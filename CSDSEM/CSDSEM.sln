@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31702.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSDSEM", "CSDSEM.csproj", "{CAE3E6AC-A0E6-40C9-8C40-230D7CAA70DA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CAE3E6AC-A0E6-40C9-8C40-230D7CAA70DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAE3E6AC-A0E6-40C9-8C40-230D7CAA70DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAE3E6AC-A0E6-40C9-8C40-230D7CAA70DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAE3E6AC-A0E6-40C9-8C40-230D7CAA70DA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FDE1F58B-55F1-4518-A1DE-31BF7B242CF6}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,22 @@
+中興自動化
+
+Revit 2018 V2.4.0
+Revit 2019 V2.4.0
+Revit 2020 V2.4.0
+
+此產品為中興工程所有，請勿違法使用。
+
+謝謝您使用我們的軟體，如有問題請撥打分機：20466。
+
+C:\ProgramData\Autodesk\Revit\Addins\2018
+C:\ProgramData\Autodesk\Revit\Addins\2019
+C:\ProgramData\Autodesk\Revit\Addins\2020
+
+Revit_2018_Setup
+Revit_2019_Setup
+Revit_2020_Setup
+
+Revit 2018 V2.4.0
+Revit 2019 V2.4.0
+Revit 2020 V2.4.0
+
