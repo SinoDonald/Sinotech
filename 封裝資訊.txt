@@ -1,8 +1,8 @@
 中興自動化
 
-Revit 2018 V2.4.0
-Revit 2019 V2.4.0
-Revit 2020 V2.4.0
+Revit 2018 V2.4.1
+Revit 2019 V2.4.1
+Revit 2020 V2.4.1
 
 此產品為中興工程所有，請勿違法使用。
 
@@ -16,7 +16,7 @@ Revit_2018_Setup
 Revit_2019_Setup
 Revit_2020_Setup
 
-Revit 2018 V2.4.0
-Revit 2019 V2.4.0
-Revit 2020 V2.4.0
+Revit 2018 V2.4.1
+Revit 2019 V2.4.1
+Revit 2020 V2.4.1
 

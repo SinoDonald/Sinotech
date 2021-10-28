@@ -15,362 +15,362 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_024A9C39C882ABA6737A371F19D03D55"
-        "OwnerKey" = "8:_D1A95FC726C3903471CD32E9FDC25A8B"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_024A9C39C882ABA6737A371F19D03D55"
-        "OwnerKey" = "8:_4EA2F5A29DD8443EA55DD6ACDC5D02CE"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_024A9C39C882ABA6737A371F19D03D55"
-        "OwnerKey" = "8:_C6A789798B1548C2922C9D3E9F872AFA"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_024A9C39C882ABA6737A371F19D03D55"
-        "OwnerKey" = "8:_3DFC6C5B92234C428B69D92BAB4F414F"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_024A9C39C882ABA6737A371F19D03D55"
-        "OwnerKey" = "8:_EFDF23AE52C6574192453F761525DFBE"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_024A9C39C882ABA6737A371F19D03D55"
-        "OwnerKey" = "8:_5198B3BBCC701CA1A8806F814A46190B"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_054E977D653D41B88D1204F7A83F4440"
+        "MsmKey" = "8:_09AE55DDFB234EAFBAB43C0E20B6CCB8"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_06184557B38847DCAA8E88023C8B5E73"
+        "MsmKey" = "8:_0AACA9C318224707A7DCEF2A8C9E7846"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_065CF554F6A3451DA6E333435098373A"
+        "MsmKey" = "8:_1D0358D676364FC597843A6C537E04E8"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_19ED775C43074F8E9BE359215F65BF20"
+        "MsmKey" = "8:_28D31DFE0E4943F684FB0B08CF086A58"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_2E039050F39F4EDF9D5D3EA20618A5E2"
+        "MsmKey" = "8:_2DBAB0C162FE40C082E83204B7FD3D73"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_3C496B2403EC4492B6ECD7002562D33F"
+        "MsmKey" = "8:_42902C87A5814539944AD6C1F0A822E5"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_3DFC6C5B92234C428B69D92BAB4F414F"
+        "MsmKey" = "8:_45BB753472B249578D5A6981E4103043"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_40BE6027B8A3DBAA04F12FF2AB820284"
-        "OwnerKey" = "8:_5198B3BBCC701CA1A8806F814A46190B"
+        "MsmKey" = "8:_490236BB228C6D54DF7AE01A52208C45"
+        "OwnerKey" = "8:_A519D2F152C94A98AD10EB90EB6C840E"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_40BE6027B8A3DBAA04F12FF2AB820284"
-        "OwnerKey" = "8:_C6A789798B1548C2922C9D3E9F872AFA"
+        "MsmKey" = "8:_490236BB228C6D54DF7AE01A52208C45"
+        "OwnerKey" = "8:_670DD37447CB4BB9BA7BC41648F0FC0C"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_4732B4C1B257437A95251B5EACD7EBD9"
+        "MsmKey" = "8:_490236BB228C6D54DF7AE01A52208C45"
+        "OwnerKey" = "8:_0AACA9C318224707A7DCEF2A8C9E7846"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_490236BB228C6D54DF7AE01A52208C45"
+        "OwnerKey" = "8:_1D0358D676364FC597843A6C537E04E8"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_490236BB228C6D54DF7AE01A52208C45"
+        "OwnerKey" = "8:_5F350C49772BBDCAB73B4DED9D64BDB2"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_490236BB228C6D54DF7AE01A52208C45"
+        "OwnerKey" = "8:_5B6BF5184034AC5344CECC4EBFAF7982"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_58F10F53AA454BDEA244CF184AC54DF3"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_4EA2F5A29DD8443EA55DD6ACDC5D02CE"
+        "MsmKey" = "8:_5B6BF5184034AC5344CECC4EBFAF7982"
+        "OwnerKey" = "8:_A519D2F152C94A98AD10EB90EB6C840E"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_5B6BF5184034AC5344CECC4EBFAF7982"
+        "OwnerKey" = "8:_670DD37447CB4BB9BA7BC41648F0FC0C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_5C3449A60D4845E19C189D53057D4875"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_5198B3BBCC701CA1A8806F814A46190B"
-        "OwnerKey" = "8:_5A430E7D67044BC78C64FD3A86AAD37F"
+        "MsmKey" = "8:_5F350C49772BBDCAB73B4DED9D64BDB2"
+        "OwnerKey" = "8:_5B6BF5184034AC5344CECC4EBFAF7982"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_5198B3BBCC701CA1A8806F814A46190B"
-        "OwnerKey" = "8:_72679B8F3EA343F69B4240423B27D545"
+        "MsmKey" = "8:_5F350C49772BBDCAB73B4DED9D64BDB2"
+        "OwnerKey" = "8:_09AE55DDFB234EAFBAB43C0E20B6CCB8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_53B1035876F5412AA3E113C06D0E63F6"
+        "MsmKey" = "8:_5F350C49772BBDCAB73B4DED9D64BDB2"
+        "OwnerKey" = "8:_1D0358D676364FC597843A6C537E04E8"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_5F350C49772BBDCAB73B4DED9D64BDB2"
+        "OwnerKey" = "8:_CEA37A886C4DDD5C7F5A28E0C62BE258"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_670DD37447CB4BB9BA7BC41648F0FC0C"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_56A56323DD4D470A9174EAE351423DB3"
+        "MsmKey" = "8:_6860E37F671F4D09821BBEEA2BCDBBAD"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_5A430E7D67044BC78C64FD3A86AAD37F"
+        "MsmKey" = "8:_6B6337936EC74885A43CBB3C8000D59C"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_61AD7AC961004A37A0B5479BEDC4F901"
+        "MsmKey" = "8:_7C77250225B843929E3B0EBB0404B74E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_6389A30FEFD8422CAFFEF1F06928132D"
+        "MsmKey" = "8:_8308DC0C80B94B9B8E5615428C193509"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_72679B8F3EA343F69B4240423B27D545"
+        "MsmKey" = "8:_8F0363846FD346CE9B7946F5984BE4B4"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_991E3CC30C7C455F88387F310FE1DFF5"
+        "MsmKey" = "8:_8F6365E1CAAC49E3AA23D98F587464F9"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_9BE59035C590484A9B9A6C62C439FB41"
+        "MsmKey" = "8:_9259A0DC010F46BAA14F165C8A1F424A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_9C3170AE5B9C421FA2081A8358C2476B"
+        "MsmKey" = "8:_A02ADCD5FC3445C7B5AA955BD168C63A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_AAF9465DC65145DE9C1BEE8E11290F9F"
+        "MsmKey" = "8:_A4042FD27D4F4320B67A755DCCF8A733"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_B7CC20FBDC544B16B3E7BB9208E3E482"
+        "MsmKey" = "8:_A519D2F152C94A98AD10EB90EB6C840E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_C6A789798B1548C2922C9D3E9F872AFA"
+        "MsmKey" = "8:_A52B455BCD6D48228DB2505FFEBE132E"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_C8B3CB1898D04156AFE966F8C23B2D64"
+        "MsmKey" = "8:_BB06DDA1CCA643519EC77C5BA7C970A1"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_D1A95FC726C3903471CD32E9FDC25A8B"
-        "OwnerKey" = "8:_5A430E7D67044BC78C64FD3A86AAD37F"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D1A95FC726C3903471CD32E9FDC25A8B"
-        "OwnerKey" = "8:_72679B8F3EA343F69B4240423B27D545"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D1A95FC726C3903471CD32E9FDC25A8B"
-        "OwnerKey" = "8:_4EA2F5A29DD8443EA55DD6ACDC5D02CE"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D1A95FC726C3903471CD32E9FDC25A8B"
-        "OwnerKey" = "8:_C6A789798B1548C2922C9D3E9F872AFA"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D1A95FC726C3903471CD32E9FDC25A8B"
-        "OwnerKey" = "8:_EFDF23AE52C6574192453F761525DFBE"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D1A95FC726C3903471CD32E9FDC25A8B"
-        "OwnerKey" = "8:_5198B3BBCC701CA1A8806F814A46190B"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D95A8B352C444E0B8F0F76B4AD1255D6"
+        "MsmKey" = "8:_BC49975EA88A4DA4AFE409C2ACB44C24"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_EA9BAC54DF924567B32FCE0144BD9DA3"
+        "MsmKey" = "8:_BD72F018A8664E10B8C22DD303E2BF7A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_EFDF23AE52C6574192453F761525DFBE"
-        "OwnerKey" = "8:_5198B3BBCC701CA1A8806F814A46190B"
+        "MsmKey" = "8:_CEA37A886C4DDD5C7F5A28E0C62BE258"
+        "OwnerKey" = "8:_5B6BF5184034AC5344CECC4EBFAF7982"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_EFDF23AE52C6574192453F761525DFBE"
-        "OwnerKey" = "8:_B7CC20FBDC544B16B3E7BB9208E3E482"
+        "MsmKey" = "8:_CEA37A886C4DDD5C7F5A28E0C62BE258"
+        "OwnerKey" = "8:_1D0358D676364FC597843A6C537E04E8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_EFDF23AE52C6574192453F761525DFBE"
-        "OwnerKey" = "8:_C6A789798B1548C2922C9D3E9F872AFA"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_EFDF23AE52C6574192453F761525DFBE"
-        "OwnerKey" = "8:_40BE6027B8A3DBAA04F12FF2AB820284"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_F3915E35647941CCA3C59BA767D7478A"
+        "MsmKey" = "8:_E95F40AE6F52407EB8F03211DEB0F88A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_FC2EF5AB04B24DC09190F1689B4A156F"
+        "MsmKey" = "8:_F7355B1911924E2B9613B66BF0D6B0FF"
         "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FBAB5152025BB37754C9642BD6E9138B"
+        "OwnerKey" = "8:_490236BB228C6D54DF7AE01A52208C45"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FBAB5152025BB37754C9642BD6E9138B"
+        "OwnerKey" = "8:_0AACA9C318224707A7DCEF2A8C9E7846"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FBAB5152025BB37754C9642BD6E9138B"
+        "OwnerKey" = "8:_1D0358D676364FC597843A6C537E04E8"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FBAB5152025BB37754C9642BD6E9138B"
+        "OwnerKey" = "8:_58F10F53AA454BDEA244CF184AC54DF3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FBAB5152025BB37754C9642BD6E9138B"
+        "OwnerKey" = "8:_5F350C49772BBDCAB73B4DED9D64BDB2"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FBAB5152025BB37754C9642BD6E9138B"
+        "OwnerKey" = "8:_5B6BF5184034AC5344CECC4EBFAF7982"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_054E977D653D41B88D1204F7A83F4440"
+        "OwnerKey" = "8:_9259A0DC010F46BAA14F165C8A1F424A"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_9BE59035C590484A9B9A6C62C439FB41"
+        "OwnerKey" = "8:_F7355B1911924E2B9613B66BF0D6B0FF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_72679B8F3EA343F69B4240423B27D545"
+        "OwnerKey" = "8:_670DD37447CB4BB9BA7BC41648F0FC0C"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_B7CC20FBDC544B16B3E7BB9208E3E482"
+        "OwnerKey" = "8:_09AE55DDFB234EAFBAB43C0E20B6CCB8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_4EA2F5A29DD8443EA55DD6ACDC5D02CE"
+        "OwnerKey" = "8:_0AACA9C318224707A7DCEF2A8C9E7846"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_C6A789798B1548C2922C9D3E9F872AFA"
+        "OwnerKey" = "8:_1D0358D676364FC597843A6C537E04E8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_3DFC6C5B92234C428B69D92BAB4F414F"
+        "OwnerKey" = "8:_58F10F53AA454BDEA244CF184AC54DF3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_3C496B2403EC4492B6ECD7002562D33F"
+        "OwnerKey" = "8:_42902C87A5814539944AD6C1F0A822E5"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_5A430E7D67044BC78C64FD3A86AAD37F"
+        "OwnerKey" = "8:_A519D2F152C94A98AD10EB90EB6C840E"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_5198B3BBCC701CA1A8806F814A46190B"
+        "OwnerKey" = "8:_5B6BF5184034AC5344CECC4EBFAF7982"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_40BE6027B8A3DBAA04F12FF2AB820284"
+        "OwnerKey" = "8:_CEA37A886C4DDD5C7F5A28E0C62BE258"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_EFDF23AE52C6574192453F761525DFBE"
+        "OwnerKey" = "8:_5F350C49772BBDCAB73B4DED9D64BDB2"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_D1A95FC726C3903471CD32E9FDC25A8B"
+        "OwnerKey" = "8:_490236BB228C6D54DF7AE01A52208C45"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_024A9C39C882ABA6737A371F19D03D55"
+        "OwnerKey" = "8:_FBAB5152025BB37754C9642BD6E9138B"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -463,23 +463,207 @@
         }
         "File"
         {
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_024A9C39C882ABA6737A371F19D03D55"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_09AE55DDFB234EAFBAB43C0E20B6CCB8"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:NPOI.OpenXmlFormats, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_09AE55DDFB234EAFBAB43C0E20B6CCB8"
+                    {
+                    "Name" = "8:NPOI.OpenXmlFormats.DLL"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\NPOI.OpenXmlFormats.DLL"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_0AACA9C318224707A7DCEF2A8C9E7846"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:NPOI.OpenXml4Net, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_0AACA9C318224707A7DCEF2A8C9E7846"
+                    {
+                    "Name" = "8:NPOI.OpenXml4Net.DLL"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\NPOI.OpenXml4Net.DLL"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_1D0358D676364FC597843A6C537E04E8"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:NPOI.OOXML, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_1D0358D676364FC597843A6C537E04E8"
+                    {
+                    "Name" = "8:NPOI.OOXML.DLL"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\NPOI.OOXML.DLL"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_28D31DFE0E4943F684FB0B08CF086A58"
+            {
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\更新Excel.png"
+            "TargetName" = "8:更新Excel.png"
+            "Tag" = "8:"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2DBAB0C162FE40C082E83204B7FD3D73"
+            {
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\NPOI.xml"
+            "TargetName" = "8:NPOI.xml"
+            "Tag" = "8:"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_42902C87A5814539944AD6C1F0A822E5"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_024A9C39C882ABA6737A371F19D03D55"
+                    "_42902C87A5814539944AD6C1F0A822E5"
                     {
                     "Name" = "8:ICSharpCode.SharpZipLib.DLL"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:ICSharpCode.SharpZipLib.DLL"
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\ICSharpCode.SharpZipLib.DLL"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_45BB753472B249578D5A6981E4103043"
+            {
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\雲形線編號.png"
+            "TargetName" = "8:雲形線編號.png"
+            "Tag" = "8:"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_490236BB228C6D54DF7AE01A52208C45"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:NPOI, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_490236BB228C6D54DF7AE01A52208C45"
+                    {
+                    "Name" = "8:NPOI.DLL"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:NPOI.DLL"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -494,23 +678,23 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_054E977D653D41B88D1204F7A83F4440"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_58F10F53AA454BDEA244CF184AC54DF3"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:AutoExport, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+            "AssemblyAsmDisplayName" = "8:NPOI, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_054E977D653D41B88D1204F7A83F4440"
+                    "_58F10F53AA454BDEA244CF184AC54DF3"
                     {
-                    "Name" = "8:AutoExport.dll"
+                    "Name" = "8:NPOI.DLL"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\AutoExport.dll"
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\NPOI.DLL"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -525,12 +709,43 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_06184557B38847DCAA8E88023C8B5E73"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5B6BF5184034AC5344CECC4EBFAF7982"
             {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\自動開口.png"
-            "TargetName" = "8:自動開口.png"
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:NPOI.OOXML, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_5B6BF5184034AC5344CECC4EBFAF7982"
+                    {
+                    "Name" = "8:NPOI.OOXML.DLL"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:NPOI.OOXML.DLL"
+            "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_5C3449A60D4845E19C189D53057D4875"
+            {
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\視圖複製.png"
+            "TargetName" = "8:視圖複製.png"
+            "Tag" = "8:"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -545,7 +760,129 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_065CF554F6A3451DA6E333435098373A"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5F350C49772BBDCAB73B4DED9D64BDB2"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:NPOI.OpenXml4Net, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_5F350C49772BBDCAB73B4DED9D64BDB2"
+                    {
+                    "Name" = "8:NPOI.OpenXml4Net.DLL"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:NPOI.OpenXml4Net.DLL"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_670DD37447CB4BB9BA7BC41648F0FC0C"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_670DD37447CB4BB9BA7BC41648F0FC0C"
+                    {
+                    "Name" = "8:Sinotech.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Sinotech.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6860E37F671F4D09821BBEEA2BCDBBAD"
+            {
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\手動標籤.png"
+            "TargetName" = "8:手動標籤.png"
+            "Tag" = "8:"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6B6337936EC74885A43CBB3C8000D59C"
+            {
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\圖紙更新.png"
+            "TargetName" = "8:圖紙更新.png"
+            "Tag" = "8:"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_7C77250225B843929E3B0EBB0404B74E"
+            {
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\圖紙匯出.png"
+            "TargetName" = "8:圖紙匯出.png"
+            "Tag" = "8:"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_8308DC0C80B94B9B8E5615428C193509"
             {
             "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech.addin"
             "TargetName" = "8:Sinotech.addin"
@@ -565,12 +902,32 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_19ED775C43074F8E9BE359215F65BF20"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_8F0363846FD346CE9B7946F5984BE4B4"
+            {
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\自動接合.png"
+            "TargetName" = "8:自動接合.png"
+            "Tag" = "8:"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_8F6365E1CAAC49E3AA23D98F587464F9"
             {
             "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\自動升版.png"
             "TargetName" = "8:自動升版.png"
             "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -585,43 +942,23 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_2E039050F39F4EDF9D5D3EA20618A5E2"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\NPOI.xml"
-            "TargetName" = "8:NPOI.xml"
-            "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3C496B2403EC4492B6ECD7002562D33F"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_9259A0DC010F46BAA14F165C8A1F424A"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:AutoExport, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
                 "ScatterAssemblies"
                 {
-                    "_3C496B2403EC4492B6ECD7002562D33F"
+                    "_9259A0DC010F46BAA14F165C8A1F424A"
                     {
-                    "Name" = "8:ICSharpCode.SharpZipLib.DLL"
+                    "Name" = "8:AutoExport.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\ICSharpCode.SharpZipLib.DLL"
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\AutoExport.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -636,23 +973,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3DFC6C5B92234C428B69D92BAB4F414F"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A02ADCD5FC3445C7B5AA955BD168C63A"
             {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:NPOI, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_3DFC6C5B92234C428B69D92BAB4F414F"
-                    {
-                    "Name" = "8:NPOI.DLL"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\NPOI.DLL"
-            "TargetName" = "8:"
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\Sinotech.png"
+            "TargetName" = "8:Sinotech.png"
             "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -667,43 +993,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_40BE6027B8A3DBAA04F12FF2AB820284"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A4042FD27D4F4320B67A755DCCF8A733"
             {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:NPOI.OpenXmlFormats, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_40BE6027B8A3DBAA04F12FF2AB820284"
-                    {
-                    "Name" = "8:NPOI.OpenXmlFormats.DLL"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:NPOI.OpenXmlFormats.DLL"
-            "TargetName" = "8:"
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\Sinotech.ico"
+            "TargetName" = "8:Sinotech.ico"
             "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4732B4C1B257437A95251B5EACD7EBD9"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\視圖複製.png"
-            "TargetName" = "8:視圖複製.png"
-            "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -718,116 +1013,14 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_4EA2F5A29DD8443EA55DD6ACDC5D02CE"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:NPOI.OpenXml4Net, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_4EA2F5A29DD8443EA55DD6ACDC5D02CE"
-                    {
-                    "Name" = "8:NPOI.OpenXml4Net.DLL"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\NPOI.OpenXml4Net.DLL"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5198B3BBCC701CA1A8806F814A46190B"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:NPOI.OOXML, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_5198B3BBCC701CA1A8806F814A46190B"
-                    {
-                    "Name" = "8:NPOI.OOXML.DLL"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:NPOI.OOXML.DLL"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_53B1035876F5412AA3E113C06D0E63F6"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\更新Excel.png"
-            "TargetName" = "8:更新Excel.png"
-            "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_56A56323DD4D470A9174EAE351423DB3"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\更新比例尺.png"
-            "TargetName" = "8:更新比例尺.png"
-            "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5A430E7D67044BC78C64FD3A86AAD37F"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A519D2F152C94A98AD10EB90EB6C840E"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:CSDSEM, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
                 "ScatterAssemblies"
                 {
-                    "_5A430E7D67044BC78C64FD3A86AAD37F"
+                    "_A519D2F152C94A98AD10EB90EB6C840E"
                     {
                     "Name" = "8:CSDSEM.dll"
                     "Attributes" = "3:512"
@@ -836,7 +1029,7 @@
             "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\CSDSEM.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -851,12 +1044,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_61AD7AC961004A37A0B5479BEDC4F901"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A52B455BCD6D48228DB2505FFEBE132E"
             {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\Sinotech.png"
-            "TargetName" = "8:Sinotech.png"
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\PCCES.png"
+            "TargetName" = "8:PCCES.png"
             "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -871,12 +1064,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6389A30FEFD8422CAFFEF1F06928132D"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BB06DDA1CCA643519EC77C5BA7C970A1"
             {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\自動接合.png"
-            "TargetName" = "8:自動接合.png"
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\視圖搬移.png"
+            "TargetName" = "8:視圖搬移.png"
             "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -891,23 +1084,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_72679B8F3EA343F69B4240423B27D545"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BC49975EA88A4DA4AFE409C2ACB44C24"
             {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_72679B8F3EA343F69B4240423B27D545"
-                    {
-                    "Name" = "8:Sinotech.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Sinotech.dll"
-            "TargetName" = "8:"
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\自動開口.png"
+            "TargetName" = "8:自動開口.png"
             "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -922,12 +1104,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_991E3CC30C7C455F88387F310FE1DFF5"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BD72F018A8664E10B8C22DD303E2BF7A"
             {
             "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\自動標籤.png"
             "TargetName" = "8:自動標籤.png"
             "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -942,14 +1124,65 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_9BE59035C590484A9B9A6C62C439FB41"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_CEA37A886C4DDD5C7F5A28E0C62BE258"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:NPOI.OpenXmlFormats, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_CEA37A886C4DDD5C7F5A28E0C62BE258"
+                    {
+                    "Name" = "8:NPOI.OpenXmlFormats.DLL"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:NPOI.OpenXmlFormats.DLL"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E95F40AE6F52407EB8F03211DEB0F88A"
+            {
+            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\更新比例尺.png"
+            "TargetName" = "8:更新比例尺.png"
+            "Tag" = "8:"
+            "Folder" = "8:_9737F97980AF4B658575E9A3AD3354D7"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_F7355B1911924E2B9613B66BF0D6B0FF"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:SpeedTools, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
                 "ScatterAssemblies"
                 {
-                    "_9BE59035C590484A9B9A6C62C439FB41"
+                    "_F7355B1911924E2B9613B66BF0D6B0FF"
                     {
                     "Name" = "8:SpeedTools.dll"
                     "Attributes" = "3:512"
@@ -958,7 +1191,7 @@
             "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\SpeedTools.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -973,145 +1206,23 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_9C3170AE5B9C421FA2081A8358C2476B"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\圖紙匯出.png"
-            "TargetName" = "8:圖紙匯出.png"
-            "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_AAF9465DC65145DE9C1BEE8E11290F9F"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\Sinotech.ico"
-            "TargetName" = "8:Sinotech.ico"
-            "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B7CC20FBDC544B16B3E7BB9208E3E482"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_FBAB5152025BB37754C9642BD6E9138B"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:NPOI.OpenXmlFormats, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_B7CC20FBDC544B16B3E7BB9208E3E482"
+                    "_FBAB5152025BB37754C9642BD6E9138B"
                     {
-                    "Name" = "8:NPOI.OpenXmlFormats.DLL"
+                    "Name" = "8:ICSharpCode.SharpZipLib.DLL"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\NPOI.OpenXmlFormats.DLL"
+            "SourcePath" = "8:ICSharpCode.SharpZipLib.DLL"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C6A789798B1548C2922C9D3E9F872AFA"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:NPOI.OOXML, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_C6A789798B1548C2922C9D3E9F872AFA"
-                    {
-                    "Name" = "8:NPOI.OOXML.DLL"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\NPOI.OOXML.DLL"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C8B3CB1898D04156AFE966F8C23B2D64"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\視圖搬移.png"
-            "TargetName" = "8:視圖搬移.png"
-            "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_D1A95FC726C3903471CD32E9FDC25A8B"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:NPOI, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_D1A95FC726C3903471CD32E9FDC25A8B"
-                    {
-                    "Name" = "8:NPOI.DLL"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:NPOI.DLL"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
+            "Folder" = "8:_04BA06A5D5C44FDD808D93546CBB63AD"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1124,117 +1235,6 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D95A8B352C444E0B8F0F76B4AD1255D6"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\雲形線編號.png"
-            "TargetName" = "8:雲形線編號.png"
-            "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_EA9BAC54DF924567B32FCE0144BD9DA3"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\PCCES.png"
-            "TargetName" = "8:PCCES.png"
-            "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_EFDF23AE52C6574192453F761525DFBE"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:NPOI.OpenXml4Net, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_EFDF23AE52C6574192453F761525DFBE"
-                    {
-                    "Name" = "8:NPOI.OpenXml4Net.DLL"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:NPOI.OpenXml4Net.DLL"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_E97CCBE41F734A5393D6FBF91C85C0F7"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F3915E35647941CCA3C59BA767D7478A"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\圖紙更新.png"
-            "TargetName" = "8:圖紙更新.png"
-            "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FC2EF5AB04B24DC09190F1689B4A156F"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018\\Sinotech\\Pic\\手動標籤.png"
-            "TargetName" = "8:手動標籤.png"
-            "Tag" = "8:"
-            "Folder" = "8:_A98341D264AF4C58B74F817EEE25BC6B"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
         }
@@ -1275,22 +1275,22 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E97CCBE41F734A5393D6FBF91C85C0F7"
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_04BA06A5D5C44FDD808D93546CBB63AD"
                     {
                     "Name" = "8:Sinotech"
                     "AlwaysCreate" = "11:FALSE"
                     "Condition" = "8:"
                     "Transitive" = "11:FALSE"
-                    "Property" = "8:_E238F7B271AF499DAF9CC40722D41BBC"
+                    "Property" = "8:_B059FEC1AEE142899186687B04B71113"
                         "Folders"
                         {
-                            "{9EF0B969-E518-4E46-987F-47570745A589}:_A98341D264AF4C58B74F817EEE25BC6B"
+                            "{9EF0B969-E518-4E46-987F-47570745A589}:_9737F97980AF4B658575E9A3AD3354D7"
                             {
                             "Name" = "8:Pic"
                             "AlwaysCreate" = "11:FALSE"
                             "Condition" = "8:"
                             "Transitive" = "11:FALSE"
-                            "Property" = "8:_9035344EDA414E9986AB0A4937490758"
+                            "Property" = "8:_D25E5E88A3154406BA15EE6FE642AA52"
                                 "Folders"
                                 {
                                 }
@@ -1315,15 +1315,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:中興自動化_2018"
-        "ProductCode" = "8:{AB634730-A151-46B4-8BB3-2C1062FF68CE}"
-        "PackageCode" = "8:{FD7652D8-35A7-41F1-9916-759F918D9C9A}"
+        "ProductCode" = "8:{60C325A2-5612-47AC-8AF5-4365CF76C10F}"
+        "PackageCode" = "8:{CB0C35AE-50F9-4F7C-87BA-D6A3E32190E3}"
         "UpgradeCode" = "8:{792C6593-F662-4AF1-83C5-61A837A7EE7F}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.4.0"
+        "ProductVersion" = "8:2.4.1"
         "Manufacturer" = "8:中興工程_軌道二部"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
