@@ -1382,7 +1382,8 @@ namespace CSDSEM
                 try
                 {
                     // 修改底部高程
-                    double offset = Convert.ToDouble(opening.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsValueString());
+                    string[] hostOffset = opening.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsValueString().Split(' ');
+                    double offset = Convert.ToDouble(hostOffset[0]);
                     Parameter para = null;
                     if (opening.Name.Equals("圓形水管牆開口"))
                     {
