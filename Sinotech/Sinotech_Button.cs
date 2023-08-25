@@ -15,7 +15,7 @@ namespace Sinotech
         //// 2017
         //public string assembly = @"C:\ProgramData\Autodesk\Revit\Addins\2017\Sinotech\";
         //public string picPath = @"C:\ProgramData\Autodesk\Revit\Addins\2017\Sinotech\pic\";
-        //// 2018
+        // 2018
         public string assembly = @"C:\ProgramData\Autodesk\Revit\Addins\2018\Sinotech\";
         public string picPath = @"C:\ProgramData\Autodesk\Revit\Addins\2018\Sinotech\pic\";
         //// 2019

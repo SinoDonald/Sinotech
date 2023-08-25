@@ -133,7 +133,7 @@
             }
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_82D2D87CE3584E72A47CA020EF366238"
             {
-            "DefaultLocation" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2020"
+            "DefaultLocation" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2018"
             "Name" = "8:#1925"
             "AlwaysCreate" = "11:FALSE"
             "Condition" = "8:"
@@ -158,9 +158,9 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:中興自動化_2020"
-        "ProductCode" = "8:{68CBCB1C-E81F-4F8D-9169-8887F62634B6}"
-        "PackageCode" = "8:{D5CDF606-A541-4D01-9F7A-CF7E1D481D8A}"
+        "ProductName" = "8:中興自動化"
+        "ProductCode" = "8:{63B4CEEE-7910-4B2B-92E3-2959E6E6AE79}"
+        "PackageCode" = "8:{1EBF1EA0-910B-4813-98BE-002388E30F6F}"
         "UpgradeCode" = "8:{792C6593-F662-4AF1-83C5-61A837A7EE7F}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -171,7 +171,7 @@
         "Manufacturer" = "8:中興工程_軌道二部"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
-        "Title" = "8:中興自動化_2020"
+        "Title" = "8:中興自動化"
         "Subject" = "8:"
         "ARPCONTACT" = "8:盧培文"
         "Keywords" = "8:"
