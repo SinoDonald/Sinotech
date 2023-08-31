@@ -405,7 +405,7 @@ namespace CSDSEM
                             {
                                 FamilyInstance familyInstance = bbElem as FamilyInstance;
                                 string fsName = familyInstance.Symbol.Family.Name;
-                                if (fsName.Contains("防火風門 - 矩形") || fsName.Contains("電動風門 - 矩形") || fsName.Contains("隧道風門 - 矩形") || fsName.Contains("異徑順水三通"))
+                                if (fsName.Contains("防火風門") || fsName.Contains("防火風門 - 矩形") || fsName.Contains("電動風門 - 矩形") || fsName.Contains("隧道風門 - 矩形") || fsName.Contains("異徑順水三通"))
                                 {
                                     elementTransform.elements.Add(bbElem);
                                     interferenceElems.Add(bbElem);
@@ -712,7 +712,7 @@ namespace CSDSEM
                             else if(interferenceElem.Category.Name.Equals("風管附件"))
                             {
                                 crushElemInfo.type = "DuctAccessory";
-                                if (fsName.Contains("防火風門 - 矩形") || fsName.Contains("電動風門 - 矩形"))
+                                if (fsName.Contains("防火風門") || fsName.Contains("防火風門 - 矩形") || fsName.Contains("電動風門 - 矩形"))
                                 {
                                     try
                                     {
