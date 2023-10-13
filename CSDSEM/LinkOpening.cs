@@ -123,6 +123,7 @@ namespace CSDSEM
                 try
                 {
                     IList<Element> pipeOrBeamList = new FilteredElementCollector(rvtIns.GetLinkDocument()).WherePasses(pipeOrDuctFilter).WhereElementIsNotElementType().ToElements();
+                    //pipeOrBeamList = pipeOrBeamList.Where(x => x.Id.IntegerValue.Equals(1588824)).ToList(); // Test
                     if (pipeOrBeamList.Count > 0)
                     {
                         pipeDuctLinkDocs.Add(rvtIns);
@@ -152,6 +153,7 @@ namespace CSDSEM
                 try
                 {
                     IList<Element> wallOrBeamElems = new FilteredElementCollector(revitLink.GetLinkDocument()).WherePasses(wallBeamFilter).WhereElementIsNotElementType().ToElements();
+                    //wallOrBeamElems = wallOrBeamElems.Where(x => x.Id.IntegerValue.Equals(559157)).ToList(); // Test
                     foreach (Element elem in wallOrBeamElems)
                     {
                         string wallFamilyName = string.Empty;
@@ -664,8 +666,9 @@ namespace CSDSEM
                                     {
                                         diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM); // 機械_直徑
                                         crushElemInfo.size = diameterPara.AsDouble(); // 管直徑
-                                        string[] diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
-                                        double diameterSize = Convert.ToDouble(diameter[0]);
+                                        //string[] diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
+                                        //double diameterSize = Convert.ToDouble(diameter[0]);
+                                        double diameterSize = UnitUtils.ConvertToInternalUnits(diameterPara.AsDouble(), DisplayUnitType.DUT_MILLIMETERS); // 機械_直徑
                                         size = diameterSize;
                                         //diameterSize = OpenSize(diameterSize); // 尺寸比對後開口
                                         diameterSize = SinoOpenSize(isInsulation, diameterSize); // 尺寸比對後開口
@@ -715,17 +718,9 @@ namespace CSDSEM
                                 if (fsName.Contains("防火風門") || fsName.Contains("防火風門 - 矩形") || fsName.Contains("電動風門 - 矩形"))
                                 {
                                     try
-                                    {
-                                        // 高度
-                                        diameterPara = interferenceElem.LookupParameter("風管高度");
-                                        string diameter = diameterPara.AsValueString();
-                                        double diameterSize = Convert.ToDouble(diameter);
-                                        crushElemInfo.ductHeight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
-                                        // 寬度
-                                        diameterPara = interferenceElem.LookupParameter("風管寬度");
-                                        diameter = diameterPara.AsValueString();
-                                        diameterSize = Convert.ToDouble(diameter);
-                                        crushElemInfo.ductWight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
+                                    {                                        
+                                        crushElemInfo.ductHeight = interferenceElem.LookupParameter("風管高度").AsDouble(); // 高度
+                                        crushElemInfo.ductWight = interferenceElem.LookupParameter("風管寬度").AsDouble(); // 寬度
                                         // 厚度
                                         if (thicknessPara != null)
                                         {
@@ -733,10 +728,7 @@ namespace CSDSEM
                                         }
                                         else
                                         {
-                                            diameterPara = interferenceElem.LookupParameter("風門長度");
-                                            diameter = diameterPara.AsValueString();
-                                            diameterSize = Convert.ToDouble(diameter);
-                                            crushElemInfo.thickness = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 風管附件長度
+                                            crushElemInfo.thickness = interferenceElem.LookupParameter("風門長度").AsDouble(); // 風管附件長度
                                         }
                                     }
                                     // 未備註的風管族群不擺放開口, Ex. 消音箱
@@ -756,22 +748,26 @@ namespace CSDSEM
                                 }
                                 else if (fsName.Contains("異徑順水三通"))
                                 {
-                                    // 長度
-                                    diameterPara = interferenceElem.LookupParameter("最大尺寸");
-                                    string diameter = diameterPara.AsValueString().Replace(" mm", "");
-                                    double diameterSize = Convert.ToDouble(diameter); // 長
-                                    crushElemInfo.thickness = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
-                                    diameterSize = Convert.ToDouble(diameter); // 寬
-                                    crushElemInfo.ductWight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
-                                    // 厚度
-                                    if (thicknessPara != null)
+                                    try
                                     {
-                                        crushElemInfo.thickness = thicknessPara.AsDouble(); // 牆厚度
+                                        // 長度
+                                        diameterPara = interferenceElem.LookupParameter("最大尺寸");
+                                        string diameter = diameterPara.AsValueString().Replace(" mm", "");
+                                        double diameterSize = Convert.ToDouble(diameter); // 長
+                                        crushElemInfo.thickness = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
+                                        diameterSize = Convert.ToDouble(diameter); // 寬
+                                        crushElemInfo.ductWight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
+                                        // 厚度
+                                        if (thicknessPara != null)
+                                        {
+                                            crushElemInfo.thickness = thicknessPara.AsDouble(); // 牆厚度
+                                        }
+                                        else
+                                        {
+                                            crushElemInfo.ductHeight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 風管附件寬度 = 高度
+                                        }
                                     }
-                                    else
-                                    {
-                                        crushElemInfo.ductHeight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 風管附件寬度 = 高度
-                                    }
+                                    catch (Exception) { }
                                 }
                             }
                             else if (interferenceElem.Category.Name.Equals("電纜架配件"))
@@ -783,16 +779,18 @@ namespace CSDSEM
                                 {
                                     // 高度
                                     diameterPara = interferenceElem.LookupParameter("托盤高度");
-                                    string[] diameters = diameterPara.AsValueString().Split(' ');
-                                    string diameter = diameters[0];
-                                    double diameterSize = Convert.ToDouble(diameter) + 50;
-                                    crushElemInfo.ductHeight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
+                                    //string[] diameters = diameterPara.AsValueString().Split(' ');
+                                    //string diameter = diameters[0];
+                                    //double diameterSize = Convert.ToDouble(diameter) + 50;
+                                    //crushElemInfo.ductHeight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
+                                    crushElemInfo.ductHeight = diameterPara.AsDouble() + UnitUtils.ConvertToInternalUnits(50, DisplayUnitType.DUT_MILLIMETERS);
                                     // 寬度
                                     diameterPara = interferenceElem.LookupParameter("托盤寬度 1");
-                                    diameters = diameterPara.AsValueString().Split(' ');
-                                    diameter = diameters[0];
-                                    diameterSize = Convert.ToDouble(diameter);
-                                    crushElemInfo.ductWight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
+                                    //diameters = diameterPara.AsValueString().Split(' ');
+                                    //diameter = diameters[0];
+                                    //diameterSize = Convert.ToDouble(diameter);
+                                    //crushElemInfo.ductWight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
+                                    crushElemInfo.ductWight = diameterPara.AsDouble();
                                     // 厚度
                                     if (thicknessPara != null)
                                     {
@@ -801,10 +799,11 @@ namespace CSDSEM
                                     else
                                     {
                                         diameterPara = interferenceElem.LookupParameter("長度 1");
-                                        diameters = diameterPara.AsValueString().Split(' ');
-                                        diameter = diameters[0];
-                                        diameterSize = Convert.ToDouble(diameter);
-                                        crushElemInfo.thickness = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 電纜架配件長度
+                                        //diameters = diameterPara.AsValueString().Split(' ');
+                                        //diameter = diameters[0];
+                                        //diameterSize = Convert.ToDouble(diameter);
+                                        //crushElemInfo.thickness = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 電纜架配件長度
+                                        crushElemInfo.thickness = diameterPara.AsDouble(); // 電纜架配件長度
                                     }
                                 }
                                 // 未備註的電纜架族群不擺放開口
@@ -867,29 +866,27 @@ namespace CSDSEM
                         else if (interferenceElem is Duct)
                         {
                             crushElemInfo.type = "Duct";
-                            Parameter diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM);
-                            string[] diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
-                            double diameterSize = Convert.ToDouble(diameter[0]);
-                            crushElemInfo.ductHeight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 高度
-                            diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM);
-                            diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
-                            diameterSize = Convert.ToDouble(diameter[0]);
-                            size = diameterSize;
-                            crushElemInfo.ductWight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 寬度
+                            //Parameter diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM);
+                            //string[] diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
+                            //double diameterSize = Convert.ToDouble(diameter[0]);
+                            //double height = UnitUtils.ConvertFromInternalUnits(diameterPara.AsDouble(), DisplayUnitType.DUT_MILLIMETERS);
+                            double height = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM).AsDouble();
+                            crushElemInfo.ductHeight = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM).AsDouble(); // 高度
+                            //diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM);
+                            //diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
+                            //diameterSize = Convert.ToDouble(diameter[0]);
+                            double width = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM).AsDouble();
+                            crushElemInfo.ductWight = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM).AsDouble(); // 寬度
+                            size = UnitUtils.ConvertFromInternalUnits(width, DisplayUnitType.DUT_MILLIMETERS);
                         }
                         else if (interferenceElem is CableTray)
                         {
                             crushElemInfo.type = "CableTray";
                             Parameter diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_HEIGHT_PARAM);
-                            string[] diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
-                            //double diameterSize = 150;
-                            double diameterSize = Convert.ToDouble(diameter[0]) + 50;
-                            crushElemInfo.ductHeight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 高度
+                            crushElemInfo.ductHeight = diameterPara.AsDouble() + UnitUtils.ConvertToInternalUnits(50, DisplayUnitType.DUT_MILLIMETERS); // 高度
                             diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_WIDTH_PARAM);
-                            diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
-                            diameterSize = Convert.ToDouble(diameter[0]);
-                            size = diameterSize;
-                            crushElemInfo.ductWight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 寬度
+                            size = UnitUtils.ConvertFromInternalUnits(diameterPara.AsDouble(), DisplayUnitType.DUT_MILLIMETERS);
+                            crushElemInfo.ductWight = diameterPara.AsDouble() + UnitUtils.ConvertToInternalUnits(50, DisplayUnitType.DUT_MILLIMETERS); // 寬度
                         }
                         if (thicknessPara != null)
                         {
@@ -1382,30 +1379,29 @@ namespace CSDSEM
                 try
                 {
                     // 修改底部高程
-                    string[] hostOffset = opening.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsValueString().Split(' ');
-                    double offset = Convert.ToDouble(hostOffset[0]);
+                    double offset = opening.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsDouble();
                     Parameter para = null;
                     if (opening.Name.Equals("圓形水管牆開口"))
                     {
-                        double height = Convert.ToDouble(opening.LookupParameter("指定圓形套管直徑").AsValueString());
-                        double sub = offset - (height / 2);
-                        string value = sub.ToString();
+                        double height = Convert.ToDouble(opening.LookupParameter("指定圓形套管直徑").AsDouble());
+                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_METERS);
+                        string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("圓形套管底部高程");
                         para.Set(value);
                     }
                     else if(opening.Name.Equals("矩形風管牆開口"))
                     {
-                        double height = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsValueString());
-                        double sub = offset - (height / 2);
-                        string value = sub.ToString();
+                        double height = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsDouble());
+                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_METERS);
+                        string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("矩形開口底部高程");
                         para.Set(value);
                     }
                     else if (opening.Name.Equals("電纜架牆開口"))
                     {
-                        double height = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsValueString());
-                        double sub = offset - (height / 2);
-                        string value = sub.ToString();
+                        double height = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsDouble());
+                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_METERS);
+                        string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("矩形開口底部高程");
                         para.Set(value);
                     }
