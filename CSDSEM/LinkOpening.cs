@@ -117,13 +117,13 @@ namespace CSDSEM
             pipeDuctFilters.Add(cableTrayFittingFilter);
             LogicalOrFilter pipeOrDuctFilter = new LogicalOrFilter(pipeDuctFilters);
             // 儲存所有RevitLink擁有管道與風管的Document
-            IList<RevitLinkInstance> rvtInss = new FilteredElementCollector(doc, doc.ActiveView.Id).OfClass(typeof(RevitLinkInstance)).WhereElementIsNotElementType().Cast<RevitLinkInstance>().ToList();
+            IList<RevitLinkInstance> rvtInss = new FilteredElementCollector(doc/*, doc.ActiveView.Id*/).OfClass(typeof(RevitLinkInstance)).WhereElementIsNotElementType().Cast<RevitLinkInstance>().ToList();
             foreach (RevitLinkInstance rvtIns in rvtInss)
             {
                 try
                 {
                     IList<Element> pipeOrBeamList = new FilteredElementCollector(rvtIns.GetLinkDocument()).WherePasses(pipeOrDuctFilter).WhereElementIsNotElementType().ToElements();
-                    //pipeOrBeamList = pipeOrBeamList.Where(x => x.Id.IntegerValue.Equals(1588824)).ToList(); // Test
+                    //pipeOrBeamList = pipeOrBeamList.Where(x => x.Id.IntegerValue.Equals(2579314)).ToList(); // Test
                     if (pipeOrBeamList.Count > 0)
                     {
                         pipeDuctLinkDocs.Add(rvtIns);
@@ -153,7 +153,7 @@ namespace CSDSEM
                 try
                 {
                     IList<Element> wallOrBeamElems = new FilteredElementCollector(revitLink.GetLinkDocument()).WherePasses(wallBeamFilter).WhereElementIsNotElementType().ToElements();
-                    //wallOrBeamElems = wallOrBeamElems.Where(x => x.Id.IntegerValue.Equals(559157)).ToList(); // Test
+                    //wallOrBeamElems = wallOrBeamElems.Where(x => x.Id.IntegerValue.Equals(681736)).ToList(); // Test
                     foreach (Element elem in wallOrBeamElems)
                     {
                         string wallFamilyName = string.Empty;
@@ -312,7 +312,7 @@ namespace CSDSEM
             return Result.Succeeded;
         }
         // 取得幾何圖形, Symbol Solids(未修改過Instance)
-        private static Solid GetSymbolSolids(GeometryObject geomObj, RevitLinkInstance revitLink, Solid solid)
+        private Solid GetSymbolSolids(GeometryObject geomObj, RevitLinkInstance revitLink, Solid solid)
         {
             if (geomObj is Solid)
             {
@@ -358,7 +358,7 @@ namespace CSDSEM
             return solid;
         }
         // 透過BoundingBox找到與牆樑Solid干涉的管
-        private static void FindInputSolidBBElems(Document revitLinkDoc, Element wallOrBeam, Solid solid, List<RevitLinkInstance> pipeDuctLinkDocs, List<OpeningInfo> openingInfoList)
+        private void FindInputSolidBBElems(Document revitLinkDoc, Element wallOrBeam, Solid solid, List<RevitLinkInstance> pipeDuctLinkDocs, List<OpeningInfo> openingInfoList)
         {
             // 轉換成專案座標
             // 取得轉換後 Solid 的 BoundingBox
@@ -442,7 +442,7 @@ namespace CSDSEM
             }
         }
         // 儲存OpeningInfo資料
-        private static void SaveElemData(Document revitLinkDoc, Element wallOrBeam, Solid solid, List<Element> interferenceElems, Transform linkTransform, List<OpeningInfo> openingInfoList)
+        private void SaveElemData(Document revitLinkDoc, Element wallOrBeam, Solid solid, List<Element> interferenceElems, Transform linkTransform, List<OpeningInfo> openingInfoList)
         {
             OpeningInfo openingInfo = new OpeningInfo();
             ElementId levelElemId = null;
@@ -866,15 +866,8 @@ namespace CSDSEM
                         else if (interferenceElem is Duct)
                         {
                             crushElemInfo.type = "Duct";
-                            //Parameter diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM);
-                            //string[] diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
-                            //double diameterSize = Convert.ToDouble(diameter[0]);
-                            //double height = UnitUtils.ConvertFromInternalUnits(diameterPara.AsDouble(), DisplayUnitType.DUT_MILLIMETERS);
                             double height = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM).AsDouble();
                             crushElemInfo.ductHeight = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM).AsDouble(); // 高度
-                            //diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM);
-                            //diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
-                            //diameterSize = Convert.ToDouble(diameter[0]);
                             double width = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM).AsDouble();
                             crushElemInfo.ductWight = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM).AsDouble(); // 寬度
                             size = UnitUtils.ConvertFromInternalUnits(width, DisplayUnitType.DUT_MILLIMETERS);
@@ -902,8 +895,15 @@ namespace CSDSEM
                             
                         }
                         else
-                        {
-                            FindFaceIntersectLine(solid, pipeCurve, openingInfo, crushElemInfo); // 找到線與面交集點
+                        {                            
+                            if (interferenceElem.Name.Equals("半徑彎頭/T 接頭")) // 矩形風管/半徑彎頭/T 接頭
+                            {
+                                FindSolidIntersection(interferenceElem, solid, openingInfo, crushElemInfo);
+                            }
+                            else
+                            {
+                                FindFaceIntersectLine(solid, pipeCurve, openingInfo, crushElemInfo); // 找到線與面交集點
+                            }
                         }
                     }
                 }
@@ -914,7 +914,7 @@ namespace CSDSEM
             }
         }
         // 找到線與面交集點
-        private static void FindFaceIntersectLine(Solid solid, Curve curve, OpeningInfo openingInfo, CrushElemInfo crushElemInfo)
+        private void FindFaceIntersectLine(Solid solid, Curve curve, OpeningInfo openingInfo, CrushElemInfo crushElemInfo)
         {
             XYZ startPoint = new XYZ();
             XYZ endPoint = new XYZ();
@@ -927,7 +927,6 @@ namespace CSDSEM
                 SetComparisonResult comparisonR = face.Intersect(curve, out intersectionR);
                 // 設置交集點
                 XYZ intersectionResult = null;
-
                 // 相交
                 if (SetComparisonResult.Disjoint != comparisonR)
                 {
@@ -999,57 +998,71 @@ namespace CSDSEM
             }
         }
         // 找到風管附件與Element衝突
-        private static void FindSolidIntersection(Element interferenceElem, Solid solid, OpeningInfo openingInfo, CrushElemInfo crushElemInfo)
+        private void FindSolidIntersection(Element interferenceElem, Solid solid, OpeningInfo openingInfo, CrushElemInfo crushElemInfo)
         {
             ICollection<ElementId> interferenceElems = new List<ElementId>();
             interferenceElems.Add(interferenceElem.Id);
-            FilteredElementCollector collector = new FilteredElementCollector(interferenceElem.Document, interferenceElems);
-            List<FamilyInstance> familyInstances = collector.OfClass(typeof(FamilyInstance)).WherePasses(new ElementIntersectsSolidFilter(solid)).WhereElementIsNotElementType().Cast<FamilyInstance>().ToList();
-            foreach (FamilyInstance familyInstance in familyInstances)
+            IList<Element> elems = new FilteredElementCollector(interferenceElem.Document, interferenceElems).WherePasses(new ElementIntersectsSolidFilter(solid)).WhereElementIsNotElementType().ToList();
+            foreach (Element elem in elems)
             {
-                LocationPoint lp = familyInstance.Location as LocationPoint;
-                XYZ insXYZ = lp.Point;
-                // 找到與放置樓程高程的偏移
-                double z = insXYZ.Z;
-                // 元件擺放點
-                if (openingInfo.element is Floor)
+                try
                 {
-                    //LocationCurve lc = openingInfo.element.Location as LocationCurve;
-                    //Line line = lc.Curve as Line;
-                    //line.MakeUnbound(); // 延伸線段
-                    //insXYZ = line.Project(insXYZ).XYZPoint; // 座標點與中心線的垂足點
-                    //crushElemInfo.xyzs.Add(insXYZ);
-                    crushElemInfo.xyzs.Add(insXYZ);
-                    double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-                    crushElemInfo.deviation = z - elevation; // 偏移
-                }
-                else
-                {
-                    // 找到風管附件放置點與樑牆中心線的最近點擺放
-                    try
+                    LocationPoint lp = elem.Location as LocationPoint;
+                    XYZ insXYZ = new XYZ();
+                    if (lp != null)
                     {
-                        LocationCurve lc = openingInfo.element.Location as LocationCurve;
-                        Line line = lc.Curve as Line;
-                        line.MakeUnbound(); // 延伸線段
-                        insXYZ = line.Project(insXYZ).XYZPoint; // 座標點與中心線的垂足點
+                        insXYZ = lp.Point;
+                    }
+                    else
+                    {
+                        LocationCurve lc = elem.Location as LocationCurve;
+                        XYZ lp1 = lc.Curve.Tessellate()[0];
+                        XYZ lp2 = lc.Curve.Tessellate()[1];
+                        insXYZ = new XYZ((lp1.X + lp2.X) / 2, (lp1.Y + lp2.Y) / 2, (lp1.Z + lp2.Z) / 2);
+                    }
+                    // 找到與放置樓程高程的偏移
+                    double z = insXYZ.Z;
+                    // 元件擺放點
+                    if (openingInfo.element is Floor)
+                    {
+                        //LocationCurve lc = openingInfo.element.Location as LocationCurve;
+                        //Line line = lc.Curve as Line;
+                        //line.MakeUnbound(); // 延伸線段
+                        //insXYZ = line.Project(insXYZ).XYZPoint; // 座標點與中心線的垂足點
+                        //crushElemInfo.xyzs.Add(insXYZ);
                         crushElemInfo.xyzs.Add(insXYZ);
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                    if (crushElemInfo.level != null) // 避免視圖無法對應到正確的Level
-                    {
                         double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
                         crushElemInfo.deviation = z - elevation; // 偏移
                     }
+                    else
+                    {
+                        // 找到風管附件放置點與樑牆中心線的最近點擺放
+                        try
+                        {
+                            LocationCurve lc = openingInfo.element.Location as LocationCurve;
+                            Line line = lc.Curve as Line;
+                            line.MakeUnbound(); // 延伸線段
+                            insXYZ = line.Project(insXYZ).XYZPoint; // 座標點與中心線的垂足點
+                            crushElemInfo.xyzs.Add(insXYZ);
+                        }
+                        catch (Exception)
+                        {
+
+                        }
+                        if (crushElemInfo.level != null) // 避免視圖無法對應到正確的Level
+                        {
+                            double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                            crushElemInfo.deviation = z - elevation; // 偏移
+                        }
+                    }
+                    crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10)); // 軸心
+                    crushElemInfo.pipeAngle = 90 - openingInfo.beamWallAngle; // 管角度
+                    if (crushElemInfo.xyzs.Count > 0)
+                    {
+                        openingInfo.crushElemInfos.Add(crushElemInfo);
+                    }
                 }
-                crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10)); // 軸心
-                crushElemInfo.pipeAngle = 90 - openingInfo.beamWallAngle; // 管角度
-                if (crushElemInfo.xyzs.Count > 0)
-                {
-                    openingInfo.crushElemInfos.Add(crushElemInfo);
-                }
+                catch (Exception) { }
             }
         }
         // 找到FamilySymbol
