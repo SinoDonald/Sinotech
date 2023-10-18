@@ -867,9 +867,9 @@ namespace CSDSEM
                         {
                             crushElemInfo.type = "Duct";
                             double height = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM).AsDouble();
-                            crushElemInfo.ductHeight = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM).AsDouble(); // 高度
+                            crushElemInfo.ductHeight = height; // 高度
                             double width = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM).AsDouble();
-                            crushElemInfo.ductWight = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM).AsDouble(); // 寬度
+                            crushElemInfo.ductWight = width; // 寬度
                             size = UnitUtils.ConvertFromInternalUnits(width, DisplayUnitType.DUT_MILLIMETERS);
                         }
                         else if (interferenceElem is CableTray)
@@ -1392,7 +1392,15 @@ namespace CSDSEM
                 try
                 {
                     // 修改底部高程
-                    double offset = opening.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsDouble();
+                    double offset = 0.0;
+                    try
+                    {
+                        offset = opening.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsDouble(); // 偏移
+                    }
+                    catch (Exception)
+                    {
+                        offset = opening.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble(); // 距離樓層的高程
+                    }
                     Parameter para = null;
                     if (opening.Name.Equals("圓形水管牆開口"))
                     {
