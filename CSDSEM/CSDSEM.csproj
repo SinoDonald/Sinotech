@@ -126,6 +126,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoPipeOpen.cs" />
+    <Compile Include="FindLevel.cs" />
     <Compile Include="ManualPipeTag.cs" />
     <Compile Include="AutoPipeTag.cs" />
     <Compile Include="ManualTagForm.cs">
