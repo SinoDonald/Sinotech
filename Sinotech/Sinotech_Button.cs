@@ -15,15 +15,15 @@ namespace Sinotech
         //// 2017
         //public string assembly = @"C:\ProgramData\Autodesk\Revit\Addins\2017\Sinotech\";
         //public string picPath = @"C:\ProgramData\Autodesk\Revit\Addins\2017\Sinotech\pic\";
-        // 2018
-        public string assembly = @"C:\ProgramData\Autodesk\Revit\Addins\2018\Sinotech\";
-        public string picPath = @"C:\ProgramData\Autodesk\Revit\Addins\2018\Sinotech\pic\";
+        //// 2018
+        //public string assembly = @"C:\ProgramData\Autodesk\Revit\Addins\2018\Sinotech\";
+        //public string picPath = @"C:\ProgramData\Autodesk\Revit\Addins\2018\Sinotech\pic\";
         //// 2019
         //public string assembly = @"C:\ProgramData\Autodesk\Revit\Addins\2019\Sinotech\";
         //public string picPath = @"C:\ProgramData\Autodesk\Revit\Addins\2019\Sinotech\pic\";
-        //// 2020
-        //public string assembly = @"C:\ProgramData\Autodesk\Revit\Addins\2020\Sinotech\";
-        //public string picPath = @"C:\ProgramData\Autodesk\Revit\Addins\2020\Sinotech\pic\";
+        // 2020
+        public string assembly = @"C:\ProgramData\Autodesk\Revit\Addins\2020\Sinotech\";
+        public string picPath = @"C:\ProgramData\Autodesk\Revit\Addins\2020\Sinotech\pic\";
     }
     // 預設Excel檔案路徑
     public class LicPath

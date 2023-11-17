@@ -82,8 +82,6 @@ namespace CSDSEM
             Autodesk.Revit.ApplicationServices.Application app = uiapp.Application;
             Document doc = uidoc.Document;
 
-            DateTime timeStart = DateTime.Now; // 計時開始 取得目前時間
-
             // 找到當前專案的Level相關資訊
             FindLevel findLevel = new FindLevel();
             Tuple<List<LevelElevation>, LevelElevation, double> multiValue = findLevel.FindDocViewLevel(doc);
@@ -166,176 +164,182 @@ namespace CSDSEM
                 }
             }
 
-            List<OpeningInfo> openingInfoList = new List<OpeningInfo>(); // 儲存樑牆板資訊
-            // 儲存樑牆的RevitLink
-            IList<ElementFilter> elementFilters = new List<ElementFilter>();
-            elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_Walls)); // 牆
-            elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_StructuralFraming)); // 樑
-            elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_Floors)); // 樓板
-            LogicalOrFilter wallBeamFilter = new LogicalOrFilter(elementFilters);
-            foreach (RevitLinkInstance rvtLinkIns in rvtLinkInsList)
+            // 輸入專業代碼
+            ProfessionalCodeForm professionalCodeForm = new ProfessionalCodeForm(rvtLinkInsList);
+            professionalCodeForm.ShowDialog();
+            if(professionalCodeForm.trueOrFalse == true)
             {
-                IList<Element> wallOrBeamElems = new FilteredElementCollector(rvtLinkIns.GetLinkDocument()).WherePasses(wallBeamFilter).WhereElementIsNotElementType().ToElements();
-                //wallOrBeamElems = wallOrBeamElems.Where(x => x.Id.IntegerValue.Equals(2047568)).ToList(); // Test
-                if(wallOrBeamElems.Count() > 0)
+                DateTime timeStart = DateTime.Now; // 計時開始 取得目前時間
+                List<OpeningInfo> openingInfoList = new List<OpeningInfo>(); // 儲存樑牆板資訊                
+                IList<ElementFilter> elementFilters = new List<ElementFilter>(); // 儲存樑牆的RevitLink
+                elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_Walls)); // 牆
+                elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_StructuralFraming)); // 樑
+                elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_Floors)); // 樓板
+                LogicalOrFilter wallBeamFilter = new LogicalOrFilter(elementFilters);
+                foreach (RevitLinkInstance rvtLinkIns in rvtLinkInsList)
                 {
-                    try
+                    IList<Element> wallOrBeamElems = new FilteredElementCollector(rvtLinkIns.GetLinkDocument()).WherePasses(wallBeamFilter).WhereElementIsNotElementType().ToElements();
+                    //wallOrBeamElems = wallOrBeamElems.Where(x => x.Id.IntegerValue.Equals(2047568)).ToList(); // Test
+                    if (wallOrBeamElems.Count() > 0)
                     {
-                        foreach (Element elem in wallOrBeamElems)
+                        try
                         {
-                            string wallFamilyName = string.Empty;
-                            string wallTypeName = string.Empty;
-                            if (elem is Wall)
+                            foreach (Element elem in wallOrBeamElems)
                             {
-                                Wall wall = elem as Wall;
-                                wallFamilyName = wall.WallType.FamilyName;
-                                wallTypeName = wall.WallType.Name;
-                            }
-                            if (!wallFamilyName.Equals("帷幕牆") && !wallTypeName.Contains("輕隔間") && !wallTypeName.Contains("琺瑯") && !wallTypeName.Contains("廁所隔牆")) // 如果是帷幕牆或輕隔間或琺瑯牆則不開口
-                            {
-                                Options opt = new Options();
-                                opt.ComputeReferences = true;
-                                opt.DetailLevel = doc.ActiveView.DetailLevel;
-                                GeometryElement geomElem = elem.get_Geometry(opt);
-                                // 儲存當前專案所有樑牆的Solid
-                                foreach (GeometryObject geomObj in geomElem)
+                                string wallFamilyName = string.Empty;
+                                string wallTypeName = string.Empty;
+                                if (elem is Wall)
                                 {
-                                    Solid solid = null;
-                                    solid = GetSymbolSolids(geomObj, rvtLinkIns, solid);
-                                    try
+                                    Wall wall = elem as Wall;
+                                    wallFamilyName = wall.WallType.FamilyName;
+                                    wallTypeName = wall.WallType.Name;
+                                }
+                                if (!wallFamilyName.Equals("帷幕牆") && !wallTypeName.Contains("輕隔間") && !wallTypeName.Contains("琺瑯") && !wallTypeName.Contains("廁所隔牆")) // 如果是帷幕牆或輕隔間或琺瑯牆則不開口
+                                {
+                                    Options opt = new Options();
+                                    opt.ComputeReferences = true;
+                                    opt.DetailLevel = doc.ActiveView.DetailLevel;
+                                    GeometryElement geomElem = elem.get_Geometry(opt);
+                                    // 儲存當前專案所有樑牆的Solid
+                                    foreach (GeometryObject geomObj in geomElem)
                                     {
-                                        if (solid.SurfaceArea != 0)
+                                        Solid solid = null;
+                                        solid = GetSymbolSolids(geomObj, rvtLinkIns, solid);
+                                        try
                                         {
-                                            FindInputSolidBBElems(rvtLinkIns.GetLinkDocument(), elem, solid, pipeDuctLinkDocs, openingInfoList); // 透過BoundingBox找到與牆樑Solid干涉的管
+                                            if (solid.SurfaceArea != 0)
+                                            {
+                                                FindInputSolidBBElems(rvtLinkIns.GetLinkDocument(), elem, solid, pipeDuctLinkDocs, openingInfoList); // 透過BoundingBox找到與牆樑Solid干涉的管
+                                            }
                                         }
-                                    }
-                                    catch (NullReferenceException)
-                                    {
-                                        string error = elem.Id.ToString();
+                                        catch (NullReferenceException)
+                                        {
+                                            string error = elem.Id.ToString();
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    catch (Autodesk.Revit.Exceptions.ArgumentNullException)
-                    {
-
-                    }
-                }
-            }
-
-            // 自動開口
-            TransactionGroup tranGrp1 = new TransactionGroup(doc, "自動開口");
-            tranGrp1.Start();
-            int amount = 0;
-            using (Transaction trans = new Transaction(doc, "放置開口"))
-            {
-                // 關閉警示視窗
-                FailureHandlingOptions options = trans.GetFailureHandlingOptions();
-                MyPreProcessor preproccessor = new MyPreProcessor();
-                options.SetClearAfterRollback(true);
-                options.SetFailuresPreprocessor(preproccessor);
-                trans.SetFailureHandlingOptions(options);
-                trans.Start();
-                List<FamilySymbol> openFSList = FindFS(doc); // 找到FamilySymbol
-                foreach (OpeningInfo openingInfo in openingInfoList)
-                {
-                    try
-                    {
-                        foreach (CrushElemInfo crushElemInfo in openingInfo.crushElemInfos)
+                        catch (Autodesk.Revit.Exceptions.ArgumentNullException)
                         {
-                            amount = PlaceOpening(doc, crushElemInfo, openFSList, amount);
+
                         }
                     }
-                    catch (Exception)
-                    {
-
-                    }
                 }
-                doc.Regenerate();
-                uidoc.RefreshActiveView();
-                trans.Commit();
-            }
-            // 旋轉修改開口參數
-            using (Transaction trans = new Transaction(doc, "旋轉修改開口參數"))
-            {
-                // 關閉警示視窗
-                FailureHandlingOptions options = trans.GetFailureHandlingOptions();
-                MyPreProcessor preproccessor = new MyPreProcessor();
-                options.SetClearAfterRollback(true);
-                options.SetFailuresPreprocessor(preproccessor);
-                trans.SetFailureHandlingOptions(options);
-                trans.Start();
-                RotateEditOpening(doc, openingInfoList);
-                doc.Regenerate();
-                uidoc.RefreshActiveView();
-                trans.Commit();
-            }
-            // 計算底部高程
-            using(Transaction trans = new Transaction(doc, "計算底部高程"))
-            {
-                trans.Start();
-                EditBottomElevation(doc);
-                doc.Regenerate();
-                uidoc.RefreshActiveView();
-                trans.Commit();
-            }
-            List<int> deleteIds = new List<int>();
-            // 查詢新增的開口修改位置後, 是否LocalPoint重複, 重複則移除
-            using(Transaction trans = new Transaction(doc, "移除重疊開口"))
-            {
-                trans.Start();
+
+                // 自動開口
+                TransactionGroup tranGrp1 = new TransactionGroup(doc, "自動開口");
+                tranGrp1.Start();
+                int amount = 0;
+                using (Transaction trans = new Transaction(doc, "放置開口"))
+                {
+                    // 關閉警示視窗
+                    FailureHandlingOptions options = trans.GetFailureHandlingOptions();
+                    MyPreProcessor preproccessor = new MyPreProcessor();
+                    options.SetClearAfterRollback(true);
+                    options.SetFailuresPreprocessor(preproccessor);
+                    trans.SetFailureHandlingOptions(options);
+                    trans.Start();
+                    List<FamilySymbol> openFSList = FindFS(doc); // 找到FamilySymbol
+                    foreach (OpeningInfo openingInfo in openingInfoList)
+                    {
+                        try
+                        {
+                            foreach (CrushElemInfo crushElemInfo in openingInfo.crushElemInfos)
+                            {
+                                amount = PlaceOpening(doc, crushElemInfo, openFSList, amount);
+                            }
+                        }
+                        catch (Exception)
+                        {
+
+                        }
+                    }
+                    doc.Regenerate();
+                    uidoc.RefreshActiveView();
+                    trans.Commit();
+                }
+                // 旋轉修改開口參數
+                using (Transaction trans = new Transaction(doc, "旋轉修改開口參數"))
+                {
+                    // 關閉警示視窗
+                    FailureHandlingOptions options = trans.GetFailureHandlingOptions();
+                    MyPreProcessor preproccessor = new MyPreProcessor();
+                    options.SetClearAfterRollback(true);
+                    options.SetFailuresPreprocessor(preproccessor);
+                    trans.SetFailureHandlingOptions(options);
+                    trans.Start();
+                    RotateEditOpening(doc, openingInfoList);
+                    doc.Regenerate();
+                    uidoc.RefreshActiveView();
+                    trans.Commit();
+                }
+                // 計算底部高程
+                using (Transaction trans = new Transaction(doc, "計算底部高程"))
+                {
+                    trans.Start();
+                    EditBottomElevation(doc);
+                    doc.Regenerate();
+                    uidoc.RefreshActiveView();
+                    trans.Commit();
+                }
+                List<int> deleteIds = new List<int>();
+                // 查詢新增的開口修改位置後, 是否LocalPoint重複, 重複則移除
+                using (Transaction trans = new Transaction(doc, "移除重疊開口"))
+                {
+                    trans.Start();
+                    foreach (int id in newOpeningIds)
+                    {
+                        ElementId elemId = new ElementId(id);
+                        FamilyInstance newOpening = doc.GetElement(elemId) as FamilyInstance;
+                        LocationPoint lp = newOpening.Location as LocationPoint;
+                        XYZ xyz = lp.Point;
+                        // 確認是否有原開口在同座標
+                        bool trueOrFalse = false;
+                        double xyzX = Math.Round(xyz.X, 8, MidpointRounding.AwayFromZero);
+                        double xyzY = Math.Round(xyz.Y, 8, MidpointRounding.AwayFromZero);
+                        double xyzZ = Math.Round(xyz.Z, 8, MidpointRounding.AwayFromZero);
+                        foreach (XYZ openingXYZ in openingXYZs)
+                        {
+                            if (Math.Round(openingXYZ.X, 8, MidpointRounding.AwayFromZero).Equals(xyzX) &&
+                               Math.Round(openingXYZ.Y, 8, MidpointRounding.AwayFromZero).Equals(xyzY) &&
+                               Math.Round(openingXYZ.Z, 8, MidpointRounding.AwayFromZero).Equals(xyzZ))
+                            {
+                                trueOrFalse = true;
+                                break;
+                            }
+                        }
+                        // 刪除同座標的開口
+                        if (trueOrFalse == true)
+                        {
+                            doc.Delete(elemId);
+                            amount--;
+                            // 找到newOpeningIds內的Id名稱刪除
+                            deleteIds.Add(id);
+                        }
+                    }
+                    doc.Regenerate();
+                    uidoc.RefreshActiveView();
+                    trans.Commit();
+                }
+                tranGrp1.Assimilate();
+
+                DateTime timeEnd = DateTime.Now; // 計時結束 取得目前時間
+                TimeSpan totalTime = timeEnd - timeStart;
+                string newOpeningId = string.Empty;
+                // 刪除重疊開口ID
+                foreach (int id in deleteIds)
+                {
+                    newOpeningIds.Remove(id);
+                }
+                int i = 1;
                 foreach (int id in newOpeningIds)
                 {
-                    ElementId elemId = new ElementId(id);
-                    FamilyInstance newOpening = doc.GetElement(elemId) as FamilyInstance;
-                    LocationPoint lp = newOpening.Location as LocationPoint;
-                    XYZ xyz = lp.Point;
-                    // 確認是否有原開口在同座標
-                    bool trueOrFalse = false;
-                    double xyzX = Math.Round(xyz.X, 8, MidpointRounding.AwayFromZero);
-                    double xyzY = Math.Round(xyz.Y, 8, MidpointRounding.AwayFromZero);
-                    double xyzZ = Math.Round(xyz.Z, 8, MidpointRounding.AwayFromZero);
-                    foreach (XYZ openingXYZ in openingXYZs)
-                    {
-                        if (Math.Round(openingXYZ.X, 8, MidpointRounding.AwayFromZero).Equals(xyzX) &&
-                           Math.Round(openingXYZ.Y, 8, MidpointRounding.AwayFromZero).Equals(xyzY) &&
-                           Math.Round(openingXYZ.Z, 8, MidpointRounding.AwayFromZero).Equals(xyzZ))
-                        {
-                            trueOrFalse = true;
-                            break;
-                        }
-                    }
-                    // 刪除同座標的開口
-                    if (trueOrFalse == true)
-                    {
-                        doc.Delete(elemId);
-                        amount--;
-                        // 找到newOpeningIds內的Id名稱刪除
-                        deleteIds.Add(id);
-                    }
+                    newOpeningId += "\n" + i + ". " + id;
+                    i++;
                 }
-                doc.Regenerate();
-                uidoc.RefreshActiveView();
-                trans.Commit();
+                TaskDialog.Show("Revit", "耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒 " + "\n\n共放置 " + amount + " 個開口。\n"/* + newOpeningId*/);
             }
-            tranGrp1.Assimilate();
-
-            DateTime timeEnd = DateTime.Now; // 計時結束 取得目前時間
-            TimeSpan totalTime = timeEnd - timeStart;
-            string newOpeningId = string.Empty;
-            // 刪除重疊開口ID
-            foreach(int id in deleteIds)
-            {
-                newOpeningIds.Remove(id);
-            }
-            int i = 1;
-            foreach(int id in newOpeningIds)
-            {
-                newOpeningId += "\n" + i + ". " + id;
-                i++;
-            }
-            TaskDialog.Show("Revit", "耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒 " + "\n\n共放置 " + amount + " 個開口。\n"/* + newOpeningId*/);
 
             return Result.Succeeded;
         }
