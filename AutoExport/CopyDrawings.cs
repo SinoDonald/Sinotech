@@ -134,8 +134,8 @@ namespace AutoExport
                         {
                             try
                             {
-                                newView.ViewName = vw.Name + " 複製 " + i; // 2018
-                                //newView.Name = vw.Name + " 複製 " + i; // 2020
+                                //newView.ViewName = vw.Name + " 複製 " + i; // 2018
+                                newView.Name = vw.Name + " 複製 " + i; // 2020
                             }
                             catch (Autodesk.Revit.Exceptions.ArgumentException)
                             {

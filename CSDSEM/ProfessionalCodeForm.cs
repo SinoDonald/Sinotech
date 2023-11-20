@@ -3,15 +3,9 @@ using Autodesk.Revit.UI;
 using Sinotech;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace CSDSEM
 {
@@ -19,6 +13,7 @@ namespace CSDSEM
     {
         public string filePath = string.Empty; // 專業代碼路徑
         public List<ProfessionalCode> professionalCodeList = new List<ProfessionalCode>();
+        public List<ProfessionalCode> combinePCodes = new List<ProfessionalCode>(); // 整合重複的專業代碼
         public class ProfessionalCode
         {
             public List<string> comments = new List<string>();
@@ -28,8 +23,8 @@ namespace CSDSEM
         public ProfessionalCodeForm(List<RevitLinkInstance> rvtLinkInsList)
         {
             InitializeComponent();
-            PacketPathName packetPathName = new PacketPathName();
-            this.filePath = Path.Combine(packetPathName.assembly, "專業代碼.txt");
+            Sinotech_Button sinotech_Button = new Sinotech_Button();
+            this.filePath = Path.Combine(sinotech_Button.assembly, "專業代碼.txt");
             LoadProfessionalCode(); // 載入專業代碼
             CreateNodes(rvtLinkInsList); // 新增節點
             CenterToParent();
@@ -153,13 +148,6 @@ namespace CSDSEM
             {
                 TaskDialog.Show("Revit", "請先選擇連結專案");
             }
-            // 整合重複的
-            List<ProfessionalCode> combinePCodes = new List<ProfessionalCode>();
-            List<string> pCodes = professionalCodeList.Select(x => x.professionalCode).Distinct().ToList();
-            foreach(string pCode in pCodes)
-            {
-                ProfessionalCode combinePCode = new ProfessionalCode();
-            }
         }
         // 清除專業代碼
         private void deleteBtn_Click(object sender, EventArgs e)
@@ -170,6 +158,22 @@ namespace CSDSEM
         // 完成
         private void finishBtn_Click(object sender, EventArgs e)
         {
+            // 整合重複的
+            List<string> pCodes = professionalCodeList.Select(x => x.professionalCode).Distinct().ToList();
+            foreach (string pCode in pCodes)
+            {
+                ProfessionalCode combinePCode = new ProfessionalCode();
+                combinePCode.professionalCode = pCode;
+                List<ProfessionalCode> sameProfessionalCodes = professionalCodeList.Where(x => x.professionalCode.Equals(pCode)).ToList();
+                foreach (ProfessionalCode sameProfessionalCode in sameProfessionalCodes)
+                {
+                    foreach (string comments in sameProfessionalCode.comments)
+                    {
+                        combinePCode.comments.Add(comments);
+                    }
+                }
+                combinePCodes.Add(combinePCode);
+            }
             trueOrFalse = true;
             Close();
         }

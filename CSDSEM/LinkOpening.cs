@@ -7,6 +7,7 @@ using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static CSDSEM.ProfessionalCodeForm;
 
 namespace CSDSEM
 {
@@ -169,6 +170,8 @@ namespace CSDSEM
             professionalCodeForm.ShowDialog();
             if(professionalCodeForm.trueOrFalse == true)
             {
+                List<ProfessionalCode> combinePCodes = professionalCodeForm.combinePCodes; // 整合重複的專業代碼
+
                 DateTime timeStart = DateTime.Now; // 計時開始 取得目前時間
                 List<OpeningInfo> openingInfoList = new List<OpeningInfo>(); // 儲存樑牆板資訊                
                 IList<ElementFilter> elementFilters = new List<ElementFilter>(); // 儲存樑牆的RevitLink
@@ -278,7 +281,7 @@ namespace CSDSEM
                 using (Transaction trans = new Transaction(doc, "計算底部高程"))
                 {
                     trans.Start();
-                    EditBottomElevation(doc);
+                    EditBottomElevation(doc, combinePCodes);
                     doc.Regenerate();
                     uidoc.RefreshActiveView();
                     trans.Commit();
@@ -1402,7 +1405,7 @@ namespace CSDSEM
             }
         }
         // 計算底部高程並旋轉
-        private void EditBottomElevation(Document doc)
+        private void EditBottomElevation(Document doc, List<ProfessionalCode> combinePCodes)
         {
             IList<ElementFilter> pipeDuctFilters = new List<ElementFilter>(); // 清空過濾器  
             ElementCategoryFilter pipeFilter = new ElementCategoryFilter(BuiltInCategory.OST_PipeAccessory); // 管道開口
@@ -1476,18 +1479,25 @@ namespace CSDSEM
                     // 修改專業代碼
                     para = opening.LookupParameter("專業代碼");
                     string comment = opening.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsString(); // 備註
-                    if(comment.Contains("AD") || comment.Contains("AP") || comment.Contains("EP"))
+                    try
                     {
-                        para.Set("CQ824A-ECS");
+                        string pipeCode = comment.Split('_')[0];
+                        ProfessionalCode combinePCode = combinePCodes.Where(x => x.comments.Any(y => pipeCode.Contains(y))).FirstOrDefault();
+                        para.Set(combinePCode.professionalCode);
                     }
-                    else if (comment.Contains("EE"))
-                    {
-                        para.Set("CQ824A-E");
-                    }
-                    else if(comment.Contains("DS") || comment.Contains("FP") || comment.Contains("WS"))
-                    {
-                        para.Set("CQ824A-M");
-                    }
+                    catch (Exception) { }
+                    //if (comment.Contains("AD") || comment.Contains("AP") || comment.Contains("EP"))
+                    //{
+                    //    para.Set("CQ824A-ECS");
+                    //}
+                    //else if (comment.Contains("EE"))
+                    //{
+                    //    para.Set("CQ824A-E");
+                    //}
+                    //else if(comment.Contains("DS") || comment.Contains("FP") || comment.Contains("WS"))
+                    //{
+                    //    para.Set("CQ824A-M");
+                    //}
                 }
                 catch (Exception)
                 {

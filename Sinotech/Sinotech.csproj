@@ -166,6 +166,54 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\干涉報告.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動翻柱.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\規範詳圖.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PCCES.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\手動標籤.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動升版.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動接合.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動開口.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動標籤.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\更新Excel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\更新比例尺.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\視圖搬移.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\視圖複製.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\雲形線編號.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\圖紙更新.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\圖紙匯出.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

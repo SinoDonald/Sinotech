@@ -1,8 +1,9 @@
 中興自動化
 
-Revit 2018 V2.4.1
-Revit 2019 V2.4.1
-Revit 2020 V2.4.1
+Revit 2018 V2.5
+Revit 2019 V2.5
+Revit 2020 V2.5
+Revit 2022 V2.5
 自動開口 V1.4
 
 此產品為中興工程所有，請勿違法使用。
@@ -12,12 +13,15 @@ Revit 2020 V2.4.1
 C:\ProgramData\Autodesk\Revit\Addins\2018
 C:\ProgramData\Autodesk\Revit\Addins\2019
 C:\ProgramData\Autodesk\Revit\Addins\2020
+C:\ProgramData\Autodesk\Revit\Addins\2022
 
 Revit_2018_Setup
 Revit_2019_Setup
 Revit_2020_Setup
+Revit_2022_Setup
 
-Revit 2018 V2.4.1
-Revit 2019 V2.4.1
-Revit 2020 V2.4.1
+Revit 2018 V2.5
+Revit 2019 V2.5
+Revit 2020 V2.5
+Revit 2022 V2.5
 
