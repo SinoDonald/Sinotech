@@ -2,6 +2,10 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+//using ClosedXML.Excel;
+//using DocumentFormat.OpenXml;
+//using DocumentFormat.OpenXml.Packaging;
+//using DocumentFormat.OpenXml.Spreadsheet;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.Model;
@@ -11,9 +15,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using static Sinotech.ReadExcel;
+using Parameter = Autodesk.Revit.DB.Parameter;
 
 namespace Sinotech
 {
@@ -36,6 +42,7 @@ namespace Sinotech
         } // 儲存Excel內Sheet的資料        
         public static List<ExcelCellData> ecDataList = new List<ExcelCellData>(); // 將Excel中Sheet的Cell資料都撈出來
         public static List<string> levelList = new List<string>(); // 所有樓層
+        public static string addinAssmeblyPath = Assembly.GetExecutingAssembly().Location; // dll路徑
 
         // 主程式
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -63,8 +70,8 @@ namespace Sinotech
                 try
                 {
                     DateTime timeStart = DateTime.Now; // 計時開始 取得目前時間
-
                     sheetNames = ExcelSheet(excelPath); // Excel中全部的Sheet
+
                     // 從專案中找到全部的圖框
                     familySymbolList = new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).OfCategory(BuiltInCategory.OST_TitleBlocks).Cast<FamilySymbol>().ToList();
                     CreateDrawings createDrawings = new CreateDrawings();
@@ -103,7 +110,7 @@ namespace Sinotech
                     List<string> checkSheets = createDrawings.checkSheets; // 選取的Sheet名稱
                     if (CreateDrawings.trueOrFalse == true && checkSheets.Count > 0) // 確定, 並且選取的Sheet大於0
                     {
-                        ecDataList = ExcelSheetData(checkSheets, excelPath); // 將Excel中Sheet的Cell資料都撈出來
+                        //ecDataList = ExcelSheetData(checkSheets, excelPath); // 將Excel中Sheet的Cell資料都撈出來
                         CreateFrames(doc, familySymbol, ecDataList); // 創建圖框, 並將參數寫入
                         
                         DateTime timeEnd = DateTime.Now; // 計時結束 取得目前時間
@@ -111,19 +118,19 @@ namespace Sinotech
                         TaskDialog.Show("Revit", "耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒 " + "\n\n完成。");
                     }
                 }
-                catch (ArgumentException)
+                catch (ArgumentException ex)
                 {
-                    TaskDialog.Show("Revit", "請選擇Excel檔");
+                    TaskDialog.Show("Revit", "請選擇Excel檔" + ex.Message + "\n" + ex.ToString());
                     return Result.Failed;
                 }
-                catch (FileNotFoundException)
+                catch (FileNotFoundException ex)
                 {
-                    TaskDialog.Show("Revit", "找不到Excel檔");
+                    TaskDialog.Show("Revit", "找不到Excel檔" + ex.Message + "\n" + ex.ToString());
                     return Result.Failed;
                 }
-                catch (DirectoryNotFoundException)
+                catch (DirectoryNotFoundException ex)
                 {
-                    TaskDialog.Show("Revit", "找不到Excel檔");
+                    TaskDialog.Show("Revit", "找不到資料夾" + ex.Message + "\n" + ex.ToString());
                     return Result.Failed;
                 }
                 catch (Exception ex)
@@ -136,8 +143,57 @@ namespace Sinotech
             return Result.Succeeded;
         }
         // 讀取Excel Sheet
+        //private List<string> ExcelSheet(string filePath)
+        //{
+        //    ecDataList = new List<ExcelCellData>();
+        //    List<string> sheetNames = new List<string>();
+        //    try
+        //    {
+        //        using (XLWorkbook workbook = new XLWorkbook(filePath))
+        //        {
+        //            foreach(IXLWorksheet worksheet in workbook.Worksheets)
+        //            {
+        //                string sheetName = worksheet.Name;
+        //                sheetNames.Add(sheetName);
+        //                IXLRows dataRows = worksheet.RowsUsed();
+        //                int i = 0;
+        //                foreach (IXLRow dataRow in dataRows)
+        //                {
+        //                    ExcelCellData ecData = new ExcelCellData();
+        //                    ecData.sheetName = sheetName; // Sheet名稱
+        //                    ecData.rowCount = i; // 第幾列
+
+        //                    foreach(IXLCell cell in dataRow.Cells())
+        //                    {
+        //                        try
+        //                        {
+        //                            var value = cell.Value;
+        //                            ecData.cellValues.Add(value.ToString());
+        //                        }
+        //                        catch(Exception ex)
+        //                        {
+        //                            string error = ex.Message + "\n" + ex.ToString();
+        //                        }
+        //                    }
+        //                    ecDataList.Add(ecData);
+        //                    i++;
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        TaskDialog.Show("Error", ex.Message + "\n" + ex.ToString());
+        //    }
+        //    return sheetNames;
+        //}
         public static List<string> ExcelSheet(string filePath)
         {
+            //List<string> dllNames = new List<string>() { "ICSharpCode.SharpZipLib", "NPOI.Core", "NPOI.OOXML", "NPOI.OpenXml4Net", "NPOI.OpenXmlFormats" };
+            //foreach (string dllName in dllNames)
+            //{
+            //    LoadExtraDll(dllName);
+            //}
             List<string> sheetNames = new List<string>();
             //讀取專案內中的sample.xls 的excel 檔案
             Stream stream = null;
@@ -149,10 +205,12 @@ namespace Sinotech
                 stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 workbook = new XSSFWorkbook(stream);
             }
-            catch
+            catch(Exception ex)
             {
-                stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                workbook = new HSSFWorkbook(stream);
+                string error = ex.Message + "\n" + ex.ToString();
+                //stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                //workbook = new HSSFWorkbook(stream);
+                //TaskDialog.Show("Error", "Test");
             }
             int sheetCounts = workbook.NumberOfSheets; // Sheet的數量
             for (int i = 0; i < sheetCounts; i++)
@@ -162,6 +220,7 @@ namespace Sinotech
 
             return sheetNames;
         }
+
         // 將Excel中Sheet的Cell資料都撈出來
         private static List<ExcelCellData> ExcelSheetData(List<string> checkSheets, string excelPath)
         {
@@ -230,6 +289,7 @@ namespace Sinotech
 
             return ecDataList;
         }
+
         // 判別Cell格式後, 並儲存到ecData
         private static ExcelCellData ExcelFormatCellData(IWorkbook workbook, ICell cellData, ExcelCellData ecData)
         {
@@ -520,5 +580,48 @@ namespace Sinotech
 
             return double.Parse((string)row["myExpression"]);
         }
+        // 外部讀取dll
+        protected void Application_Start()
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(MyAssemblyResolver);
+        }
+        static Assembly MyAssemblyResolver(object sender, ResolveEventArgs args)
+        {
+            AppDomain domain = (AppDomain)sender;
+            Assembly assembly = null;
+            List<string> dllNames = new List<string>() { "ICSharpCode.SharpZipLib", "NPOI.Core", "NPOI.OOXML", "NPOI.OpenXml4Net", "NPOI.OpenXmlFormats" };
+            string folderName = @"C:\ProgramData\Autodesk\Revit\Addins\2020\Sinotech\";
+            foreach(string dllName in dllNames)
+            {
+                byte[] rawAssembly = File.ReadAllBytes(Path.Combine(folderName, dllName + ".dll"));
+                byte[] rawSymbolStore = File.ReadAllBytes(Path.Combine(folderName, dllName + ".pdb"));
+                assembly = domain.Load(rawAssembly, rawSymbolStore);
+            }
+            return assembly;
+        }
+        public static void LoadExtraDll(string dllName)
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += (object sender, ResolveEventArgs args) =>
+            {
+                if (args.Name.Contains(dllName))
+                {
+                    Assembly assembly = Assembly.GetExecutingAssembly();
+                    string dirPath = assembly.Location;
+                    string filename = Path.GetDirectoryName(dirPath);
+                    filename = Path.Combine(Path.GetDirectoryName(addinAssmeblyPath), $"{dllName}.dll");
+                    if (File.Exists(filename))
+                    {
+                        try
+                        {
+                            Assembly loadAssembly = Assembly.LoadFrom(filename);
+                            //TaskDialog.Show("Revit", loadAssembly.Location + "\nSuccess.");
+                        }
+                        catch (Exception ex) { TaskDialog.Show("Error", ex.Message + "\n" + ex.ToString()); }
+                    }
+                }
+                return null;
+            };
+        }
+
     }
 }

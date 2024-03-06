@@ -108,7 +108,9 @@ namespace AutoExport
                             // 電腦圖號
                             try
                             {
-                                string picNumber = view.LookupParameter("圖框-電腦圖號").AsString();
+                                string picNumber = string.Empty;
+                                try { picNumber = view.LookupParameter("圖框-電腦圖號").AsString(); } catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+
                                 if (picNumber != null)
                                 {
                                     viewInfo.picNumber = picNumber;
@@ -368,7 +370,7 @@ namespace AutoExport
                                             printManager.PrintSetup.CurrentPrintSetting = chosedPrintSetting;
                                             printManager.Apply();
                                             //輸出位置
-                                            printManager.PrintToFileName = path + "\\" + viewInfo.picNumber + ".pdf";
+                                            printManager.PrintToFileName = Path.Combine(path, viewInfo.picNumber + ".pdf");
                                             printManager.Apply();
                                             printManager.SubmitPrint(viewInfo.view as View);
                                             GC.Collect();
@@ -379,7 +381,7 @@ namespace AutoExport
                                         }
                                         catch (Exception)
                                         {
-                                            Autodesk.Revit.UI.TaskDialog.Show("ERROR", "Couldn't access PDF driver registry settings");
+                                            //TaskDialog.Show("ERROR", "Couldn't access PDF driver registry settings");
                                         }
                                     }
 
@@ -388,7 +390,7 @@ namespace AutoExport
                             }
                             catch (Exception ex)
                             {
-                                Autodesk.Revit.UI.TaskDialog.Show("Error", ex.Message + "\n" + ex.ToString());
+                                TaskDialog.Show("Error", ex.Message + "\n" + ex.ToString());
                             }
                         }
                     }
@@ -396,15 +398,12 @@ namespace AutoExport
                     // 計時結束 取得目前時間
                     DateTime timeEnd = DateTime.Now;
                     TimeSpan totalTime = timeEnd - timeStart;
-                    Autodesk.Revit.UI.TaskDialog.Show("Revit", "耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒 ");
-                    //// 顯示匯出位址
-                    //MessageBox.Show("一、" + chooseViewSheets.Count() + " 個圖面匯出DWG檔，儲存路徑：\n" + path +
-                    //                "\n\n二、耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒 ", "提示", MessageBoxButtons.OK);
+                    TaskDialog.Show("Revit", "耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒 ");
                 }
             }
             catch (Exception ex)
             {
-                Autodesk.Revit.UI.TaskDialog.Show("Error", ex.Message + "\n" + ex.ToString());
+                TaskDialog.Show("Error", ex.Message + "\n" + ex.ToString());
             }
 
             Close(); // 關閉
