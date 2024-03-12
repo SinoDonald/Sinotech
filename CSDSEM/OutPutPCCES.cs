@@ -99,14 +99,14 @@ namespace CSDSEM
                 }
             }
             if (!filePath.Equals("") && filePath != null)
-            {                
+            {
                 CloseExcel(filePath); // 查詢Excel是否開啟中
 
                 DateTime timeStart = DateTime.Now; // 計時開始 取得目前時間
 
                 // 讀取Excel中的All Sheet, 將比對的套管、開口, 對應名稱&工程編號撈出紀錄
                 UpdateExcel updateExcel = new UpdateExcel();
-                updateExcel.NameAndNumber(filePath, openingContrastList);
+                openingContrastList = updateExcel.ReadExcel(filePath);
                 List<ItemDescription> ItemDescriptions = updateExcel.ItemDescriptions; // A1、A2、A3配合各標名稱
 
                 // 收集專案中所有的Level, 並且依高程排序

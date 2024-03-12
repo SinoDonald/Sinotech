@@ -1,24 +1,13 @@
-﻿using Autodesk.Revit.ApplicationServices;
-using Autodesk.Revit.Attributes;
+﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-//using ClosedXML.Excel;
-//using DocumentFormat.OpenXml;
-//using DocumentFormat.OpenXml.Packaging;
-//using DocumentFormat.OpenXml.Spreadsheet;
-using NPOI.HSSF.UserModel;
-using NPOI.SS.UserModel;
-using NPOI.XSSF.Model;
-using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Windows.Forms;
-using static Sinotech.ReadExcel;
 using Parameter = Autodesk.Revit.DB.Parameter;
 
 namespace Sinotech
@@ -32,16 +21,7 @@ namespace Sinotech
             public string number { get; set; }
         } // 圖紙與圖號
         public static List<FamilySymbol> familySymbolList = new List<FamilySymbol>(); // 從專案中找到全部的圖框
-        public static List<string> sheetNames = new List<string>(); // Excel中全部的Sheet        
-        public class ExcelCellData
-        {
-            public string sheetName = string.Empty; // Sheet名稱
-            public int rowCount = 0; // 第幾列
-            public List<string> cellValues = new List<string>(); // 值
-            public bool header = false; // 是否為標頭
-        } // 儲存Excel內Sheet的資料        
-        public static List<ExcelCellData> ecDataList = new List<ExcelCellData>(); // 將Excel中Sheet的Cell資料都撈出來
-        public static List<string> levelList = new List<string>(); // 所有樓層
+        public static List<string> sheetNames = new List<string>(); // Excel中全部的Sheet
         public static string addinAssmeblyPath = Assembly.GetExecutingAssembly().Location; // dll路徑
 
         // 主程式
@@ -70,7 +50,9 @@ namespace Sinotech
                 try
                 {
                     DateTime timeStart = DateTime.Now; // 計時開始 取得目前時間
-                    sheetNames = ExcelSheet(excelPath); // Excel中全部的Sheet
+                    EPPlus epPlus = new EPPlus();
+                    Tuple<List<string>, List<ExcelCellData>> readExcel = epPlus.ReadExcel(excelPath);
+                    sheetNames = readExcel.Item1; // Excel中全部的Sheet
 
                     // 從專案中找到全部的圖框
                     familySymbolList = new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).OfCategory(BuiltInCategory.OST_TitleBlocks).Cast<FamilySymbol>().ToList();
@@ -110,8 +92,11 @@ namespace Sinotech
                     List<string> checkSheets = createDrawings.checkSheets; // 選取的Sheet名稱
                     if (CreateDrawings.trueOrFalse == true && checkSheets.Count > 0) // 確定, 並且選取的Sheet大於0
                     {
-                        //ecDataList = ExcelSheetData(checkSheets, excelPath); // 將Excel中Sheet的Cell資料都撈出來
-                        CreateFrames(doc, familySymbol, ecDataList); // 創建圖框, 並將參數寫入
+                        foreach(string checkSheet in checkSheets)
+                        {
+                            List<ExcelCellData> ecDataList = readExcel.Item2.Where(x => x.sheetName.Equals(checkSheet)).ToList(); // 將Excel中Sheet的Cell資料都撈出來
+                            CreateFrames(doc, familySymbol, ecDataList); // 創建圖框, 並將參數寫入
+                        }
                         
                         DateTime timeEnd = DateTime.Now; // 計時結束 取得目前時間
                         TimeSpan totalTime = timeEnd - timeStart;
@@ -141,232 +126,6 @@ namespace Sinotech
             }
 
             return Result.Succeeded;
-        }
-        // 讀取Excel Sheet
-        //private List<string> ExcelSheet(string filePath)
-        //{
-        //    ecDataList = new List<ExcelCellData>();
-        //    List<string> sheetNames = new List<string>();
-        //    try
-        //    {
-        //        using (XLWorkbook workbook = new XLWorkbook(filePath))
-        //        {
-        //            foreach(IXLWorksheet worksheet in workbook.Worksheets)
-        //            {
-        //                string sheetName = worksheet.Name;
-        //                sheetNames.Add(sheetName);
-        //                IXLRows dataRows = worksheet.RowsUsed();
-        //                int i = 0;
-        //                foreach (IXLRow dataRow in dataRows)
-        //                {
-        //                    ExcelCellData ecData = new ExcelCellData();
-        //                    ecData.sheetName = sheetName; // Sheet名稱
-        //                    ecData.rowCount = i; // 第幾列
-
-        //                    foreach(IXLCell cell in dataRow.Cells())
-        //                    {
-        //                        try
-        //                        {
-        //                            var value = cell.Value;
-        //                            ecData.cellValues.Add(value.ToString());
-        //                        }
-        //                        catch(Exception ex)
-        //                        {
-        //                            string error = ex.Message + "\n" + ex.ToString();
-        //                        }
-        //                    }
-        //                    ecDataList.Add(ecData);
-        //                    i++;
-        //                }
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        TaskDialog.Show("Error", ex.Message + "\n" + ex.ToString());
-        //    }
-        //    return sheetNames;
-        //}
-        public static List<string> ExcelSheet(string filePath)
-        {
-            //List<string> dllNames = new List<string>() { "ICSharpCode.SharpZipLib", "NPOI.Core", "NPOI.OOXML", "NPOI.OpenXml4Net", "NPOI.OpenXmlFormats" };
-            //foreach (string dllName in dllNames)
-            //{
-            //    LoadExtraDll(dllName);
-            //}
-            List<string> sheetNames = new List<string>();
-            //讀取專案內中的sample.xls 的excel 檔案
-            Stream stream = null;
-            IWorkbook workbook = null;
-            //ISheet sheet = null;
-            // 07年以後的版本使用XSSFWorkbook和XSSFSheet，03年以前的使用HSSFWorkbook和HSSFSheet
-            try
-            {
-                stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                workbook = new XSSFWorkbook(stream);
-            }
-            catch(Exception ex)
-            {
-                string error = ex.Message + "\n" + ex.ToString();
-                //stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                //workbook = new HSSFWorkbook(stream);
-                //TaskDialog.Show("Error", "Test");
-            }
-            int sheetCounts = workbook.NumberOfSheets; // Sheet的數量
-            for (int i = 0; i < sheetCounts; i++)
-            {
-                sheetNames.Add(workbook.GetSheetName(i));
-            }
-
-            return sheetNames;
-        }
-
-        // 將Excel中Sheet的Cell資料都撈出來
-        private static List<ExcelCellData> ExcelSheetData(List<string> checkSheets, string excelPath)
-        {
-            ecDataList = new List<ExcelCellData>();
-
-            Stream stream = null;
-            IWorkbook workbook = null;
-            ISheet sheet = null;//上邊這幾行都是固定格式，如果你不深究，記著就行
-            ExcelCellData ecData = new ExcelCellData();
-            foreach (string sheetName in checkSheets)
-            {
-                try // Excel 2007以後
-                {
-                    stream = new FileStream(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    workbook = new XSSFWorkbook(stream);
-                    sheet = (XSSFSheet)workbook.GetSheet(sheetName);
-                }
-                catch // Excel 2007以前
-                {
-                    stream = new FileStream(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                    workbook = new HSSFWorkbook(stream);
-                    sheet = (HSSFSheet)workbook.GetSheet(sheetName);
-                }
-                IRow row = null;
-                int lastRowIndex = -1;
-                if (sheet.PhysicalNumberOfRows > 0)
-                {
-                    lastRowIndex = sheet.LastRowNum; // 讀取row所涵蓋的範圍
-                    for (int i = 0; i <= lastRowIndex; i++)
-                    {
-                        try
-                        {
-                            row = (XSSFRow)sheet.GetRow(i); // 2007以後
-                        }
-                        catch
-                        {
-                            row = (HSSFRow)sheet.GetRow(i); // 2007以前
-                        }
-                        if (row != null)
-                        {
-                            int lastCellIndex = row.LastCellNum; // 讀取此列cell的數量
-                            ICell cellData = null;
-                            try
-                            {
-                                ecData = new ExcelCellData();
-                                ecData.sheetName = sheetName; // Sheet名稱
-                                ecData.rowCount = i; // 第幾列
-                                for (int j = 0; j < lastCellIndex; j++)
-                                {
-                                    cellData = row.GetCell(j);
-                                    ecData = ExcelFormatCellData(workbook, cellData, ecData);  // 判別Cell格式後, 並儲存到ecData
-                                }
-                                if (!ecData.cellValues[0].Equals("")) // 圖號不得為空才儲存
-                                {
-                                    ecDataList.Add(ecData);
-                                }
-                            }
-                            catch (NullReferenceException)
-                            {
-
-                            }
-                        }
-                    }
-                }
-            }
-
-            return ecDataList;
-        }
-
-        // 判別Cell格式後, 並儲存到ecData
-        private static ExcelCellData ExcelFormatCellData(IWorkbook workbook, ICell cellData, ExcelCellData ecData)
-        {
-            try
-            {
-                StylesTable st = ((XSSFWorkbook)workbook).GetStylesSource();
-                XSSFDataFormat df = new XSSFDataFormat(st);
-                string formatCode = df.GetFormat(cellData.CellStyle.DataFormat);
-                // 如果儲存格式是數值
-                if (cellData.CellType == NPOI.SS.UserModel.CellType.Numeric)
-                {
-                    if (formatCode.EndsWith("%"))
-                    {
-                        double dataValue = Convert.ToDouble(cellData.ToString()) * 100;
-                        string value = Math.Round(dataValue, 2, MidpointRounding.AwayFromZero).ToString("0.00") + "%";
-                        ecData.cellValues.Add(value);
-                    }
-                    else
-                    {
-                        ecData.cellValues.Add(cellData.ToString());
-                    }
-                }
-                // 如果儲存格式是公式
-                else if (cellData.CellType == NPOI.SS.UserModel.CellType.Formula)
-                {
-                    if (formatCode.EndsWith("%"))
-                    {
-                        double dataValue = cellData.NumericCellValue * 100;
-                        string value = Math.Round(dataValue, 2, MidpointRounding.AwayFromZero).ToString("0.00") + "%";
-                        ecData.cellValues.Add(value);
-                    }
-                    else
-                    {
-                        try
-                        {
-                            string value = string.Empty;
-                            IFormulaEvaluator formulaEvaluator; // 運算公式
-                            try
-                            {
-                                formulaEvaluator = new XSSFFormulaEvaluator(workbook);
-                            }
-                            catch
-                            {
-                                formulaEvaluator = new HSSFFormulaEvaluator(workbook);
-                            }
-                            var formulaValue = formulaEvaluator.Evaluate(cellData); // 公式計算值
-                            if (formulaValue.CellType == NPOI.SS.UserModel.CellType.String)
-                            {
-                                value = formulaValue.StringValue.ToString();  // 執行公式後的值為字串型態
-                            }
-                            else if (formulaValue.CellType == NPOI.SS.UserModel.CellType.Numeric)
-                            {
-                                value = formulaValue.NumberValue.ToString();    // 執行公式後的值為數字型態
-                            }
-                            ecData.cellValues.Add(value);
-                        }
-                        catch (Exception)
-                        {
-                            ecData.cellValues.Add("資料錯誤");
-                        }
-                    }
-                }
-                else
-                {
-                    ecData.cellValues.Add(cellData.ToString());
-                }
-            }
-            catch (NullReferenceException)
-            {
-                ecData.cellValues.Add("");
-            }
-            catch (InvalidOperationException)
-            {
-                ecData.cellValues.Add("");
-            }
-
-            return ecData;
         }
         // 從專案中找到全部的Title Blocks
         private void CreateFrames(Document doc, FamilySymbol familySymbol, List<ExcelCellData> ecDataList)
@@ -421,7 +180,7 @@ namespace Sinotech
                         }
                         if(check >= 5)
                         {
-                            ecData.header = true; // 此列為標頭
+                            ecData.isheader = true; // 此列為標頭
                             headerCell = ecData;
                             break;
                         }
@@ -622,6 +381,5 @@ namespace Sinotech
                 return null;
             };
         }
-
     }
 }
