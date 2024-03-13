@@ -193,6 +193,13 @@
       <DependentUpon>CreateDrawings.cs</DependentUpon>
     </Compile>
     <Compile Include="DetectionScale.cs" />
+    <Compile Include="EditViewSheetNumber.cs" />
+    <Compile Include="EditViewSheetNumberForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditViewSheetNumberForm.Designer.cs">
+      <DependentUpon>EditViewSheetNumberForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="EPPlus.cs" />
     <Compile Include="Sinotech_API.cs" />
     <Compile Include="Sinotech_Button.cs" />
@@ -214,6 +221,9 @@
     <EmbeddedResource Include="CreateDrawings.resx">
       <DependentUpon>CreateDrawings.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditViewSheetNumberForm.resx">
+      <DependentUpon>EditViewSheetNumberForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -267,6 +277,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\圖紙匯出.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\更新圖號.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

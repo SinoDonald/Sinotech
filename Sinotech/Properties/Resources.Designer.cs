@@ -113,6 +113,16 @@ namespace Sinotech.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
+        internal static System.Drawing.Bitmap 更新圖號 {
+            get {
+                object obj = ResourceManager.GetObject("更新圖號", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
         internal static System.Drawing.Bitmap 更新比例尺 {
             get {
                 object obj = ResourceManager.GetObject("更新比例尺", resourceCulture);

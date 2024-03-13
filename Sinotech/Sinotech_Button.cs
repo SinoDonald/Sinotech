@@ -41,6 +41,8 @@ namespace Sinotech
             detectionScaleBtn.LargeImage = convertFromBitmap(Properties.Resources.更新比例尺);
             PushButton updateExcelBtn = sinotechPanel.AddItem(new PushButtonData("UpdateExcel", "更新Excel", sinotechAsb, "Sinotech.UpdateExcelCell")) as PushButton;
             updateExcelBtn.LargeImage = convertFromBitmap(Properties.Resources.更新Excel);
+            PushButton editViewSheetNumberBtn = sinotechPanel.AddItem(new PushButtonData("EditViewSheetNumber", "更新圖號", sinotechAsb, "Sinotech.EditViewSheetNumber")) as PushButton;
+            editViewSheetNumberBtn.LargeImage = convertFromBitmap(Properties.Resources.更新圖號);
 
             // 添加「自動出圖」面板
             RibbonPanel autoExportPanel = application.CreateRibbonPanel(tabName, "自動出圖");
