@@ -1,42 +1,25 @@
 中興自動化
 
-Revit 2018 V2.6
-Revit 2019 V2.6
-Revit 2020 V2.6
-Revit 2022 V2.6
+中興自動化 V3.0
 自動開口 V1.4
-中興自動化 V1.5
 
 此產品為中興工程所有，請勿違法使用。
 
 謝謝您使用我們的軟體，如有問題請撥打分機：20466。
 
-C:\ProgramData\Autodesk\Revit\Addins\2018
-C:\ProgramData\Autodesk\Revit\Addins\2019
-C:\ProgramData\Autodesk\Revit\Addins\2020
-C:\ProgramData\Autodesk\Revit\Addins\2022
+C:\Users\[員編5碼]\AppData\Roaming\Autodesk\Revit\Addins
 
-Revit_2018_Setup
-Revit_2019_Setup
-Revit_2020_Setup
-Revit_2022_Setup
-
-Revit 2018 V2.6
-Revit 2019 V2.6
-Revit 2020 V2.6
-Revit 2022 V2.6
+Revit_Sinotech_Setup
 
 =================================================
 
 檔案複製路徑：
 
-將此資料夾內兩個檔案
-
-1. Sinotech資料夾
-2. Sinotech.addin
+將此資料夾內的4個資料夾
+1. 2018
+2. 2019
+3. 2020
+4. Sinotech
 
 複製到以下路徑：
-C:\ProgramData\Autodesk\Revit\Addins\2018
-C:\ProgramData\Autodesk\Revit\Addins\2019
-C:\ProgramData\Autodesk\Revit\Addins\2020
-C:\ProgramData\Autodesk\Revit\Addins\2022
+C:\Users\[員編5碼]\AppData\Roaming\Autodesk\Revit\Addins

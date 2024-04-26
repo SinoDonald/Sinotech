@@ -15,374 +15,386 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_08FF31DB671DC6463987382ACD61A8D2"
-        "OwnerKey" = "8:_259D7CD4DC080CDDDA6ED858C0AEB83B"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_08FF31DB671DC6463987382ACD61A8D2"
-        "OwnerKey" = "8:_F0AC95299C1E407CB2A6D1E71F9467A5"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "OwnerKey" = "8:_08FF31DB671DC6463987382ACD61A8D2"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "OwnerKey" = "8:_5175281764164149B13F43D36305938D"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_259D7CD4DC080CDDDA6ED858C0AEB83B"
-        "OwnerKey" = "8:_6F4291FC32CD4E41ABF83ABBDC1D6C9F"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_259D7CD4DC080CDDDA6ED858C0AEB83B"
-        "OwnerKey" = "8:_CD31D3E244CA4CA591A37CF7A133F684"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_259D7CD4DC080CDDDA6ED858C0AEB83B"
-        "OwnerKey" = "8:_730258392485A24D6FCE8B0295D978FD"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_416DAA69F73842F49AFC244CC5266EF0"
+        "MsmKey" = "8:_01F32935F6DD4468854334C7F34086AE"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_433C26295947D5CD5DBD142F7E9C5D42"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_44362DE987C0F17A35723B6F84982447"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_4FCD6BD9FF182CB35F95B143CE63145B"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_5175281764164149B13F43D36305938D"
+        "MsmKey" = "8:_0489B8AE770D4FDD8B32F1FCDC2D72FF"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_65DEB8A21C47981B6A2643075557CB84"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_65EFF032327F6EF05F3F1D07F59F8EDF"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_6F4291FC32CD4E41ABF83ABBDC1D6C9F"
+        "MsmKey" = "8:_0A44786214114B238042E6669370D156"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_71FAE8045CCF5EFC4DB02B16E9D2FDB8"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
+        "MsmKey" = "8:_12AB0022B872FD14DD3A6DFB2EE9133D"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_730258392485A24D6FCE8B0295D978FD"
-        "OwnerKey" = "8:_6F4291FC32CD4E41ABF83ABBDC1D6C9F"
+        "MsmKey" = "8:_14B809A0F84F95E6E56F0066457596B9"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_8BACCD0FCE65BC66B6CF58E4FC825D37"
-        "OwnerKey" = "8:_08FF31DB671DC6463987382ACD61A8D2"
+        "MsmKey" = "8:_1503D428EEECF4E0D912F38F42045040"
+        "OwnerKey" = "8:_7C39A17B73E5403EAE8C11A79D4C22F9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_8BACCD0FCE65BC66B6CF58E4FC825D37"
-        "OwnerKey" = "8:_5175281764164149B13F43D36305938D"
+        "MsmKey" = "8:_1503D428EEECF4E0D912F38F42045040"
+        "OwnerKey" = "8:_C4CA4417B8BF4ED38D5F90D934A65DCA"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_8CD8485A00621B4DBA5F568A4CF8C02B"
-        "OwnerKey" = "8:_AE855E38BDD2660AD9173761973A61CB"
+        "MsmKey" = "8:_1503D428EEECF4E0D912F38F42045040"
+        "OwnerKey" = "8:_3BB6B8010ECCF1B4D3AB70E87FA1AD5B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_8CD8485A00621B4DBA5F568A4CF8C02B"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
+        "MsmKey" = "8:_19DA319022B1142D30E16DB520E5D336"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_95F01715A1573847145D5F27C02BF511"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_A479B4199F56D7EBDBEA71011C8FB950"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_A7B011B29EEF06776CC8127E94255323"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_A929122C349F19413201FF31293E0BA2"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_AE15DED26FB9439D9E956C4F59BEF721"
+        "MsmKey" = "8:_3030236CFC6F40B9A567B5B811E3D93F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_AE855E38BDD2660AD9173761973A61CB"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
+        "MsmKey" = "8:_3384DC167B36C51161C151F4E251512D"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_B3F64EDCEE051AB65B2B3557BA51EF59"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
+        "MsmKey" = "8:_3BB6B8010ECCF1B4D3AB70E87FA1AD5B"
+        "OwnerKey" = "8:_7C39A17B73E5403EAE8C11A79D4C22F9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_BA27C0B8718F405BA42F402A7D31A4AF"
+        "MsmKey" = "8:_566A9955155DA9D43212A95C984790C1"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_6768DF5ABE054F25BCFF8E8F6504E00B"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_BB7BDF8044161A1EE8D3EEE2516FE4F1"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_CD31D3E244CA4CA591A37CF7A133F684"
+        "MsmKey" = "8:_7C39A17B73E5403EAE8C11A79D4C22F9"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_E213F2EE706845C19DF2CECC66602285"
+        "MsmKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "OwnerKey" = "8:_D161C2DA2F36981646665ED462F06841"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "OwnerKey" = "8:_C8B2B294356A4CBB92F6C4FCE96269AD"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_84559C6D29AB002E8A55D80C82BC0167"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_870BB34D55C785B8B9F4431EA34598C5"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_9174BF880BC0FD7DB4FD1F32E625E581"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_9C9F139C456BC2C5CA504FB59EF4AA2B"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A305EE92125A4536A82588DE8EFD28CF"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_E55B92ED47B4D24AA3EE4ABFF86CE317"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
+        "MsmKey" = "8:_A40C52437438EB59C032ECCD804DDF0E"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_E615E3D6B507EEF17AFEE4CC655CEA29"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_F0AC95299C1E407CB2A6D1E71F9467A5"
+        "MsmKey" = "8:_B26530E43C84478397FE12FF791862C1"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_F9D9C0EE3CC442A4958FE5A4CEB5F741"
+        "MsmKey" = "8:_B81545B1FFE5D3A65400932B41A717EF"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_BA26319D45D64C24A3A61C3B1E4571F7"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_E213F2EE706845C19DF2CECC66602285"
+        "MsmKey" = "8:_C4CA4417B8BF4ED38D5F90D934A65DCA"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C8B2B294356A4CBB92F6C4FCE96269AD"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_CFE2D08F9908A036A6B6EC4C69DD495B"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D161C2DA2F36981646665ED462F06841"
+        "OwnerKey" = "8:_1503D428EEECF4E0D912F38F42045040"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D161C2DA2F36981646665ED462F06841"
+        "OwnerKey" = "8:_01F32935F6DD4468854334C7F34086AE"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D4FA1F1AEAE782449C732101F94B7268"
+        "OwnerKey" = "8:_19DA319022B1142D30E16DB520E5D336"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D4FA1F1AEAE782449C732101F94B7268"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E2BB10DE72FEC68B7AFF2B0BEA79FBE6"
+        "OwnerKey" = "8:_D161C2DA2F36981646665ED462F06841"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E2BB10DE72FEC68B7AFF2B0BEA79FBE6"
+        "OwnerKey" = "8:_C8B2B294356A4CBB92F6C4FCE96269AD"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E7261A6A85DB40F19C36A4D27BF9379C"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E95DD089CD811EC477ACCAFF4C4CA38C"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F18822B9F6D5CB9FAFF086B8740C98A5"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_F9D9C0EE3CC442A4958FE5A4CEB5F741"
+        "OwnerKey" = "8:_BA26319D45D64C24A3A61C3B1E4571F7"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_AE15DED26FB9439D9E956C4F59BEF721"
+        "OwnerKey" = "8:_0A44786214114B238042E6669370D156"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_CD31D3E244CA4CA591A37CF7A133F684"
+        "OwnerKey" = "8:_B26530E43C84478397FE12FF791862C1"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_F0AC95299C1E407CB2A6D1E71F9467A5"
+        "OwnerKey" = "8:_C4CA4417B8BF4ED38D5F90D934A65DCA"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_6F4291FC32CD4E41ABF83ABBDC1D6C9F"
+        "OwnerKey" = "8:_01F32935F6DD4468854334C7F34086AE"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_730258392485A24D6FCE8B0295D978FD"
+        "OwnerKey" = "8:_7C39A17B73E5403EAE8C11A79D4C22F9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_259D7CD4DC080CDDDA6ED858C0AEB83B"
+        "OwnerKey" = "8:_3BB6B8010ECCF1B4D3AB70E87FA1AD5B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_0CA9B79E3E3E39021B4C5E40D765CEB4"
+        "OwnerKey" = "8:_1503D428EEECF4E0D912F38F42045040"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_65DEB8A21C47981B6A2643075557CB84"
+        "OwnerKey" = "8:_8340E1E7F59C03D346BCC54B3D89D60B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_71FAE8045CCF5EFC4DB02B16E9D2FDB8"
+        "OwnerKey" = "8:_566A9955155DA9D43212A95C984790C1"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_44362DE987C0F17A35723B6F84982447"
+        "OwnerKey" = "8:_9C9F139C456BC2C5CA504FB59EF4AA2B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_4FCD6BD9FF182CB35F95B143CE63145B"
+        "OwnerKey" = "8:_E7261A6A85DB40F19C36A4D27BF9379C"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_BB7BDF8044161A1EE8D3EEE2516FE4F1"
+        "OwnerKey" = "8:_870BB34D55C785B8B9F4431EA34598C5"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_95F01715A1573847145D5F27C02BF511"
+        "OwnerKey" = "8:_A40C52437438EB59C032ECCD804DDF0E"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_A479B4199F56D7EBDBEA71011C8FB950"
+        "OwnerKey" = "8:_12AB0022B872FD14DD3A6DFB2EE9133D"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_65EFF032327F6EF05F3F1D07F59F8EDF"
+        "OwnerKey" = "8:_E95DD089CD811EC477ACCAFF4C4CA38C"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_E55B92ED47B4D24AA3EE4ABFF86CE317"
+        "OwnerKey" = "8:_F18822B9F6D5CB9FAFF086B8740C98A5"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_B3F64EDCEE051AB65B2B3557BA51EF59"
+        "OwnerKey" = "8:_CFE2D08F9908A036A6B6EC4C69DD495B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_AE855E38BDD2660AD9173761973A61CB"
+        "OwnerKey" = "8:_84559C6D29AB002E8A55D80C82BC0167"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_8CD8485A00621B4DBA5F568A4CF8C02B"
+        "OwnerKey" = "8:_19DA319022B1142D30E16DB520E5D336"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_A7B011B29EEF06776CC8127E94255323"
+        "OwnerKey" = "8:_D4FA1F1AEAE782449C732101F94B7268"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_A929122C349F19413201FF31293E0BA2"
+        "OwnerKey" = "8:_14B809A0F84F95E6E56F0066457596B9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_E615E3D6B507EEF17AFEE4CC655CEA29"
+        "OwnerKey" = "8:_B81545B1FFE5D3A65400932B41A717EF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_433C26295947D5CD5DBD142F7E9C5D42"
+        "OwnerKey" = "8:_3384DC167B36C51161C151F4E251512D"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_8BACCD0FCE65BC66B6CF58E4FC825D37"
+        "OwnerKey" = "8:_9174BF880BC0FD7DB4FD1F32E625E581"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_E2BB10DE72FEC68B7AFF2B0BEA79FBE6"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -393,7 +405,7 @@
         "DisplayName" = "8:Debug"
         "IsDebugOnly" = "11:TRUE"
         "IsReleaseOnly" = "11:FALSE"
-        "OutputFilename" = "8:Debug\\Revit_2020_Setup.msi"
+        "OutputFilename" = "8:Debug\\Revit_Sinotech_Setup.msi"
         "PackageFilesAs" = "3:2"
         "PackageFileSize" = "3:-2147483648"
         "CabType" = "3:1"
@@ -475,105 +487,23 @@
         }
         "File"
         {
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_08FF31DB671DC6463987382ACD61A8D2"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Microsoft.IO.RecyclableMemoryStream, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_08FF31DB671DC6463987382ACD61A8D2"
-                    {
-                    "Name" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_0CA9B79E3E3E39021B4C5E40D765CEB4"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_0CA9B79E3E3E39021B4C5E40D765CEB4"
-                    {
-                    "Name" = "8:netstandard.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:netstandard.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_259D7CD4DC080CDDDA6ED858C0AEB83B"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_01F32935F6DD4468854334C7F34086AE"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:EPPlus, Version=7.0.9.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_259D7CD4DC080CDDDA6ED858C0AEB83B"
+                    "_01F32935F6DD4468854334C7F34086AE"
                     {
                     "Name" = "8:EPPlus.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:EPPlus.dll"
+            "SourcePath" = "8:C:\\Users\\07291\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\Sinotech\\EPPlus.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_416DAA69F73842F49AFC244CC5266EF0"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2020\\Sinotech\\專業代碼.txt"
-            "TargetName" = "8:專業代碼.txt"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -588,116 +518,12 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_433C26295947D5CD5DBD142F7E9C5D42"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0489B8AE770D4FDD8B32F1FCDC2D72FF"
             {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Data.Common, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_433C26295947D5CD5DBD142F7E9C5D42"
-                    {
-                    "Name" = "8:System.Data.Common.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Data.Common.dll"
-            "TargetName" = "8:"
+            "SourcePath" = "8:C:\\Users\\07291\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\2020\\Sinotech.addin"
+            "TargetName" = "8:Sinotech.addin"
             "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_44362DE987C0F17A35723B6F84982447"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Threading.Overlapped, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_44362DE987C0F17A35723B6F84982447"
-                    {
-                    "Name" = "8:System.Threading.Overlapped.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Threading.Overlapped.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_4FCD6BD9FF182CB35F95B143CE63145B"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Security.SecureString, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_4FCD6BD9FF182CB35F95B143CE63145B"
-                    {
-                    "Name" = "8:System.Security.SecureString.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Security.SecureString.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5175281764164149B13F43D36305938D"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Microsoft.IO.RecyclableMemoryStream, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_5175281764164149B13F43D36305938D"
-                    {
-                    "Name" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2020\\Sinotech\\Microsoft.IO.RecyclableMemoryStream.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
+            "Folder" = "8:_EF923CCEBABF4FDABE7EA4B0381A115F"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -712,178 +538,23 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_65DEB8A21C47981B6A2643075557CB84"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Xml.XPath.XDocument, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_65DEB8A21C47981B6A2643075557CB84"
-                    {
-                    "Name" = "8:System.Xml.XPath.XDocument.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Xml.XPath.XDocument.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_65EFF032327F6EF05F3F1D07F59F8EDF"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Runtime.InteropServices.RuntimeInformation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_65EFF032327F6EF05F3F1D07F59F8EDF"
-                    {
-                    "Name" = "8:System.Runtime.InteropServices.RuntimeInformation.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Runtime.InteropServices.RuntimeInformation.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6F4291FC32CD4E41ABF83ABBDC1D6C9F"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:CSDSEM, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_6F4291FC32CD4E41ABF83ABBDC1D6C9F"
-                    {
-                    "Name" = "8:CSDSEM.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2020\\Sinotech\\CSDSEM.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_71FAE8045CCF5EFC4DB02B16E9D2FDB8"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.ValueTuple, Version=4.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_71FAE8045CCF5EFC4DB02B16E9D2FDB8"
-                    {
-                    "Name" = "8:System.ValueTuple.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.ValueTuple.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_730258392485A24D6FCE8B0295D978FD"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_730258392485A24D6FCE8B0295D978FD"
-                    {
-                    "Name" = "8:Sinotech.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:Sinotech.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_8BACCD0FCE65BC66B6CF58E4FC825D37"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_0A44786214114B238042E6669370D156"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
             "AssemblyAsmDisplayName" = "8:System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_8BACCD0FCE65BC66B6CF58E4FC825D37"
+                    "_0A44786214114B238042E6669370D156"
                     {
                     "Name" = "8:System.Memory.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:System.Memory.dll"
+            "SourcePath" = "8:C:\\Users\\07291\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\Sinotech\\System.Memory.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -895,48 +566,17 @@
             "PackageAs" = "3:1"
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_8CD8485A00621B4DBA5F568A4CF8C02B"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_8CD8485A00621B4DBA5F568A4CF8C02B"
-                    {
-                    "Name" = "8:System.IO.Compression.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.IO.Compression.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_95F01715A1573847145D5F27C02BF511"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_12AB0022B872FD14DD3A6DFB2EE9133D"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:TRUE"
             "AssemblyAsmDisplayName" = "8:System.Runtime.Serialization.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_95F01715A1573847145D5F27C02BF511"
+                    "_12AB0022B872FD14DD3A6DFB2EE9133D"
                     {
                     "Name" = "8:System.Runtime.Serialization.Xml.dll"
                     "Attributes" = "3:512"
@@ -945,7 +585,7 @@
             "SourcePath" = "8:System.Runtime.Serialization.Xml.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -960,45 +600,14 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A479B4199F56D7EBDBEA71011C8FB950"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Runtime.Serialization.Primitives, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_A479B4199F56D7EBDBEA71011C8FB950"
-                    {
-                    "Name" = "8:System.Runtime.Serialization.Primitives.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Runtime.Serialization.Primitives.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A7B011B29EEF06776CC8127E94255323"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_14B809A0F84F95E6E56F0066457596B9"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:TRUE"
             "AssemblyAsmDisplayName" = "8:System.Globalization.Extensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_A7B011B29EEF06776CC8127E94255323"
+                    "_14B809A0F84F95E6E56F0066457596B9"
                     {
                     "Name" = "8:System.Globalization.Extensions.dll"
                     "Attributes" = "3:512"
@@ -1007,7 +616,7 @@
             "SourcePath" = "8:System.Globalization.Extensions.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1022,54 +631,23 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A929122C349F19413201FF31293E0BA2"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Diagnostics.Tracing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_A929122C349F19413201FF31293E0BA2"
-                    {
-                    "Name" = "8:System.Diagnostics.Tracing.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Diagnostics.Tracing.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_AE15DED26FB9439D9E956C4F59BEF721"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_1503D428EEECF4E0D912F38F42045040"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:SpeedTools, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+            "AssemblyAsmDisplayName" = "8:EPPlus, Version=7.0.9.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_AE15DED26FB9439D9E956C4F59BEF721"
+                    "_1503D428EEECF4E0D912F38F42045040"
                     {
-                    "Name" = "8:SpeedTools.dll"
+                    "Name" = "8:EPPlus.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2020\\Sinotech\\SpeedTools.dll"
+            "SourcePath" = "8:EPPlus.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1081,17 +659,17 @@
             "PackageAs" = "3:1"
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_AE855E38BDD2660AD9173761973A61CB"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_19DA319022B1142D30E16DB520E5D336"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:TRUE"
             "AssemblyAsmDisplayName" = "8:System.IO.Compression.FileSystem, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_AE855E38BDD2660AD9173761973A61CB"
+                    "_19DA319022B1142D30E16DB520E5D336"
                     {
                     "Name" = "8:System.IO.Compression.FileSystem.dll"
                     "Attributes" = "3:512"
@@ -1100,7 +678,7 @@
             "SourcePath" = "8:System.IO.Compression.FileSystem.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1115,43 +693,12 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B3F64EDCEE051AB65B2B3557BA51EF59"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3030236CFC6F40B9A567B5B811E3D93F"
             {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_B3F64EDCEE051AB65B2B3557BA51EF59"
-                    {
-                    "Name" = "8:System.Net.Http.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Net.Http.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BA27C0B8718F405BA42F402A7D31A4AF"
-            {
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2020\\Sinotech.addin"
+            "SourcePath" = "8:C:\\Users\\07291\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\2018\\Sinotech.addin"
             "TargetName" = "8:Sinotech.addin"
             "Tag" = "8:"
-            "Folder" = "8:_82D2D87CE3584E72A47CA020EF366238"
+            "Folder" = "8:_EF8A6F20F6CE40E9AF66B228D8A14F4C"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1166,138 +713,14 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_BB7BDF8044161A1EE8D3EEE2516FE4F1"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Security.Cryptography.Algorithms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_BB7BDF8044161A1EE8D3EEE2516FE4F1"
-                    {
-                    "Name" = "8:System.Security.Cryptography.Algorithms.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Security.Cryptography.Algorithms.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_CD31D3E244CA4CA591A37CF7A133F684"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_CD31D3E244CA4CA591A37CF7A133F684"
-                    {
-                    "Name" = "8:Sinotech.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2020\\Sinotech\\Sinotech.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E213F2EE706845C19DF2CECC66602285"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:AutoExport, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_E213F2EE706845C19DF2CECC66602285"
-                    {
-                    "Name" = "8:AutoExport.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2020\\Sinotech\\AutoExport.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E55B92ED47B4D24AA3EE4ABFF86CE317"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Net.Sockets, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_E55B92ED47B4D24AA3EE4ABFF86CE317"
-                    {
-                    "Name" = "8:System.Net.Sockets.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Net.Sockets.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E615E3D6B507EEF17AFEE4CC655CEA29"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3384DC167B36C51161C151F4E251512D"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:TRUE"
             "AssemblyAsmDisplayName" = "8:System.Diagnostics.StackTrace, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_E615E3D6B507EEF17AFEE4CC655CEA29"
+                    "_3384DC167B36C51161C151F4E251512D"
                     {
                     "Name" = "8:System.Diagnostics.StackTrace.dll"
                     "Attributes" = "3:512"
@@ -1306,7 +729,7 @@
             "SourcePath" = "8:System.Diagnostics.StackTrace.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1321,23 +744,74 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_F0AC95299C1E407CB2A6D1E71F9467A5"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3BB6B8010ECCF1B4D3AB70E87FA1AD5B"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:EPPlus, Version=7.0.9.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
                 "ScatterAssemblies"
                 {
-                    "_F0AC95299C1E407CB2A6D1E71F9467A5"
+                    "_3BB6B8010ECCF1B4D3AB70E87FA1AD5B"
                     {
-                    "Name" = "8:EPPlus.dll"
+                    "Name" = "8:Sinotech.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2020\\Sinotech\\EPPlus.dll"
+            "SourcePath" = "8:Sinotech.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_566A9955155DA9D43212A95C984790C1"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Xml.XPath.XDocument, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_566A9955155DA9D43212A95C984790C1"
+                    {
+                    "Name" = "8:System.Xml.XPath.XDocument.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Xml.XPath.XDocument.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6768DF5ABE054F25BCFF8E8F6504E00B"
+            {
+            "SourcePath" = "8:C:\\Users\\07291\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\2019\\Sinotech.addin"
+            "TargetName" = "8:Sinotech.addin"
+            "Tag" = "8:"
+            "Folder" = "8:_513F389A3A5D4F7089DC6969D2E6B8DC"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1352,23 +826,23 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_F9D9C0EE3CC442A4958FE5A4CEB5F741"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_7C39A17B73E5403EAE8C11A79D4C22F9"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:CSDSEM, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
                 "ScatterAssemblies"
                 {
-                    "_F9D9C0EE3CC442A4958FE5A4CEB5F741"
+                    "_7C39A17B73E5403EAE8C11A79D4C22F9"
                     {
-                    "Name" = "8:System.Memory.dll"
+                    "Name" = "8:CSDSEM.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2020\\Sinotech\\System.Memory.dll"
+            "SourcePath" = "8:C:\\Users\\07291\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\Sinotech\\CSDSEM.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_7FE10EAFD99546DB9B03C38A242744D0"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1381,6 +855,584 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_8340E1E7F59C03D346BCC54B3D89D60B"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_8340E1E7F59C03D346BCC54B3D89D60B"
+                    {
+                    "Name" = "8:netstandard.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:netstandard.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_84559C6D29AB002E8A55D80C82BC0167"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_84559C6D29AB002E8A55D80C82BC0167"
+                    {
+                    "Name" = "8:System.Net.Http.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Net.Http.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_870BB34D55C785B8B9F4431EA34598C5"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Security.SecureString, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_870BB34D55C785B8B9F4431EA34598C5"
+                    {
+                    "Name" = "8:System.Security.SecureString.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Security.SecureString.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_9174BF880BC0FD7DB4FD1F32E625E581"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Data.Common, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_9174BF880BC0FD7DB4FD1F32E625E581"
+                    {
+                    "Name" = "8:System.Data.Common.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Data.Common.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_9C9F139C456BC2C5CA504FB59EF4AA2B"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.ValueTuple, Version=4.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_9C9F139C456BC2C5CA504FB59EF4AA2B"
+                    {
+                    "Name" = "8:System.ValueTuple.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.ValueTuple.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A305EE92125A4536A82588DE8EFD28CF"
+            {
+            "SourcePath" = "8:C:\\Users\\07291\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\Sinotech\\專業代碼.txt"
+            "TargetName" = "8:專業代碼.txt"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A40C52437438EB59C032ECCD804DDF0E"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Security.Cryptography.Algorithms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_A40C52437438EB59C032ECCD804DDF0E"
+                    {
+                    "Name" = "8:System.Security.Cryptography.Algorithms.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Security.Cryptography.Algorithms.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B26530E43C84478397FE12FF791862C1"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:SpeedTools, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_B26530E43C84478397FE12FF791862C1"
+                    {
+                    "Name" = "8:SpeedTools.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:C:\\Users\\07291\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\Sinotech\\SpeedTools.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B81545B1FFE5D3A65400932B41A717EF"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Diagnostics.Tracing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_B81545B1FFE5D3A65400932B41A717EF"
+                    {
+                    "Name" = "8:System.Diagnostics.Tracing.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Diagnostics.Tracing.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_BA26319D45D64C24A3A61C3B1E4571F7"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:AutoExport, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_BA26319D45D64C24A3A61C3B1E4571F7"
+                    {
+                    "Name" = "8:AutoExport.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:C:\\Users\\07291\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\Sinotech\\AutoExport.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C4CA4417B8BF4ED38D5F90D934A65DCA"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_C4CA4417B8BF4ED38D5F90D934A65DCA"
+                    {
+                    "Name" = "8:Sinotech.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:C:\\Users\\07291\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\Sinotech\\Sinotech.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C8B2B294356A4CBB92F6C4FCE96269AD"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Microsoft.IO.RecyclableMemoryStream, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_C8B2B294356A4CBB92F6C4FCE96269AD"
+                    {
+                    "Name" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:C:\\Users\\07291\\AppData\\Roaming\\Autodesk\\Revit\\Addins\\Sinotech\\Microsoft.IO.RecyclableMemoryStream.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_CFE2D08F9908A036A6B6EC4C69DD495B"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Net.Sockets, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_CFE2D08F9908A036A6B6EC4C69DD495B"
+                    {
+                    "Name" = "8:System.Net.Sockets.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Net.Sockets.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_D161C2DA2F36981646665ED462F06841"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Microsoft.IO.RecyclableMemoryStream, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_D161C2DA2F36981646665ED462F06841"
+                    {
+                    "Name" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_D4FA1F1AEAE782449C732101F94B7268"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_D4FA1F1AEAE782449C732101F94B7268"
+                    {
+                    "Name" = "8:System.IO.Compression.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.IO.Compression.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E2BB10DE72FEC68B7AFF2B0BEA79FBE6"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_E2BB10DE72FEC68B7AFF2B0BEA79FBE6"
+                    {
+                    "Name" = "8:System.Memory.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Memory.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E7261A6A85DB40F19C36A4D27BF9379C"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Threading.Overlapped, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_E7261A6A85DB40F19C36A4D27BF9379C"
+                    {
+                    "Name" = "8:System.Threading.Overlapped.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Threading.Overlapped.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E95DD089CD811EC477ACCAFF4C4CA38C"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Runtime.Serialization.Primitives, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_E95DD089CD811EC477ACCAFF4C4CA38C"
+                    {
+                    "Name" = "8:System.Runtime.Serialization.Primitives.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Runtime.Serialization.Primitives.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_F18822B9F6D5CB9FAFF086B8740C98A5"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Runtime.InteropServices.RuntimeInformation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_F18822B9F6D5CB9FAFF086B8740C98A5"
+                    {
+                    "Name" = "8:System.Runtime.InteropServices.RuntimeInformation.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Runtime.InteropServices.RuntimeInformation.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_4EE92AE3B71E45E4A533B83D1CCA33C9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
         }
@@ -1413,7 +1465,7 @@
             }
             "{3C67513D-01DD-4637-8A68-80971EB9504F}:_82D2D87CE3584E72A47CA020EF366238"
             {
-            "DefaultLocation" = "8:C:\\ProgramData\\Autodesk\\Revit\\Addins\\2020"
+            "DefaultLocation" = "8:[AppDataFolder]Autodesk\\Revit\\Addins"
             "Name" = "8:#1925"
             "AlwaysCreate" = "11:FALSE"
             "Condition" = "8:"
@@ -1421,13 +1473,46 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_7FE10EAFD99546DB9B03C38A242744D0"
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_4EE92AE3B71E45E4A533B83D1CCA33C9"
                     {
                     "Name" = "8:Sinotech"
                     "AlwaysCreate" = "11:FALSE"
                     "Condition" = "8:"
                     "Transitive" = "11:FALSE"
-                    "Property" = "8:_5DEC6BEE60CB422A93AD7C921B8CA1A9"
+                    "Property" = "8:_AF814AC0411F4D2EAFA4362A1BC1443C"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_513F389A3A5D4F7089DC6969D2E6B8DC"
+                    {
+                    "Name" = "8:2019"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_F637C6728BB546168B8353EBFB25EFD2"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_EF8A6F20F6CE40E9AF66B228D8A14F4C"
+                    {
+                    "Name" = "8:2018"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_456193E11972462187CFA4C573D5838F"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_EF923CCEBABF4FDABE7EA4B0381A115F"
+                    {
+                    "Name" = "8:2020"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_CFC1736A07DA4511A877573A27F4B554"
                         "Folders"
                         {
                         }
@@ -1449,16 +1534,16 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:中興自動化 V2.6"
-        "ProductCode" = "8:{51AB0FAA-BA3E-4D0D-98B5-0A247F671480}"
-        "PackageCode" = "8:{7B8F6C6F-07F3-4833-94BC-4E9490E9A318}"
+        "ProductName" = "8:中興自動化 V3.0"
+        "ProductCode" = "8:{0CFA42C1-0427-42DF-89D7-6A967AE5034D}"
+        "PackageCode" = "8:{A3B686DD-2757-4B80-B400-4531D7036855}"
         "UpgradeCode" = "8:{792C6593-F662-4AF1-83C5-61A837A7EE7F}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:2.6"
+        "ProductVersion" = "8:3.0"
         "Manufacturer" = "8:中興工程_軌道二部"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

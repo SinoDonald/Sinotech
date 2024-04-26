@@ -1,5 +1,7 @@
 ﻿using Autodesk.Revit.UI;
 using System;
+using System.IO;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
@@ -10,23 +12,18 @@ namespace Sinotech
     {
         public string previous = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         public string pathStr = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\tmp.txt"; // 我的文件
-        //public string pathStr = @"C:\ProgramData\Autodesk\Revit\Addins\2018\Sinotech\tmp.txt";
-        //public string pathStr = @"C:\ProgramData\Autodesk\Revit\Addins\2019\Sinotech\tmp.txt";
-        //public string pathStr = @"C:\ProgramData\Autodesk\Revit\Addins\2020\Sinotech\tmp.txt";
-        //public string pathStr = @"C:\ProgramData\Autodesk\Revit\Addins\2021\Sinotech\tmp.txt";
-        //public string pathStr = @"C:\ProgramData\Autodesk\Revit\Addins\2022\Sinotech\tmp.txt";
     }
     public class Sinotech_Button : IExternalApplication
     {
-        public string assembly = @"C:\ProgramData\Autodesk\Revit\Addins\2020\Sinotech\"; // 封包版路徑位址
+        public string assembly = Assembly.GetExecutingAssembly().Location; // 封包版路徑位址
         public Result OnStartup(UIControlledApplication application)
         {
-            string sinotechAsb = assembly + "Sinotech.dll"; // 圖紙更新
-            string autoExportAsb = assembly + "AutoExport.dll"; // 自動出圖
-            string speedToolsAsb = assembly + "SpeedTools.dll"; // 快速工具
-            string CSDSEMAsb = assembly + "CSDSEM.dll"; // CSD/SEM
-            string autoBuildAsb = assembly + "AutoBuild.dll"; // 快速翻模
-            string codeViewAsb = assembly + "CodeView.dll"; // 規範校核
+            string sinotechAsb = Path.Combine(Directory.GetParent(assembly).FullName, "Sinotech.dll"); // 圖紙更新
+            string autoExportAsb = Path.Combine(Directory.GetParent(assembly).FullName, "AutoExport.dll"); // 自動出圖
+            string speedToolsAsb = Path.Combine(Directory.GetParent(assembly).FullName, "SpeedTools.dll"); // 快速工具
+            string CSDSEMAsb = Path.Combine(Directory.GetParent(assembly).FullName, "CSDSEM.dll"); // CSD/SEM
+            string autoBuildAsb = Path.Combine(Directory.GetParent(assembly).FullName, "AutoBuild.dll"); // 快速翻模
+            string codeViewAsb = Path.Combine(Directory.GetParent(assembly).FullName, "CodeView.dll"); // 規範校核
 
             // 創建一個新的選單
             String tabName = "中興自動化";
