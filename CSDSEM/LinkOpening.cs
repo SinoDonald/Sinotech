@@ -914,7 +914,7 @@ namespace CSDSEM
                             crushElemInfo.ductHeight = diameterPara.AsDouble() + UnitUtils.ConvertToInternalUnits(50, DisplayUnitType.DUT_MILLIMETERS); // 高度
                             diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_WIDTH_PARAM);
                             size = UnitUtils.ConvertFromInternalUnits(diameterPara.AsDouble(), DisplayUnitType.DUT_MILLIMETERS);
-                            crushElemInfo.ductWight = diameterPara.AsDouble() + UnitUtils.ConvertToInternalUnits(50, DisplayUnitType.DUT_MILLIMETERS); // 寬度
+                            crushElemInfo.ductWight = diameterPara.AsDouble()/* + UnitUtils.ConvertToInternalUnits(50, DisplayUnitType.DUT_MILLIMETERS)*/; // 寬度
                         }
                         if (thicknessPara != null)
                         {
@@ -1439,7 +1439,7 @@ namespace CSDSEM
                     if (opening.Name.Equals("圓形水管牆開口"))
                     {
                         double height = Convert.ToDouble(opening.LookupParameter("指定圓形套管直徑").AsDouble());
-                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_METERS);
+                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_MILLIMETERS);
                         string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("圓形套管底部高程");
                         para.Set(value);
@@ -1447,7 +1447,7 @@ namespace CSDSEM
                     else if(opening.Name.Equals("矩形風管牆開口"))
                     {
                         double height = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsDouble());
-                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_METERS);
+                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_MILLIMETERS);
                         string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("矩形開口底部高程");
                         para.Set(value);
@@ -1455,7 +1455,7 @@ namespace CSDSEM
                     else if (opening.Name.Equals("電纜架牆開口"))
                     {
                         double height = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsDouble());
-                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_METERS);
+                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_MILLIMETERS);
                         string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("矩形開口底部高程");
                         para.Set(value);
