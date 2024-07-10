@@ -29,46 +29,46 @@ namespace Sinotech
             String tabName = "中興自動化";
             application.CreateRibbonTab(tabName);
 
-            //// 添加「圖紙更新」面板
-            //RibbonPanel sinotechPanel = application.CreateRibbonPanel(tabName, "圖紙更新");
-            //PushButton sinotechBtn = sinotechPanel.AddItem(new PushButtonData("Sinotech_API", "圖紙更新", sinotechAsb, "Sinotech.Sinotech_API")) as PushButton;
-            ////sinotechBtn.LargeImage = new BitmapImage(new Uri(picPath + "圖紙更新.png")); <-- 舊版寫法
-            //sinotechBtn.LargeImage = convertFromBitmap(Properties.Resources.圖紙更新);
-            //PushButton detectionScaleBtn = sinotechPanel.AddItem(new PushButtonData("DetectionScale", "更新比例尺", sinotechAsb, "Sinotech.DetectionScale")) as PushButton;
-            //detectionScaleBtn.LargeImage = convertFromBitmap(Properties.Resources.更新比例尺);
-            //PushButton updateExcelBtn = sinotechPanel.AddItem(new PushButtonData("UpdateExcel", "更新Excel", sinotechAsb, "Sinotech.UpdateExcelCell")) as PushButton;
-            //updateExcelBtn.LargeImage = convertFromBitmap(Properties.Resources.更新Excel);
-            //PushButton editViewSheetNumberBtn = sinotechPanel.AddItem(new PushButtonData("EditViewSheetNumber", "更新圖號", sinotechAsb, "Sinotech.EditViewSheetNumber")) as PushButton;
-            //editViewSheetNumberBtn.LargeImage = convertFromBitmap(Properties.Resources.更新圖號);
+            // 添加「圖紙更新」面板
+            RibbonPanel sinotechPanel = application.CreateRibbonPanel(tabName, "圖紙更新");
+            PushButton sinotechBtn = sinotechPanel.AddItem(new PushButtonData("Sinotech_API", "圖紙更新", sinotechAsb, "Sinotech.Sinotech_API")) as PushButton;
+            //sinotechBtn.LargeImage = new BitmapImage(new Uri(picPath + "圖紙更新.png")); <-- 舊版寫法
+            sinotechBtn.LargeImage = convertFromBitmap(Properties.Resources.圖紙更新);
+            PushButton detectionScaleBtn = sinotechPanel.AddItem(new PushButtonData("DetectionScale", "更新比例尺", sinotechAsb, "Sinotech.DetectionScale")) as PushButton;
+            detectionScaleBtn.LargeImage = convertFromBitmap(Properties.Resources.更新比例尺);
+            PushButton updateExcelBtn = sinotechPanel.AddItem(new PushButtonData("UpdateExcel", "更新Excel", sinotechAsb, "Sinotech.UpdateExcelCell")) as PushButton;
+            updateExcelBtn.LargeImage = convertFromBitmap(Properties.Resources.更新Excel);
+            PushButton editViewSheetNumberBtn = sinotechPanel.AddItem(new PushButtonData("EditViewSheetNumber", "更新圖號", sinotechAsb, "Sinotech.EditViewSheetNumber")) as PushButton;
+            editViewSheetNumberBtn.LargeImage = convertFromBitmap(Properties.Resources.更新圖號);
 
             // 添加「自動出圖」面板
             RibbonPanel autoExportPanel = application.CreateRibbonPanel(tabName, "自動出圖");
-            //PushButton viewCopyBtn = autoExportPanel.AddItem(new PushButtonData("ViewCopy", "視圖複製", autoExportAsb, "AutoExport.CopyDrawings")) as PushButton;
-            //viewCopyBtn.LargeImage = convertFromBitmap(Properties.Resources.視圖複製);
-            //PushButton moveViewBtn = autoExportPanel.AddItem(new PushButtonData("MoveView", "視圖搬移", autoExportAsb, "AutoExport.MoveView")) as PushButton;
-            //moveViewBtn.LargeImage = convertFromBitmap(Properties.Resources.視圖搬移);
+            PushButton viewCopyBtn = autoExportPanel.AddItem(new PushButtonData("ViewCopy", "視圖複製", autoExportAsb, "AutoExport.CopyDrawings")) as PushButton;
+            viewCopyBtn.LargeImage = convertFromBitmap(Properties.Resources.視圖複製);
+            PushButton moveViewBtn = autoExportPanel.AddItem(new PushButtonData("MoveView", "視圖搬移", autoExportAsb, "AutoExport.MoveView")) as PushButton;
+            moveViewBtn.LargeImage = convertFromBitmap(Properties.Resources.視圖搬移);
             PushButton exportViewBtn = autoExportPanel.AddItem(new PushButtonData("ExportView", "圖紙匯出", autoExportAsb, "AutoExport.ExportDWG")) as PushButton;
             exportViewBtn.LargeImage = convertFromBitmap(Properties.Resources.圖紙匯出);
 
-            //// 添加「快速工具」面板
-            //RibbonPanel speedToolsPanel = application.CreateRibbonPanel(tabName, "快速工具");
-            //PushButton autoJoinBtn = speedToolsPanel.AddItem(new PushButtonData("AutoJoin", "自動接合", speedToolsAsb, "SpeedTools.AutoJoin")) as PushButton;
-            //autoJoinBtn.LargeImage = convertFromBitmap(Properties.Resources.自動接合);
-            //PushButton parkOrRoomBtn = speedToolsPanel.AddItem(new PushButtonData("ParkOrRoom", "雲形線編號", speedToolsAsb, "SpeedTools.ParkOrRoom")) as PushButton;
-            //parkOrRoomBtn.LargeImage = convertFromBitmap(Properties.Resources.雲形線編號);
-            //PushButton autoUpdateBtn = speedToolsPanel.AddItem(new PushButtonData("AutoUpdate", "自動升版", speedToolsAsb, "SpeedTools.AutoUpdate")) as PushButton;
-            //autoUpdateBtn.LargeImage = convertFromBitmap(Properties.Resources.自動升版);
+            // 添加「快速工具」面板
+            RibbonPanel speedToolsPanel = application.CreateRibbonPanel(tabName, "快速工具");
+            PushButton autoJoinBtn = speedToolsPanel.AddItem(new PushButtonData("AutoJoin", "自動接合", speedToolsAsb, "SpeedTools.AutoJoin")) as PushButton;
+            autoJoinBtn.LargeImage = convertFromBitmap(Properties.Resources.自動接合);
+            PushButton parkOrRoomBtn = speedToolsPanel.AddItem(new PushButtonData("ParkOrRoom", "雲形線編號", speedToolsAsb, "SpeedTools.ParkOrRoom")) as PushButton;
+            parkOrRoomBtn.LargeImage = convertFromBitmap(Properties.Resources.雲形線編號);
+            PushButton autoUpdateBtn = speedToolsPanel.AddItem(new PushButtonData("AutoUpdate", "自動升版", speedToolsAsb, "SpeedTools.AutoUpdate")) as PushButton;
+            autoUpdateBtn.LargeImage = convertFromBitmap(Properties.Resources.自動升版);
 
             // 添加「CSD/SEM」面板
             RibbonPanel CSDSEMPanel = application.CreateRibbonPanel(tabName, "CSD/SEM");
             PushButton autoPipeOpenBtn = CSDSEMPanel.AddItem(new PushButtonData("AutoPipeOpen", "自動開口", CSDSEMAsb, "CSDSEM.LinkOpening")) as PushButton;
             autoPipeOpenBtn.LargeImage = convertFromBitmap(Properties.Resources.自動開口);
-            //PushButton autoPipeTagBtn = CSDSEMPanel.AddItem(new PushButtonData("AutoPipeTag", "自動標籤", CSDSEMAsb, "CSDSEM.AutoPipeTag")) as PushButton;
-            //autoPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.自動標籤);
-            //PushButton manualPipeTagBtn = CSDSEMPanel.AddItem(new PushButtonData("ManualPipeTag", "手動標籤", CSDSEMAsb, "CSDSEM.ManualPipeTag")) as PushButton;
-            //manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動標籤);
-            //PushButton PCCESBtn = CSDSEMPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", CSDSEMAsb, "CSDSEM.OutPutPCCES")) as PushButton;
-            //PCCESBtn.LargeImage = convertFromBitmap(Properties.Resources.PCCES);
+            PushButton autoPipeTagBtn = CSDSEMPanel.AddItem(new PushButtonData("AutoPipeTag", "自動標籤", CSDSEMAsb, "CSDSEM.AutoPipeTag")) as PushButton;
+            autoPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.自動標籤);
+            PushButton manualPipeTagBtn = CSDSEMPanel.AddItem(new PushButtonData("ManualPipeTag", "手動標籤", CSDSEMAsb, "CSDSEM.ManualPipeTag")) as PushButton;
+            manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動標籤);
+            PushButton PCCESBtn = CSDSEMPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", CSDSEMAsb, "CSDSEM.OutPutPCCES")) as PushButton;
+            PCCESBtn.LargeImage = convertFromBitmap(Properties.Resources.PCCES);
 
             //// 添加「快速翻模」面板
             //RibbonPanel autoBuildPanel = application.CreateRibbonPanel(tabName, "快速翻模");
