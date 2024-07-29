@@ -31,24 +31,15 @@ namespace CSDSEM
                 levelElevation.elevation = UnitUtils.ConvertFromInternalUnits(elevation, DisplayUnitType.DUT_METERS);
                 levelElevList.Add(levelElevation);
             }
-            levelElevList = (from x in levelElevList
-                             select x).OrderBy(x => x.elevation).ToList();
+            levelElevList = levelElevList.OrderBy(x => x.elevation).ToList();
             double startElev = 0.0;
             double endElev = 0.0;
             double floorHeight = 10;
             // 找到當前樓層
             LevelElevation viewLevel = new LevelElevation();
-            try
-            {
-                viewLevel = (from x in levelElevList
-                             where x.level.Id.Equals(doc.ActiveView.GenLevel.Id)
-                             select x).FirstOrDefault();
-
-            }
-            catch (NullReferenceException)
-            {
-                viewLevel = levelElevList[0];
-            }
+            try { viewLevel = levelElevList.Where(x => x.level.Id.Equals(doc.ActiveView.GenLevel.Id)).FirstOrDefault(); }
+            catch (NullReferenceException) { viewLevel = levelElevList[0]; }
+            catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
             int leCount = levelElevList.IndexOf(viewLevel);
             // 查詢當前樓層與上一樓層的高度, 製作火源高度
             if (levelElevList.Count >= 2)
