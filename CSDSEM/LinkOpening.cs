@@ -85,7 +85,6 @@ namespace CSDSEM
 
             try
             {
-
                 // 找到當前專案的Level相關資訊
                 FindLevel findLevel = new FindLevel();
                 Tuple<List<LevelElevation>, LevelElevation, double> multiValue = findLevel.FindDocViewLevel(doc);
@@ -578,6 +577,7 @@ namespace CSDSEM
                     LocationCurve lc = wallOrBeam.Location as LocationCurve;
                     Line line = lc.Curve as Line;
                     double beamWallAngle = PointRotation(line.Tessellate()[0], line.Tessellate()[1]);
+                    //double beamWallAngle = Math.Atan2(line.Tessellate()[line.Tessellate().Count - 1].Y - line.Tessellate()[0].Y, line.Tessellate()[0].X - line.Tessellate()[line.Tessellate().Count - 1].X) - 90 * Math.PI / 180.0;
                     openingInfo.beamWallAngle = beamWallAngle; // 樑牆旋轉的角度
                 }
                 catch (NullReferenceException) // 排除弧形牆
@@ -1090,7 +1090,7 @@ namespace CSDSEM
                         }
                     }
                     crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10)); // 軸心
-                    crushElemInfo.pipeAngle = 90 - openingInfo.beamWallAngle; // 管角度
+                    crushElemInfo.pipeAngle = /*90 - */openingInfo.beamWallAngle; // 管角度
                     if (crushElemInfo.xyzs.Count > 0)
                     {
                         openingInfo.crushElemInfos.Add(crushElemInfo);
@@ -1347,7 +1347,7 @@ namespace CSDSEM
                                 editPara.Set(crushElemInfo.thickness);
                                 editPara = pipeOpen.LookupParameter("矩形牆開口流水號");
                                 editPara.Set(crushElemInfo.number);
-                                ElementTransformUtils.RotateElement(doc, pipeOpen.Id, crushElemInfo.axis, crushElemInfo.pipeAngle * Math.PI / 180);
+                                ElementTransformUtils.RotateElement(doc, pipeOpen.Id, crushElemInfo.axis, (crushElemInfo.pipeAngle - 90) * Math.PI / 180);
                             }
                             else if (crushElemInfo.useFS.Equals("矩形風管樓版開口"))
                             {
