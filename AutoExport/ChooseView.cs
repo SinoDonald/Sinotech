@@ -129,7 +129,7 @@ namespace AutoExport
                             }
                             if (view.GenLevel != null)
                             {
-                                viewInfo.levelId = view.GenLevel.Id.IntegerValue;
+                                viewInfo.levelId = RevitAPI.GetValue(view.GenLevel.Id);
                             }
                             if (view.CanBePrinted == true)
                             {

@@ -54,7 +54,7 @@ namespace CodeView
                 selectedElement = doc.GetElement(id);
                 // 取得Element的屬性
                 Category category = selectedElement.Category;
-                BuiltInCategory enumCategory = (BuiltInCategory)category.Id.IntegerValue;
+                BuiltInCategory enumCategory = (BuiltInCategory)RevitAPI.GetValue(category.Id);
                 elemInfo.categoryName = category.Name; // 品類名稱
                 elemInfo.builtInCategory = enumCategory.ToString(); // BuiltInCategory
                 Parameter para = selectedElement.get_Parameter(BuiltInParameter.ELEM_FAMILY_PARAM);

@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AutoBuild</RootNamespace>
     <AssemblyName>AutoBuild</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
@@ -54,7 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoColumn.cs" />
-    <Compile Include="ApiUtils.cs" />
+    <Compile Include="RevitAPI.cs" />
     <Compile Include="AutoPipe.cs" />
     <Compile Include="AutoPipeForm.cs">
       <SubType>Form</SubType>

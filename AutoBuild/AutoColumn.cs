@@ -8,7 +8,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using static AutoBuild.ApiUtils;
+using static AutoBuild.RevitAPI;
 
 namespace AutoBuild
 {
@@ -19,7 +19,7 @@ namespace AutoBuild
         public static IEnumerable columnNames = null; // 所有載入的柱名稱
         public static bool trueOrFalse = false; // 視窗是否有正確選擇
         public static string familyName = "M_混凝土-矩形-柱";
-        ElementId startFIid = null;        
+        ElementId startFIid = null;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -40,7 +40,7 @@ namespace AutoBuild
             
             if(elem != null)
             {
-                cadLinkValueList = ApiUtils.SaveCADLinkValue(uidoc, elem); // 讀取幾何圖形, 儲存所有的CAD連結資訊
+                cadLinkValueList = RevitAPI.SaveCADLinkValue(uidoc, elem); // 讀取幾何圖形, 儲存所有的CAD連結資訊
                 try
                 {
                     FamilyInstance familyInstance = FindFamilyInstance(doc); // 找到柱的FamilyInstance
@@ -166,14 +166,14 @@ namespace AutoBuild
                                         {
                                             // 將英呎轉換成公分
                                             //familyManager.Set(familyParamB, length / 30.4801 / 10);
-                                            double bLength = UnitUtils.ConvertToInternalUnits(length, DisplayUnitType.DUT_MILLIMETERS);
+                                            double bLength = RevitAPI.ConvertToInternalUnits(length, "millimeters");
                                             familyManager.Set(familyParamB, bLength);
                                         }
                                         if (null != familyParamH)
                                         {
                                             // 將英呎轉換成公分
                                             //familyManager.Set(familyParamH, width / 30.4801 / 10);
-                                            double hWidth = UnitUtils.ConvertToInternalUnits(width, DisplayUnitType.DUT_MILLIMETERS);
+                                            double hWidth = RevitAPI.ConvertToInternalUnits(width, "millimeters");
                                             familyManager.Set(familyParamH, hWidth);
                                         }
                                     }

@@ -24,7 +24,7 @@ namespace CSDSEM
         {
             InitializeComponent();
             Sinotech_Button sinotech_Button = new Sinotech_Button();
-            this.filePath = Path.Combine(Directory.GetParent(sinotech_Button.assembly).FullName, "專業代碼.txt");
+            this.filePath = Path.Combine(Directory.GetParent(sinotech_Button.addinAssmeblyPath).FullName, "專業代碼.txt");
             LoadProfessionalCode(); // 載入專業代碼
             CreateNodes(rvtLinkInsList); // 新增節點
             CenterToParent();

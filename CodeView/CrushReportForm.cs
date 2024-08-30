@@ -56,7 +56,7 @@ namespace CodeView
                 try
                 {
                     string[] content = treeView1.SelectedNode.Text.Split('：');
-                    ElementId id = new ElementId(Convert.ToInt32(content[1]));
+                    ElementId id = RevitAPI.NewElementId(content[1]);
                     elem = formDoc.GetElement(id);
                     ICollection<ElementId> ids = new List<ElementId>();
                     ids.Add(id);
@@ -76,7 +76,7 @@ namespace CodeView
                 try
                 {
                     string[] content = treeView1.SelectedNode.Text.Split('：');
-                    ElementId id = new ElementId(Convert.ToInt32(content[1]));
+                    ElementId id = RevitAPI.NewElementId(content[1]);
                     elem = formDoc.GetElement(id);
                     ElementIntersectsElementFilter interFilter = new ElementIntersectsElementFilter(elem);
                     FilteredElementCollector interCollector = new FilteredElementCollector(formDoc);
@@ -151,7 +151,7 @@ namespace CodeView
             {
                 string[] nameId = checkedNodes.Split('：');
                 string name = nameId[0];
-                ElementId id = new ElementId(Convert.ToInt32(nameId[1]));
+                ElementId id = RevitAPI.NewElementId(nameId[1]);
                 Element nodeElem = formDoc.GetElement(id);
                 crushReport += CrushReportInfo(nodeElem);
             }

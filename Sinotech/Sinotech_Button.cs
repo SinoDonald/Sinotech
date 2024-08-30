@@ -15,15 +15,22 @@ namespace Sinotech
     }
     public class Sinotech_Button : IExternalApplication
     {
-        public string assembly = Assembly.GetExecutingAssembly().Location; // 封包版路徑位址
+        public string addinAssmeblyPath = Assembly.GetExecutingAssembly().Location; // 封包版路徑位址
         public Result OnStartup(UIControlledApplication application)
         {
-            string sinotechAsb = Path.Combine(Directory.GetParent(assembly).FullName, "Sinotech.dll"); // 圖紙更新
-            string autoExportAsb = Path.Combine(Directory.GetParent(assembly).FullName, "AutoExport.dll"); // 自動出圖
-            string speedToolsAsb = Path.Combine(Directory.GetParent(assembly).FullName, "SpeedTools.dll"); // 快速工具
-            string CSDSEMAsb = Path.Combine(Directory.GetParent(assembly).FullName, "CSDSEM.dll"); // CSD/SEM
-            string autoBuildAsb = Path.Combine(Directory.GetParent(assembly).FullName, "AutoBuild.dll"); // 快速翻模
-            string codeViewAsb = Path.Combine(Directory.GetParent(assembly).FullName, "CodeView.dll"); // 規範校核
+            // 2020
+            string autoBuildAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoBuild_Old.dll"); // 快速翻模
+            string autoExportAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoExport_Old.dll"); // 自動出圖
+            string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView_Old.dll"); // 規範校核
+            string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM_Old.dll"); // CSD/SEM
+            string speedToolsAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "SpeedTools.dll"); // 快速工具
+
+            //// 2024
+            //string autoBuildAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoBuild.dll"); // 快速翻模
+            //string autoExportAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoExport.dll"); // 自動出圖
+            //string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView.dll"); // 規範校核
+            //string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM.dll"); // CSD/SEM
+            //string speedToolsAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "SpeedTools.dll"); // 快速工具
 
             // 創建一個新的選單
             String tabName = "中興自動化";
@@ -31,14 +38,14 @@ namespace Sinotech
 
             // 添加「圖紙更新」面板
             RibbonPanel sinotechPanel = application.CreateRibbonPanel(tabName, "圖紙更新");
-            PushButton sinotechBtn = sinotechPanel.AddItem(new PushButtonData("Sinotech_API", "圖紙更新", sinotechAsb, "Sinotech.Sinotech_API")) as PushButton;
+            PushButton sinotechBtn = sinotechPanel.AddItem(new PushButtonData("Sinotech_API", "圖紙更新", addinAssmeblyPath, "Sinotech.Sinotech_API")) as PushButton;
             //sinotechBtn.LargeImage = new BitmapImage(new Uri(picPath + "圖紙更新.png")); <-- 舊版寫法
             sinotechBtn.LargeImage = convertFromBitmap(Properties.Resources.圖紙更新);
-            PushButton detectionScaleBtn = sinotechPanel.AddItem(new PushButtonData("DetectionScale", "更新比例尺", sinotechAsb, "Sinotech.DetectionScale")) as PushButton;
+            PushButton detectionScaleBtn = sinotechPanel.AddItem(new PushButtonData("DetectionScale", "更新比例尺", addinAssmeblyPath, "Sinotech.DetectionScale")) as PushButton;
             detectionScaleBtn.LargeImage = convertFromBitmap(Properties.Resources.更新比例尺);
-            PushButton updateExcelBtn = sinotechPanel.AddItem(new PushButtonData("UpdateExcel", "更新Excel", sinotechAsb, "Sinotech.UpdateExcelCell")) as PushButton;
+            PushButton updateExcelBtn = sinotechPanel.AddItem(new PushButtonData("UpdateExcel", "更新Excel", addinAssmeblyPath, "Sinotech.UpdateExcelCell")) as PushButton;
             updateExcelBtn.LargeImage = convertFromBitmap(Properties.Resources.更新Excel);
-            PushButton editViewSheetNumberBtn = sinotechPanel.AddItem(new PushButtonData("EditViewSheetNumber", "更新圖號", sinotechAsb, "Sinotech.EditViewSheetNumber")) as PushButton;
+            PushButton editViewSheetNumberBtn = sinotechPanel.AddItem(new PushButtonData("EditViewSheetNumber", "更新圖號", addinAssmeblyPath, "Sinotech.EditViewSheetNumber")) as PushButton;
             editViewSheetNumberBtn.LargeImage = convertFromBitmap(Properties.Resources.更新圖號);
 
             // 添加「自動出圖」面板

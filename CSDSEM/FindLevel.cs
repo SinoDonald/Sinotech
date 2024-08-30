@@ -28,7 +28,7 @@ namespace CSDSEM
                 levelElevation.height = level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
                 //levelElevation.elevation = Convert.ToDouble(level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsValueString());
                 double elevation = level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-                levelElevation.elevation = UnitUtils.ConvertFromInternalUnits(elevation, DisplayUnitType.DUT_METERS);
+                levelElevation.elevation = RevitAPI.ConvertFromInternalUnits(elevation, "meters");
                 levelElevList.Add(levelElevation);
             }
             levelElevList = levelElevList.OrderBy(x => x.elevation).ToList();

@@ -388,9 +388,9 @@ namespace CSDSEM
                         para.Set(bwpValue.pipeLength * 3); // 公分轉換英呎需 * 30.4801
                         para = pipeOpen.LookupParameter("開孔放大距離");
                         // 單位轉換
-                        double diameter = UnitUtils.ConvertFromInternalUnits(bwpValue.outerDiameter, DisplayUnitType.DUT_MILLIMETERS);
+                        double diameter = RevitAPI.ConvertFromInternalUnits(bwpValue.outerDiameter, "millimeters");
                         double openSize = OpenSize(diameter);
-                        double openingDistance = UnitUtils.ConvertToInternalUnits((openSize - diameter), DisplayUnitType.DUT_MILLIMETERS) / 2;
+                        double openingDistance = RevitAPI.ConvertToInternalUnits((openSize - diameter), "millimeters") / 2;
                         para.Set(openingDistance);
                     }
                     catch (NullReferenceException)

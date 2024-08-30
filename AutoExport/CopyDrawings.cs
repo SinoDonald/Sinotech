@@ -82,7 +82,7 @@ namespace AutoExport
                         viewInfo.name = viewTitle[1].Trim();
                         if(view.GenLevel != null)
                         {
-                            viewInfo.levelId = view.GenLevel.Id.IntegerValue;
+                            viewInfo.levelId = RevitAPI.GetValue(view.GenLevel.Id);
                         }
                         //if (!viewInfo.vftName.Contains("圖紙")) // 圖紙不包含, 避免視圖名稱相同重複複製
                         //{

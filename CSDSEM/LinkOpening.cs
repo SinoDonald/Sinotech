@@ -95,9 +95,9 @@ namespace CSDSEM
                 List<BasePoint> prjLocations = allPrjLocations.Where(x => x.get_Parameter(BuiltInParameter.BASEPOINT_ANGLETON_PARAM) != null).ToList();
                 BasePoint prjLocation = prjLocations.Where(x => x.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble() ==
                                         prjLocations.Max(y => y.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble())).FirstOrDefault();
-                prjNS = UnitUtils.ConvertFromInternalUnits(prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble(), DisplayUnitType.DUT_METERS); // 南北
-                prjWE = UnitUtils.ConvertFromInternalUnits(prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_EASTWEST_PARAM).AsDouble(), DisplayUnitType.DUT_METERS); // 東西
-                prjElev = UnitUtils.ConvertFromInternalUnits(prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_ELEVATION_PARAM).AsDouble(), DisplayUnitType.DUT_METERS); // 高程
+                prjNS = RevitAPI.ConvertFromInternalUnits(prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble(), "meters"); // 南北
+                prjWE = RevitAPI.ConvertFromInternalUnits(prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_EASTWEST_PARAM).AsDouble(), "meters"); // 東西
+                prjElev = RevitAPI.ConvertFromInternalUnits(prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_ELEVATION_PARAM).AsDouble(), "meters"); // 高程
                 try
                 {
                     string angleton = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_ANGLETON_PARAM).AsValueString();
@@ -286,7 +286,7 @@ namespace CSDSEM
                         trans.Start();
                         foreach (int id in newOpeningIds)
                         {
-                            ElementId elemId = new ElementId(id);
+                            ElementId elemId = RevitAPI.NewElementId(id.ToString());
                             FamilyInstance newOpening = doc.GetElement(elemId) as FamilyInstance;
                             LocationPoint lp = newOpening.Location as LocationPoint;
                             XYZ xyz = lp.Point;
@@ -687,10 +687,10 @@ namespace CSDSEM
                                                 isInsulation = true; // 是否為保溫管
                                                 //outerDiameter += insulationThickness; // 管外徑 + 絕緣體厚度
                                             }
-                                            outerDiameter = UnitUtils.ConvertFromInternalUnits(outerDiameter, DisplayUnitType.DUT_MILLIMETERS); // 機械_直徑
+                                            outerDiameter = RevitAPI.ConvertFromInternalUnits(outerDiameter, "millimeters"); // 機械_直徑
                                             size = outerDiameter;
                                             outerDiameter = SinoOpenSize(isInsulation, outerDiameter); // 尺寸比對後開口
-                                            crushElemInfo.diameter = UnitUtils.ConvertToInternalUnits(outerDiameter, DisplayUnitType.DUT_MILLIMETERS); // 機械_直徑
+                                            crushElemInfo.diameter = RevitAPI.ConvertToInternalUnits(outerDiameter, "millimeters"); // 機械_直徑
                                         }
                                         catch(Exception ex)
                                         {
@@ -703,11 +703,11 @@ namespace CSDSEM
                                         crushElemInfo.size = diameterPara.AsDouble(); // 管直徑
                                         //string[] diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
                                         //double diameterSize = Convert.ToDouble(diameter[0]);
-                                        double diameterSize = UnitUtils.ConvertToInternalUnits(diameterPara.AsDouble(), DisplayUnitType.DUT_MILLIMETERS); // 機械_直徑
+                                        double diameterSize = RevitAPI.ConvertToInternalUnits(diameterPara.AsDouble(), "millimeters"); // 機械_直徑
                                         size = diameterSize;
                                         //diameterSize = OpenSize(diameterSize); // 尺寸比對後開口
                                         diameterSize = SinoOpenSize(isInsulation, diameterSize); // 尺寸比對後開口
-                                        crushElemInfo.diameter = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 管直徑
+                                        crushElemInfo.diameter = RevitAPI.ConvertToInternalUnits(diameterSize, "millimeters"); // 管直徑
                                     }
                                     // 厚度
                                     if (thicknessPara != null)
@@ -716,7 +716,7 @@ namespace CSDSEM
                                     }
                                     else
                                     {
-                                        crushElemInfo.thickness = UnitUtils.ConvertToInternalUnits(100, DisplayUnitType.DUT_MILLIMETERS); // 風管附件長度
+                                        crushElemInfo.thickness = RevitAPI.ConvertToInternalUnits(100, "millimeters"); // 風管附件長度
                                     }
                                     // 非保溫管且尺寸小於50, 不執行開口
                                     if (isInsulation == false && size < 50)
@@ -789,9 +789,9 @@ namespace CSDSEM
                                         diameterPara = interferenceElem.LookupParameter("最大尺寸");
                                         string diameter = diameterPara.AsValueString().Replace(" mm", "");
                                         double diameterSize = Convert.ToDouble(diameter); // 長
-                                        crushElemInfo.thickness = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
+                                        crushElemInfo.thickness = RevitAPI.ConvertToInternalUnits(diameterSize, "millimeters");
                                         diameterSize = Convert.ToDouble(diameter); // 寬
-                                        crushElemInfo.ductWight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
+                                        crushElemInfo.ductWight = RevitAPI.ConvertToInternalUnits(diameterSize, "millimeters");
                                         // 厚度
                                         if (thicknessPara != null)
                                         {
@@ -799,7 +799,7 @@ namespace CSDSEM
                                         }
                                         else
                                         {
-                                            crushElemInfo.ductHeight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 風管附件寬度 = 高度
+                                            crushElemInfo.ductHeight = RevitAPI.ConvertToInternalUnits(diameterSize, "millimeters"); // 風管附件寬度 = 高度
                                         }
                                     }
                                     catch (Exception) { }
@@ -818,7 +818,7 @@ namespace CSDSEM
                                     //string diameter = diameters[0];
                                     //double diameterSize = Convert.ToDouble(diameter) + 50;
                                     //crushElemInfo.ductHeight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
-                                    crushElemInfo.ductHeight = diameterPara.AsDouble() + UnitUtils.ConvertToInternalUnits(50, DisplayUnitType.DUT_MILLIMETERS);
+                                    crushElemInfo.ductHeight = diameterPara.AsDouble() + RevitAPI.ConvertToInternalUnits(50, "millimeters");
                                     // 寬度
                                     diameterPara = interferenceElem.LookupParameter("托盤寬度 1");
                                     //diameters = diameterPara.AsValueString().Split(' ');
@@ -881,10 +881,10 @@ namespace CSDSEM
                                     isInsulation = true; // 是否為保溫管
                                     //outerDiameter += insulationThickness; // 管外徑 + 絕緣體厚度
                                 }
-                                outerDiameter = UnitUtils.ConvertFromInternalUnits(outerDiameter, DisplayUnitType.DUT_MILLIMETERS); // 機械_直徑
+                                outerDiameter = RevitAPI.ConvertFromInternalUnits(outerDiameter, "millimeters"); // 機械_直徑
                                 size = outerDiameter;
                                 outerDiameter = SinoOpenSize(isInsulation, outerDiameter); // 尺寸比對後開口
-                                crushElemInfo.diameter = UnitUtils.ConvertToInternalUnits(outerDiameter, DisplayUnitType.DUT_MILLIMETERS); // 機械_直徑
+                                crushElemInfo.diameter = RevitAPI.ConvertToInternalUnits(outerDiameter, "millimeters"); // 機械_直徑
                             }
                             else
                             {
@@ -895,7 +895,7 @@ namespace CSDSEM
                                 size = diameterSize;
                                 //diameterSize = OpenSize(diameterSize); // 尺寸比對後開口
                                 diameterSize = SinoOpenSize(isInsulation, diameterSize); // 尺寸比對後開口
-                                crushElemInfo.diameter = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 管直徑
+                                crushElemInfo.diameter = RevitAPI.ConvertToInternalUnits(diameterSize, "millimeters"); // 管直徑
                             }
                         }
                         else if (interferenceElem is Duct)
@@ -905,15 +905,15 @@ namespace CSDSEM
                             crushElemInfo.ductHeight = height; // 高度
                             double width = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM).AsDouble();
                             crushElemInfo.ductWight = width; // 寬度
-                            size = UnitUtils.ConvertFromInternalUnits(width, DisplayUnitType.DUT_MILLIMETERS);
+                            size = RevitAPI.ConvertFromInternalUnits(width, "millimeters");
                         }
                         else if (interferenceElem is CableTray)
                         {
                             crushElemInfo.type = "CableTray";
                             Parameter diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_HEIGHT_PARAM);
-                            crushElemInfo.ductHeight = diameterPara.AsDouble() + UnitUtils.ConvertToInternalUnits(50, DisplayUnitType.DUT_MILLIMETERS); // 高度
+                            crushElemInfo.ductHeight = diameterPara.AsDouble() + RevitAPI.ConvertToInternalUnits(50, "millimeters"); // 高度
                             diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_WIDTH_PARAM);
-                            size = UnitUtils.ConvertFromInternalUnits(diameterPara.AsDouble(), DisplayUnitType.DUT_MILLIMETERS);
+                            size = RevitAPI.ConvertFromInternalUnits(diameterPara.AsDouble(), "millimeters");
                             crushElemInfo.ductWight = diameterPara.AsDouble()/* + UnitUtils.ConvertToInternalUnits(50, DisplayUnitType.DUT_MILLIMETERS)*/; // 寬度
                         }
                         if (thicknessPara != null)
@@ -1006,7 +1006,7 @@ namespace CSDSEM
                                             double cableTrayHeight = Convert.ToDouble(cableTrayPara[0]) / 2;
                                             // 偏移至開口底部與電纜架底部距離50cm
                                             double deviation = openingHeight - (cableTrayHeight + 50); // 中心點到中心點所以
-                                            double move = UnitUtils.ConvertToInternalUnits(deviation, DisplayUnitType.DUT_MILLIMETERS); // 偏移
+                                            double move = RevitAPI.ConvertToInternalUnits(deviation, "millimeters"); // 偏移
                                             double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
                                             crushElemInfo.deviation = z - elevation + move; // 偏移
                                         }
@@ -1090,7 +1090,7 @@ namespace CSDSEM
                         }
                     }
                     crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10)); // 軸心
-                    crushElemInfo.pipeAngle = /*90 - */openingInfo.beamWallAngle; // 管角度
+                    crushElemInfo.pipeAngle = /*90 - */openingInfo.beamWallAngle - 90; // 管角度
                     if (crushElemInfo.xyzs.Count > 0)
                     {
                         openingInfo.crushElemInfos.Add(crushElemInfo);
@@ -1290,7 +1290,7 @@ namespace CSDSEM
                     {
                         pipeOpen = doc.Create.NewFamilyInstance(xyz, openFS, crushElemInfo.level, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
                         crushElemInfo.pipeOpens.Add(pipeOpen); // 儲存所有新增開口
-                        newOpeningIds.Add(pipeOpen.Id.IntegerValue);
+                        newOpeningIds.Add(RevitAPI.GetValue(pipeOpen.Id));
                         amount++;
                     }
                 }
@@ -1347,7 +1347,7 @@ namespace CSDSEM
                                 editPara.Set(crushElemInfo.thickness);
                                 editPara = pipeOpen.LookupParameter("矩形牆開口流水號");
                                 editPara.Set(crushElemInfo.number);
-                                ElementTransformUtils.RotateElement(doc, pipeOpen.Id, crushElemInfo.axis, (crushElemInfo.pipeAngle - 90) * Math.PI / 180);
+                                ElementTransformUtils.RotateElement(doc, pipeOpen.Id, crushElemInfo.axis, crushElemInfo.pipeAngle * Math.PI / 180);
                             }
                             else if (crushElemInfo.useFS.Equals("矩形風管樓版開口"))
                             {
@@ -1439,7 +1439,7 @@ namespace CSDSEM
                     if (opening.Name.Equals("圓形水管牆開口"))
                     {
                         double height = Convert.ToDouble(opening.LookupParameter("指定圓形套管直徑").AsDouble());
-                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_MILLIMETERS);
+                        double sub = RevitAPI.ConvertFromInternalUnits(offset - (height / 2), "millimeters");
                         string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("圓形套管底部高程");
                         para.Set(value);
@@ -1447,7 +1447,7 @@ namespace CSDSEM
                     else if(opening.Name.Equals("矩形風管牆開口"))
                     {
                         double height = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsDouble());
-                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_MILLIMETERS);
+                        double sub = RevitAPI.ConvertFromInternalUnits(offset - (height / 2), "millimeters");
                         string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("矩形開口底部高程");
                         para.Set(value);
@@ -1455,7 +1455,7 @@ namespace CSDSEM
                     else if (opening.Name.Equals("電纜架牆開口"))
                     {
                         double height = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsDouble());
-                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), DisplayUnitType.DUT_MILLIMETERS);
+                        double sub = RevitAPI.ConvertFromInternalUnits(offset - (height / 2), "millimeters");
                         string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("矩形開口底部高程");
                         para.Set(value);

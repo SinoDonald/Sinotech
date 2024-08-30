@@ -471,7 +471,7 @@ namespace CSDSEM
                 // 儲存修改過編號的開口
                 List<OpeningInfo> removeOpenings = new List<OpeningInfo>();
                 List<OpeningInfo> sameCrushPipes = (from x in openingInfoList
-                                                    where x.crushPipeId.Equals(pipeData.elem.Id.IntegerValue)
+                                                    where x.crushPipeId.Equals(RevitAPI.GetValue(pipeData.elem.Id))
                                                     select x).ToList();
                 foreach (OpeningInfo sameCrushPipe in sameCrushPipes)
                 {
