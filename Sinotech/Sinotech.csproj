@@ -176,6 +176,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BatchSign.cs" />
     <Compile Include="CreateDrawings.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -270,6 +271,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\更新圖號.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DocumentProcessing\DocumentProcessing.csproj">
+      <Project>{35479CD8-6326-4F94-9E97-E45ED29DDEB6}</Project>
+      <Name>DocumentProcessing</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動簽圖.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

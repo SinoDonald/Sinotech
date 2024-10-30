@@ -15,494 +15,710 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_09C79F8152F97468D977CC09E00DBE8F"
-        "OwnerKey" = "8:_1C6E305F95B074D77C0B2497928BB0A2"
+        "MsmKey" = "8:_00578AAACB94C4E82C2800E8672E2396"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_09C79F8152F97468D977CC09E00DBE8F"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
+        "MsmKey" = "8:_00578AAACB94C4E82C2800E8672E2396"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_12A6A852EDBCBAAA529B0F771048E724"
-        "OwnerKey" = "8:_130C701A4D545C8FE3858979CDB4874F"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_12A6A852EDBCBAAA529B0F771048E724"
-        "OwnerKey" = "8:_69312A53F19243E0832D3860451C557B"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_130C701A4D545C8FE3858979CDB4874F"
-        "OwnerKey" = "8:_D4261058D9D04B4CA326F7BD103DC7AA"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_130C701A4D545C8FE3858979CDB4874F"
-        "OwnerKey" = "8:_682B36C17F2543ACBD1F7C68DF6640E0"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_130C701A4D545C8FE3858979CDB4874F"
-        "OwnerKey" = "8:_B585BF6F14274F02A1D24B3DB33A5A56"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_130C701A4D545C8FE3858979CDB4874F"
-        "OwnerKey" = "8:_29439E7037DB4948BA51CE7C8374A8BA"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_130C701A4D545C8FE3858979CDB4874F"
-        "OwnerKey" = "8:_DD8CD61E2B7AFFF4334A0E8A91F6F2C4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_1831512FEA7149B3A374634227C57BA3"
+        "MsmKey" = "8:_0230E71B9C134DC9ACAFC82819AADB02"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_1C6E305F95B074D77C0B2497928BB0A2"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
+        "MsmKey" = "8:_0351C8ABEA7334C1088CB0C35EAB1D4B"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_1FA50B4197079465523E1E902F13E010"
-        "OwnerKey" = "8:_4BCAC55745CF3F9D2FC49DA983F91042"
+        "MsmKey" = "8:_0351C8ABEA7334C1088CB0C35EAB1D4B"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_1FA50B4197079465523E1E902F13E010"
-        "OwnerKey" = "8:_24B0E4464B5544ACAB352089712517A5"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_24B0E4464B5544ACAB352089712517A5"
+        "MsmKey" = "8:_05145BBBE056454EB7B9D7B18528BB6F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_29439E7037DB4948BA51CE7C8374A8BA"
+        "MsmKey" = "8:_0FB52B381AB6904161C2780223225A1E"
+        "OwnerKey" = "8:_645EBFDBE4A74E148B2EE1CCE764E238"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_0FB52B381AB6904161C2780223225A1E"
+        "OwnerKey" = "8:_BD450D3936B74BB0BCC8B4CFDDD0885C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_129ED94409F6D498F78A03CDD000AF5F"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_129ED94409F6D498F78A03CDD000AF5F"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_12FA84E772BE6B0789E3D0DF5B323B23"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_12FA84E772BE6B0789E3D0DF5B323B23"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_19E4171C45764D9F8085AA929ABF6EA7"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_2E967D8027D8EDDC33F57FFF56B81E3A"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
+        "MsmKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "OwnerKey" = "8:_5122B4D3FB1EE30D24098603456251A2"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_312611597742E627DDCC756556949FB4"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
+        "MsmKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "OwnerKey" = "8:_19E4171C45764D9F8085AA929ABF6EA7"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_35F4FA184FC24F619B3ED449E8530D31"
+        "MsmKey" = "8:_3D00F7BCFA574AC99CB9332BBA0F98F8"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_38140D70A7044A20B642DC1338F92110"
+        "MsmKey" = "8:_420FB14B9815F86282924F82EBF9C6B9"
+        "OwnerKey" = "8:_3D00F7BCFA574AC99CB9332BBA0F98F8"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_420FB14B9815F86282924F82EBF9C6B9"
+        "OwnerKey" = "8:_BD450D3936B74BB0BCC8B4CFDDD0885C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_44FE247745AE4FB186A07E517E430EC6"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_3CC1D59182A47BE42CD6942533821192"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
+        "MsmKey" = "8:_4EDE4549E195F1C890CEA1FF4FC93A3A"
+        "OwnerKey" = "8:_A10355B920A3CF8027BBD72CD0781CCC"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_4559FDDEB30D46B396C4A9894A2F5FA6"
+        "MsmKey" = "8:_4EDE4549E195F1C890CEA1FF4FC93A3A"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_4EDE4549E195F1C890CEA1FF4FC93A3A"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_5122B4D3FB1EE30D24098603456251A2"
+        "OwnerKey" = "8:_75CCB1C52C77802653EF955E271625D3"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_5122B4D3FB1EE30D24098603456251A2"
+        "OwnerKey" = "8:_841582A62D694D56BCF27BADCD66ED69"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_53A385A9FA612CE6F7CBFAB625C0457B"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_53A385A9FA612CE6F7CBFAB625C0457B"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_559DF3DE522740279B0A59CE1453E95A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_4B10FCDC37BBD2A7CF29D07D664D193E"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
+        "MsmKey" = "8:_5B3DD4AEB69944E4A64E3F0018A88101"
+        "OwnerKey" = "8:_75CCB1C52C77802653EF955E271625D3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_4BCAC55745CF3F9D2FC49DA983F91042"
-        "OwnerKey" = "8:_130C701A4D545C8FE3858979CDB4874F"
+        "MsmKey" = "8:_5B3DD4AEB69944E4A64E3F0018A88101"
+        "OwnerKey" = "8:_841582A62D694D56BCF27BADCD66ED69"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_4BCAC55745CF3F9D2FC49DA983F91042"
-        "OwnerKey" = "8:_69312A53F19243E0832D3860451C557B"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_66340B524C9A4CCEAAFCE57EFD47C3B0"
+        "MsmKey" = "8:_600DD43A2C774269A52AC351F96F3DE4"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_682B36C17F2543ACBD1F7C68DF6640E0"
+        "MsmKey" = "8:_60664A1E4784451E8994A4F147C71C3A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_69312A53F19243E0832D3860451C557B"
+        "MsmKey" = "8:_61E1651A69B7F14AB2E8CF819E0A2A19"
+        "OwnerKey" = "8:_AAF32621E3B548E7A0A00963EAB96DDC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_61E1651A69B7F14AB2E8CF819E0A2A19"
+        "OwnerKey" = "8:_3D00F7BCFA574AC99CB9332BBA0F98F8"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_645EBFDBE4A74E148B2EE1CCE764E238"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_6A45CBE9F43246C7A9745E611D59603A"
+        "MsmKey" = "8:_6A26B2C657964708B7CB87344E00106F"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_6E3D8A4CE2FE4C5988C2C8CF4030C06A"
+        "MsmKey" = "8:_6DE36A4EBCC4435B840C1D121F7F9223"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_6FE51AD3E56ADB45B7FDBF270CA62DB4"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_7425B6EAFD2046EEA0169376B35B7554"
+        "MsmKey" = "8:_6F1679D97E504B07BB9422559298C88D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_8FEEE737FDCB8D275782AC1D14A2248C"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
+        "MsmKey" = "8:_75CCB1C52C77802653EF955E271625D3"
+        "OwnerKey" = "8:_3D00F7BCFA574AC99CB9332BBA0F98F8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_98FD88E7CB00E3838EB4E4999E9D1F59"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
+        "MsmKey" = "8:_75CCB1C52C77802653EF955E271625D3"
+        "OwnerKey" = "8:_E3BA024AEDE241B9B30FCFDAE033534B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_9E2C4E6DE7C1AEAE906C41CBBA3DFC2E"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
+        "MsmKey" = "8:_75CCB1C52C77802653EF955E271625D3"
+        "OwnerKey" = "8:_6A26B2C657964708B7CB87344E00106F"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_A6D97841996C4C298ED8C12C82366B0E"
+        "MsmKey" = "8:_75CCB1C52C77802653EF955E271625D3"
+        "OwnerKey" = "8:_600DD43A2C774269A52AC351F96F3DE4"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_75CCB1C52C77802653EF955E271625D3"
+        "OwnerKey" = "8:_BD450D3936B74BB0BCC8B4CFDDD0885C"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_75CCB1C52C77802653EF955E271625D3"
+        "OwnerKey" = "8:_420FB14B9815F86282924F82EBF9C6B9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_75CCB1C52C77802653EF955E271625D3"
+        "OwnerKey" = "8:_83AD2C26718A16024EA86D95EAE457DC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_7D5615E4FEA045E6AD46895C0EAF87F7"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_B30993B29541A167F4D25FFF9B90F23A"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_B585BF6F14274F02A1D24B3DB33A5A56"
+        "MsmKey" = "8:_820C967A79E7413DBF10E15685794E6A"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_B6DF95AEC4F14BF986B8906B09F80CC0"
+        "MsmKey" = "8:_83AD2C26718A16024EA86D95EAE457DC"
+        "OwnerKey" = "8:_420FB14B9815F86282924F82EBF9C6B9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_83AD2C26718A16024EA86D95EAE457DC"
+        "OwnerKey" = "8:_E3BA024AEDE241B9B30FCFDAE033534B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_83AD2C26718A16024EA86D95EAE457DC"
+        "OwnerKey" = "8:_6A26B2C657964708B7CB87344E00106F"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_841582A62D694D56BCF27BADCD66ED69"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_BA5676E85D38D868B1E41D020849DD2F"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_C831524B44126E38BBFA77E852BD05FD"
-        "OwnerKey" = "8:_4BCAC55745CF3F9D2FC49DA983F91042"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_C831524B44126E38BBFA77E852BD05FD"
-        "OwnerKey" = "8:_24B0E4464B5544ACAB352089712517A5"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_D4261058D9D04B4CA326F7BD103DC7AA"
+        "MsmKey" = "8:_84CBB2E2EE6A47F0A55C9CEBFA287DD4"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_DD8CD61E2B7AFFF4334A0E8A91F6F2C4"
-        "OwnerKey" = "8:_D4261058D9D04B4CA326F7BD103DC7AA"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_DD8CD61E2B7AFFF4334A0E8A91F6F2C4"
-        "OwnerKey" = "8:_29439E7037DB4948BA51CE7C8374A8BA"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E37FBE00F8D94F4196222669DF794F26"
+        "MsmKey" = "8:_86DD1687E0DD477DBC1FE96321CA2779"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_E8583867834F4C8E8B3351B032A6D857"
+        "MsmKey" = "8:_97052425F8E74DCBB50D5DB94F691D08"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_97052425F8E74DCBB50D5DB94F691D08"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A10355B920A3CF8027BBD72CD0781CCC"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A10355B920A3CF8027BBD72CD0781CCC"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A663951C82C036F4CF957224B1E795AC"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A663951C82C036F4CF957224B1E795AC"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A6CAAA5E93A49059797E81B4EF9427A9"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A6CAAA5E93A49059797E81B4EF9427A9"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_AAF32621E3B548E7A0A00963EAB96DDC"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_E88D337480F309E9BE5FB76490F15EB7"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_EBBE99EA43AD9A4F2E808378FCA97E16"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_EEDCCF67C31A2A25B64BA6F1F5EF644C"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_F5AFC995E472B451EFF7F1BE190696F6"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_FE2A3AD8FCBB465D87D6778AD837F7D9"
+        "MsmKey" = "8:_B6B5541733FB41BE8810A1FB9602FE24"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_66340B524C9A4CCEAAFCE57EFD47C3B0"
+        "MsmKey" = "8:_B89E6D2043472A3877649CF399A3BC7D"
+        "OwnerKey" = "8:_5122B4D3FB1EE30D24098603456251A2"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B89E6D2043472A3877649CF399A3BC7D"
+        "OwnerKey" = "8:_19E4171C45764D9F8085AA929ABF6EA7"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_BAFF5822928046228508C3FCB0AA3AE4"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_BB881BA14E9A2CD6D6BCB608EEA691C1"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_BB881BA14E9A2CD6D6BCB608EEA691C1"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_BD450D3936B74BB0BCC8B4CFDDD0885C"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C2C9B0F24F663F5A7C1E7B4FC7636467"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C2C9B0F24F663F5A7C1E7B4FC7636467"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D5C4A6C9910C5ACB0FE87DD2787EC120"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D5C4A6C9910C5ACB0FE87DD2787EC120"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E3BA024AEDE241B9B30FCFDAE033534B"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E402D9C63CF738A63ABE83E9D01B1327"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E402D9C63CF738A63ABE83E9D01B1327"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_EE84DAE0B2AB2635D4401B74EE5BD184"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_EE84DAE0B2AB2635D4401B74EE5BD184"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FCE82BA3AFBC044EE7E5A8FAD005CA86"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_FCE82BA3AFBC044EE7E5A8FAD005CA86"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_FE2A3AD8FCBB465D87D6778AD837F7D9"
+        "OwnerKey" = "8:_61E1651A69B7F14AB2E8CF819E0A2A19"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_6A45CBE9F43246C7A9745E611D59603A"
+        "OwnerKey" = "8:_6DE36A4EBCC4435B840C1D121F7F9223"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_682B36C17F2543ACBD1F7C68DF6640E0"
+        "OwnerKey" = "8:_0230E71B9C134DC9ACAFC82819AADB02"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_B585BF6F14274F02A1D24B3DB33A5A56"
+        "OwnerKey" = "8:_E3BA024AEDE241B9B30FCFDAE033534B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_7425B6EAFD2046EEA0169376B35B7554"
+        "OwnerKey" = "8:_6A26B2C657964708B7CB87344E00106F"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_69312A53F19243E0832D3860451C557B"
+        "OwnerKey" = "8:_86DD1687E0DD477DBC1FE96321CA2779"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_29439E7037DB4948BA51CE7C8374A8BA"
+        "OwnerKey" = "8:_B6B5541733FB41BE8810A1FB9602FE24"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_D4261058D9D04B4CA326F7BD103DC7AA"
+        "OwnerKey" = "8:_EE7E6A533904435C8531184D63A18FB9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_DD8CD61E2B7AFFF4334A0E8A91F6F2C4"
+        "OwnerKey" = "8:_84CBB2E2EE6A47F0A55C9CEBFA287DD4"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_130C701A4D545C8FE3858979CDB4874F"
+        "OwnerKey" = "8:_841582A62D694D56BCF27BADCD66ED69"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_1FA50B4197079465523E1E902F13E010"
+        "OwnerKey" = "8:_600DD43A2C774269A52AC351F96F3DE4"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_8FEEE737FDCB8D275782AC1D14A2248C"
+        "OwnerKey" = "8:_BD450D3936B74BB0BCC8B4CFDDD0885C"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_EBBE99EA43AD9A4F2E808378FCA97E16"
+        "OwnerKey" = "8:_3D00F7BCFA574AC99CB9332BBA0F98F8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_EEDCCF67C31A2A25B64BA6F1F5EF644C"
+        "OwnerKey" = "8:_420FB14B9815F86282924F82EBF9C6B9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_312611597742E627DDCC756556949FB4"
+        "OwnerKey" = "8:_83AD2C26718A16024EA86D95EAE457DC"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_F5AFC995E472B451EFF7F1BE190696F6"
+        "OwnerKey" = "8:_75CCB1C52C77802653EF955E271625D3"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_BA5676E85D38D868B1E41D020849DD2F"
+        "OwnerKey" = "8:_3C6BC56694E450AD78A6945D9F516F03"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_E88D337480F309E9BE5FB76490F15EB7"
+        "OwnerKey" = "8:_97052425F8E74DCBB50D5DB94F691D08"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_3CC1D59182A47BE42CD6942533821192"
+        "OwnerKey" = "8:_FCE82BA3AFBC044EE7E5A8FAD005CA86"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_4B10FCDC37BBD2A7CF29D07D664D193E"
+        "OwnerKey" = "8:_53A385A9FA612CE6F7CBFAB625C0457B"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_2E967D8027D8EDDC33F57FFF56B81E3A"
+        "OwnerKey" = "8:_E402D9C63CF738A63ABE83E9D01B1327"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_1C6E305F95B074D77C0B2497928BB0A2"
+        "OwnerKey" = "8:_129ED94409F6D498F78A03CDD000AF5F"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_09C79F8152F97468D977CC09E00DBE8F"
+        "OwnerKey" = "8:_00578AAACB94C4E82C2800E8672E2396"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_98FD88E7CB00E3838EB4E4999E9D1F59"
+        "OwnerKey" = "8:_EE84DAE0B2AB2635D4401B74EE5BD184"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_B30993B29541A167F4D25FFF9B90F23A"
+        "OwnerKey" = "8:_C2C9B0F24F663F5A7C1E7B4FC7636467"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_6FE51AD3E56ADB45B7FDBF270CA62DB4"
+        "OwnerKey" = "8:_A6CAAA5E93A49059797E81B4EF9427A9"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_9E2C4E6DE7C1AEAE906C41CBBA3DFC2E"
+        "OwnerKey" = "8:_12FA84E772BE6B0789E3D0DF5B323B23"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_C831524B44126E38BBFA77E852BD05FD"
+        "OwnerKey" = "8:_A10355B920A3CF8027BBD72CD0781CCC"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_12A6A852EDBCBAAA529B0F771048E724"
+        "OwnerKey" = "8:_4EDE4549E195F1C890CEA1FF4FC93A3A"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_6E3D8A4CE2FE4C5988C2C8CF4030C06A"
+        "OwnerKey" = "8:_BB881BA14E9A2CD6D6BCB608EEA691C1"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_0351C8ABEA7334C1088CB0C35EAB1D4B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_D5C4A6C9910C5ACB0FE87DD2787EC120"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_A663951C82C036F4CF957224B1E795AC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_B89E6D2043472A3877649CF399A3BC7D"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_5B3DD4AEB69944E4A64E3F0018A88101"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_645EBFDBE4A74E148B2EE1CCE764E238"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_0FB52B381AB6904161C2780223225A1E"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_AAF32621E3B548E7A0A00963EAB96DDC"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -595,878 +811,14 @@
         }
         "File"
         {
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_09C79F8152F97468D977CC09E00DBE8F"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_09C79F8152F97468D977CC09E00DBE8F"
-                    {
-                    "Name" = "8:System.IO.Compression.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.IO.Compression.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_12A6A852EDBCBAAA529B0F771048E724"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:EPPlus.Interfaces, Version=6.1.1.0, Culture=neutral, PublicKeyToken=a694d7f3b0907a61, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_12A6A852EDBCBAAA529B0F771048E724"
-                    {
-                    "Name" = "8:EPPlus.Interfaces.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:EPPlus.Interfaces.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_130C701A4D545C8FE3858979CDB4874F"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:EPPlus, Version=7.2.2.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_130C701A4D545C8FE3858979CDB4874F"
-                    {
-                    "Name" = "8:EPPlus.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:EPPlus.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1831512FEA7149B3A374634227C57BA3"
-            {
-            "SourcePath" = "8:..\\安裝目錄\\2020\\Sinotech.addin"
-            "TargetName" = "8:Sinotech.addin"
-            "Tag" = "8:"
-            "Folder" = "8:_BC75204E105B44169611EE9BB5560D47"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_1C6E305F95B074D77C0B2497928BB0A2"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.IO.Compression.FileSystem, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_1C6E305F95B074D77C0B2497928BB0A2"
-                    {
-                    "Name" = "8:System.IO.Compression.FileSystem.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.IO.Compression.FileSystem.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_1FA50B4197079465523E1E902F13E010"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_1FA50B4197079465523E1E902F13E010"
-                    {
-                    "Name" = "8:netstandard.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:netstandard.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_24B0E4464B5544ACAB352089712517A5"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Microsoft.IO.RecyclableMemoryStream, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_24B0E4464B5544ACAB352089712517A5"
-                    {
-                    "Name" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\Microsoft.IO.RecyclableMemoryStream.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_29439E7037DB4948BA51CE7C8374A8BA"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:CSDSEM, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_29439E7037DB4948BA51CE7C8374A8BA"
-                    {
-                    "Name" = "8:CSDSEM_Old.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\CSDSEM_Old.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_2E967D8027D8EDDC33F57FFF56B81E3A"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_2E967D8027D8EDDC33F57FFF56B81E3A"
-                    {
-                    "Name" = "8:System.Net.Http.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Net.Http.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_312611597742E627DDCC756556949FB4"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Security.SecureString, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_312611597742E627DDCC756556949FB4"
-                    {
-                    "Name" = "8:System.Security.SecureString.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Security.SecureString.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_35F4FA184FC24F619B3ED449E8530D31"
-            {
-            "SourcePath" = "8:..\\安裝目錄\\2023\\Sinotech.addin"
-            "TargetName" = "8:Sinotech.addin"
-            "Tag" = "8:"
-            "Folder" = "8:_1EDF110F39A842CF8CC8DE1902F919F5"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_38140D70A7044A20B642DC1338F92110"
-            {
-            "SourcePath" = "8:..\\安裝目錄\\2018\\Sinotech.addin"
-            "TargetName" = "8:Sinotech.addin"
-            "Tag" = "8:"
-            "Folder" = "8:_E35EEE6C1B964614A9C02224BC225691"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3CC1D59182A47BE42CD6942533821192"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Runtime.InteropServices.RuntimeInformation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_3CC1D59182A47BE42CD6942533821192"
-                    {
-                    "Name" = "8:System.Runtime.InteropServices.RuntimeInformation.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Runtime.InteropServices.RuntimeInformation.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_4559FDDEB30D46B396C4A9894A2F5FA6"
-            {
-            "SourcePath" = "8:..\\安裝目錄\\2024\\Sinotech.addin"
-            "TargetName" = "8:Sinotech.addin"
-            "Tag" = "8:"
-            "Folder" = "8:_2E686F7C77AA4D208E89C39252C4676B"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_4B10FCDC37BBD2A7CF29D07D664D193E"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Net.Sockets, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_4B10FCDC37BBD2A7CF29D07D664D193E"
-                    {
-                    "Name" = "8:System.Net.Sockets.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Net.Sockets.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_4BCAC55745CF3F9D2FC49DA983F91042"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Microsoft.IO.RecyclableMemoryStream, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_4BCAC55745CF3F9D2FC49DA983F91042"
-                    {
-                    "Name" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_66340B524C9A4CCEAAFCE57EFD47C3B0"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:AutoExport, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_66340B524C9A4CCEAAFCE57EFD47C3B0"
-                    {
-                    "Name" = "8:AutoExport.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\AutoExport.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_682B36C17F2543ACBD1F7C68DF6640E0"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_682B36C17F2543ACBD1F7C68DF6640E0"
-                    {
-                    "Name" = "8:Sinotech_Old.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\Sinotech_Old.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_69312A53F19243E0832D3860451C557B"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:EPPlus, Version=7.2.2.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_69312A53F19243E0832D3860451C557B"
-                    {
-                    "Name" = "8:EPPlus.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\EPPlus.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6A45CBE9F43246C7A9745E611D59603A"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:SpeedTools, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_6A45CBE9F43246C7A9745E611D59603A"
-                    {
-                    "Name" = "8:SpeedTools.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\SpeedTools.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6E3D8A4CE2FE4C5988C2C8CF4030C06A"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:AutoExport, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_6E3D8A4CE2FE4C5988C2C8CF4030C06A"
-                    {
-                    "Name" = "8:AutoExport_Old.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\AutoExport_Old.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6FE51AD3E56ADB45B7FDBF270CA62DB4"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Diagnostics.StackTrace, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_6FE51AD3E56ADB45B7FDBF270CA62DB4"
-                    {
-                    "Name" = "8:System.Diagnostics.StackTrace.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Diagnostics.StackTrace.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_7425B6EAFD2046EEA0169376B35B7554"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:EPPlus.Interfaces, Version=6.1.1.0, Culture=neutral, PublicKeyToken=a694d7f3b0907a61, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_7425B6EAFD2046EEA0169376B35B7554"
-                    {
-                    "Name" = "8:EPPlus.Interfaces.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\EPPlus.Interfaces.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_8FEEE737FDCB8D275782AC1D14A2248C"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Xml.XPath.XDocument, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_8FEEE737FDCB8D275782AC1D14A2248C"
-                    {
-                    "Name" = "8:System.Xml.XPath.XDocument.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Xml.XPath.XDocument.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_98FD88E7CB00E3838EB4E4999E9D1F59"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Globalization.Extensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_98FD88E7CB00E3838EB4E4999E9D1F59"
-                    {
-                    "Name" = "8:System.Globalization.Extensions.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Globalization.Extensions.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_9E2C4E6DE7C1AEAE906C41CBBA3DFC2E"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Data.Common, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_9E2C4E6DE7C1AEAE906C41CBBA3DFC2E"
-                    {
-                    "Name" = "8:System.Data.Common.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Data.Common.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A6D97841996C4C298ED8C12C82366B0E"
-            {
-            "SourcePath" = "8:..\\安裝目錄\\2019\\Sinotech.addin"
-            "TargetName" = "8:Sinotech.addin"
-            "Tag" = "8:"
-            "Folder" = "8:_F8CF130E330D4ED7B2226E2D16BCD799"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B30993B29541A167F4D25FFF9B90F23A"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Diagnostics.Tracing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_B30993B29541A167F4D25FFF9B90F23A"
-                    {
-                    "Name" = "8:System.Diagnostics.Tracing.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Diagnostics.Tracing.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B585BF6F14274F02A1D24B3DB33A5A56"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_B585BF6F14274F02A1D24B3DB33A5A56"
-                    {
-                    "Name" = "8:Sinotech.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\Sinotech.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B6DF95AEC4F14BF986B8906B09F80CC0"
-            {
-            "SourcePath" = "8:..\\安裝目錄\\2021\\Sinotech.addin"
-            "TargetName" = "8:Sinotech.addin"
-            "Tag" = "8:"
-            "Folder" = "8:_C3034155FCA74FC2A1DA1FCA2A8852DD"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_BA5676E85D38D868B1E41D020849DD2F"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_00578AAACB94C4E82C2800E8672E2396"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:TRUE"
             "AssemblyAsmDisplayName" = "8:System.Runtime.Serialization.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_BA5676E85D38D868B1E41D020849DD2F"
+                    "_00578AAACB94C4E82C2800E8672E2396"
                     {
                     "Name" = "8:System.Runtime.Serialization.Xml.dll"
                     "Attributes" = "3:512"
@@ -1475,7 +827,7 @@
             "SourcePath" = "8:System.Runtime.Serialization.Xml.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1490,54 +842,23 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C831524B44126E38BBFA77E852BD05FD"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_0230E71B9C134DC9ACAFC82819AADB02"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:SpeedTools, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
                 "ScatterAssemblies"
                 {
-                    "_C831524B44126E38BBFA77E852BD05FD"
+                    "_0230E71B9C134DC9ACAFC82819AADB02"
                     {
-                    "Name" = "8:System.Memory.dll"
+                    "Name" = "8:SpeedTools.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:System.Memory.dll"
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\SpeedTools.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_D4261058D9D04B4CA326F7BD103DC7AA"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:CSDSEM, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
-                "ScatterAssemblies"
-                {
-                    "_D4261058D9D04B4CA326F7BD103DC7AA"
-                    {
-                    "Name" = "8:CSDSEM.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\CSDSEM.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1552,23 +873,23 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_DD8CD61E2B7AFFF4334A0E8A91F6F2C4"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_0351C8ABEA7334C1088CB0C35EAB1D4B"
             {
             "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Diagnostics.Tracing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_DD8CD61E2B7AFFF4334A0E8A91F6F2C4"
+                    "_0351C8ABEA7334C1088CB0C35EAB1D4B"
                     {
-                    "Name" = "8:Sinotech.dll"
+                    "Name" = "8:System.Diagnostics.Tracing.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Sinotech.dll"
+            "SourcePath" = "8:System.Diagnostics.Tracing.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1583,12 +904,12 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E37FBE00F8D94F4196222669DF794F26"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_05145BBBE056454EB7B9D7B18528BB6F"
             {
-            "SourcePath" = "8:..\\安裝目錄\\2022\\Sinotech.addin"
+            "SourcePath" = "8:..\\安裝目錄\\2021\\Sinotech.addin"
             "TargetName" = "8:Sinotech.addin"
             "Tag" = "8:"
-            "Folder" = "8:_9A10DDA0EE5D44748718E3DBAA25A809"
+            "Folder" = "8:_93DD4A058E634F17936EE3A7722DEF64"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1603,43 +924,23 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E8583867834F4C8E8B3351B032A6D857"
-            {
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\專業代碼.txt"
-            "TargetName" = "8:專業代碼.txt"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E88D337480F309E9BE5FB76490F15EB7"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_0FB52B381AB6904161C2780223225A1E"
             {
             "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Runtime.Serialization.Primitives, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Revit_API_Old, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_E88D337480F309E9BE5FB76490F15EB7"
+                    "_0FB52B381AB6904161C2780223225A1E"
                     {
-                    "Name" = "8:System.Runtime.Serialization.Primitives.dll"
+                    "Name" = "8:Revit_API_Old.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:System.Runtime.Serialization.Primitives.dll"
+            "SourcePath" = "8:Revit_API_Old.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1654,76 +955,14 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_EBBE99EA43AD9A4F2E808378FCA97E16"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.ValueTuple, Version=4.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_EBBE99EA43AD9A4F2E808378FCA97E16"
-                    {
-                    "Name" = "8:System.ValueTuple.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.ValueTuple.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_EEDCCF67C31A2A25B64BA6F1F5EF644C"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:System.Threading.Overlapped, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_EEDCCF67C31A2A25B64BA6F1F5EF644C"
-                    {
-                    "Name" = "8:System.Threading.Overlapped.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:System.Threading.Overlapped.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_F5AFC995E472B451EFF7F1BE190696F6"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_129ED94409F6D498F78A03CDD000AF5F"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:TRUE"
             "AssemblyAsmDisplayName" = "8:System.Security.Cryptography.Algorithms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_F5AFC995E472B451EFF7F1BE190696F6"
+                    "_129ED94409F6D498F78A03CDD000AF5F"
                     {
                     "Name" = "8:System.Security.Cryptography.Algorithms.dll"
                     "Attributes" = "3:512"
@@ -1732,7 +971,7 @@
             "SourcePath" = "8:System.Security.Cryptography.Algorithms.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1747,23 +986,54 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_FE2A3AD8FCBB465D87D6778AD837F7D9"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_12FA84E772BE6B0789E3D0DF5B323B23"
             {
             "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_FE2A3AD8FCBB465D87D6778AD837F7D9"
+                    "_12FA84E772BE6B0789E3D0DF5B323B23"
                     {
-                    "Name" = "8:System.Memory.dll"
+                    "Name" = "8:System.Net.Http.dll"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\System.Memory.dll"
+            "SourcePath" = "8:System.Net.Http.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
-            "Folder" = "8:_8B47CC3B8527425FA36DCF7F62864AA3"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_19E4171C45764D9F8085AA929ABF6EA7"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Microsoft.IO.RecyclableMemoryStream, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_19E4171C45764D9F8085AA929ABF6EA7"
+                    {
+                    "Name" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\Microsoft.IO.RecyclableMemoryStream.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -1776,6 +1046,1169 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3C6BC56694E450AD78A6945D9F516F03"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_3C6BC56694E450AD78A6945D9F516F03"
+                    {
+                    "Name" = "8:netstandard.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:netstandard.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_3D00F7BCFA574AC99CB9332BBA0F98F8"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:CSDSEM, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_3D00F7BCFA574AC99CB9332BBA0F98F8"
+                    {
+                    "Name" = "8:CSDSEM.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\CSDSEM.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_420FB14B9815F86282924F82EBF9C6B9"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_420FB14B9815F86282924F82EBF9C6B9"
+                    {
+                    "Name" = "8:Sinotech.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Sinotech.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_44FE247745AE4FB186A07E517E430EC6"
+            {
+            "SourcePath" = "8:..\\安裝目錄\\2022\\Sinotech.addin"
+            "TargetName" = "8:Sinotech.addin"
+            "Tag" = "8:"
+            "Folder" = "8:_35DB415978624CC2AC692C75C829CAED"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_4EDE4549E195F1C890CEA1FF4FC93A3A"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_4EDE4549E195F1C890CEA1FF4FC93A3A"
+                    {
+                    "Name" = "8:System.IO.Compression.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.IO.Compression.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5122B4D3FB1EE30D24098603456251A2"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Microsoft.IO.RecyclableMemoryStream, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_5122B4D3FB1EE30D24098603456251A2"
+                    {
+                    "Name" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Microsoft.IO.RecyclableMemoryStream.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_53A385A9FA612CE6F7CBFAB625C0457B"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Threading.Overlapped, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_53A385A9FA612CE6F7CBFAB625C0457B"
+                    {
+                    "Name" = "8:System.Threading.Overlapped.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Threading.Overlapped.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_559DF3DE522740279B0A59CE1453E95A"
+            {
+            "SourcePath" = "8:..\\安裝目錄\\2023\\Sinotech.addin"
+            "TargetName" = "8:Sinotech.addin"
+            "Tag" = "8:"
+            "Folder" = "8:_E3604AF59A1545A9980E6C773C69BC41"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5B3DD4AEB69944E4A64E3F0018A88101"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:EPPlus.Interfaces, Version=6.1.1.0, Culture=neutral, PublicKeyToken=a694d7f3b0907a61, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_5B3DD4AEB69944E4A64E3F0018A88101"
+                    {
+                    "Name" = "8:EPPlus.Interfaces.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:EPPlus.Interfaces.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_600DD43A2C774269A52AC351F96F3DE4"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:DocumentProcessing, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_600DD43A2C774269A52AC351F96F3DE4"
+                    {
+                    "Name" = "8:DocumentProcessing.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\DocumentProcessing.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_60664A1E4784451E8994A4F147C71C3A"
+            {
+            "SourcePath" = "8:..\\安裝目錄\\2020\\Sinotech.addin"
+            "TargetName" = "8:Sinotech.addin"
+            "Tag" = "8:"
+            "Folder" = "8:_6D7E3B5F38F04997AA7B8B4BC68375DA"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_61E1651A69B7F14AB2E8CF819E0A2A19"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Revit_API, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_61E1651A69B7F14AB2E8CF819E0A2A19"
+                    {
+                    "Name" = "8:Revit_API.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Revit_API.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_645EBFDBE4A74E148B2EE1CCE764E238"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:AutoExport, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_645EBFDBE4A74E148B2EE1CCE764E238"
+                    {
+                    "Name" = "8:AutoExport_Old.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\AutoExport_Old.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6A26B2C657964708B7CB87344E00106F"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_6A26B2C657964708B7CB87344E00106F"
+                    {
+                    "Name" = "8:Sinotech.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\Sinotech.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_6DE36A4EBCC4435B840C1D121F7F9223"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_6DE36A4EBCC4435B840C1D121F7F9223"
+                    {
+                    "Name" = "8:System.Memory.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\System.Memory.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6F1679D97E504B07BB9422559298C88D"
+            {
+            "SourcePath" = "8:..\\安裝目錄\\2024\\Sinotech.addin"
+            "TargetName" = "8:Sinotech.addin"
+            "Tag" = "8:"
+            "Folder" = "8:_45108BE85B89420B98BD4F7342933028"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_75CCB1C52C77802653EF955E271625D3"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:EPPlus, Version=7.2.2.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_75CCB1C52C77802653EF955E271625D3"
+                    {
+                    "Name" = "8:EPPlus.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:EPPlus.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_7D5615E4FEA045E6AD46895C0EAF87F7"
+            {
+            "SourcePath" = "8:..\\安裝目錄\\2018\\Sinotech.addin"
+            "TargetName" = "8:Sinotech.addin"
+            "Tag" = "8:"
+            "Folder" = "8:_25530B80123E438A9C3708F6415EFC7A"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_820C967A79E7413DBF10E15685794E6A"
+            {
+            "SourcePath" = "8:..\\安裝目錄\\2019\\Sinotech.addin"
+            "TargetName" = "8:Sinotech.addin"
+            "Tag" = "8:"
+            "Folder" = "8:_D1FD0EC6C1A14B479A0143DC936EC68F"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_83AD2C26718A16024EA86D95EAE457DC"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:DocumentProcessing, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_83AD2C26718A16024EA86D95EAE457DC"
+                    {
+                    "Name" = "8:DocumentProcessing.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:DocumentProcessing.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_841582A62D694D56BCF27BADCD66ED69"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:EPPlus, Version=7.2.2.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_841582A62D694D56BCF27BADCD66ED69"
+                    {
+                    "Name" = "8:EPPlus.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\EPPlus.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_84CBB2E2EE6A47F0A55C9CEBFA287DD4"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:EPPlus.Interfaces, Version=6.1.1.0, Culture=neutral, PublicKeyToken=a694d7f3b0907a61, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_84CBB2E2EE6A47F0A55C9CEBFA287DD4"
+                    {
+                    "Name" = "8:EPPlus.Interfaces.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\EPPlus.Interfaces.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_86DD1687E0DD477DBC1FE96321CA2779"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Revit_API_Old, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_86DD1687E0DD477DBC1FE96321CA2779"
+                    {
+                    "Name" = "8:Revit_API_Old.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\Revit_API_Old.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_97052425F8E74DCBB50D5DB94F691D08"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Xml.XPath.XDocument, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_97052425F8E74DCBB50D5DB94F691D08"
+                    {
+                    "Name" = "8:System.Xml.XPath.XDocument.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Xml.XPath.XDocument.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A10355B920A3CF8027BBD72CD0781CCC"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.IO.Compression.FileSystem, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_A10355B920A3CF8027BBD72CD0781CCC"
+                    {
+                    "Name" = "8:System.IO.Compression.FileSystem.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.IO.Compression.FileSystem.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A663951C82C036F4CF957224B1E795AC"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Data.Common, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_A663951C82C036F4CF957224B1E795AC"
+                    {
+                    "Name" = "8:System.Data.Common.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Data.Common.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_A6CAAA5E93A49059797E81B4EF9427A9"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Net.Sockets, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_A6CAAA5E93A49059797E81B4EF9427A9"
+                    {
+                    "Name" = "8:System.Net.Sockets.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Net.Sockets.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_AAF32621E3B548E7A0A00963EAB96DDC"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:AutoExport, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_AAF32621E3B548E7A0A00963EAB96DDC"
+                    {
+                    "Name" = "8:AutoExport.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\AutoExport.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B6B5541733FB41BE8810A1FB9602FE24"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Revit_API, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_B6B5541733FB41BE8810A1FB9602FE24"
+                    {
+                    "Name" = "8:Revit_API.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\Revit_API.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B89E6D2043472A3877649CF399A3BC7D"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_B89E6D2043472A3877649CF399A3BC7D"
+                    {
+                    "Name" = "8:System.Memory.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Memory.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_BAFF5822928046228508C3FCB0AA3AE4"
+            {
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\專業代碼.txt"
+            "TargetName" = "8:專業代碼.txt"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_BB881BA14E9A2CD6D6BCB608EEA691C1"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Globalization.Extensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_BB881BA14E9A2CD6D6BCB608EEA691C1"
+                    {
+                    "Name" = "8:System.Globalization.Extensions.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Globalization.Extensions.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_BD450D3936B74BB0BCC8B4CFDDD0885C"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:CSDSEM, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_BD450D3936B74BB0BCC8B4CFDDD0885C"
+                    {
+                    "Name" = "8:CSDSEM_Old.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\CSDSEM_Old.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C2C9B0F24F663F5A7C1E7B4FC7636467"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Runtime.InteropServices.RuntimeInformation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_C2C9B0F24F663F5A7C1E7B4FC7636467"
+                    {
+                    "Name" = "8:System.Runtime.InteropServices.RuntimeInformation.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Runtime.InteropServices.RuntimeInformation.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_D5C4A6C9910C5ACB0FE87DD2787EC120"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Diagnostics.StackTrace, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_D5C4A6C9910C5ACB0FE87DD2787EC120"
+                    {
+                    "Name" = "8:System.Diagnostics.StackTrace.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Diagnostics.StackTrace.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E3BA024AEDE241B9B30FCFDAE033534B"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:Sinotech, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64"
+                "ScatterAssemblies"
+                {
+                    "_E3BA024AEDE241B9B30FCFDAE033534B"
+                    {
+                    "Name" = "8:Sinotech_Old.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\Sinotech_Old.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E402D9C63CF738A63ABE83E9D01B1327"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Security.SecureString, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_E402D9C63CF738A63ABE83E9D01B1327"
+                    {
+                    "Name" = "8:System.Security.SecureString.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Security.SecureString.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_EE7E6A533904435C8531184D63A18FB9"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_EE7E6A533904435C8531184D63A18FB9"
+                    {
+                    "Name" = "8:netstandard.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:..\\安裝目錄\\Sinotech\\netstandard.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_EE84DAE0B2AB2635D4401B74EE5BD184"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.Runtime.Serialization.Primitives, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_EE84DAE0B2AB2635D4401B74EE5BD184"
+                    {
+                    "Name" = "8:System.Runtime.Serialization.Primitives.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.Runtime.Serialization.Primitives.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_FCE82BA3AFBC044EE7E5A8FAD005CA86"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:System.ValueTuple, Version=4.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_FCE82BA3AFBC044EE7E5A8FAD005CA86"
+                    {
+                    "Name" = "8:System.ValueTuple.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:System.ValueTuple.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_28E9B00B519D48298987FBF7F4D700BB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
         }
@@ -1816,90 +2249,90 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_1EDF110F39A842CF8CC8DE1902F919F5"
-                    {
-                    "Name" = "8:2023"
-                    "AlwaysCreate" = "11:FALSE"
-                    "Condition" = "8:"
-                    "Transitive" = "11:FALSE"
-                    "Property" = "8:_C0032834B74F41C3A2C911F9FB03B19C"
-                        "Folders"
-                        {
-                        }
-                    }
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_2E686F7C77AA4D208E89C39252C4676B"
-                    {
-                    "Name" = "8:2024"
-                    "AlwaysCreate" = "11:FALSE"
-                    "Condition" = "8:"
-                    "Transitive" = "11:FALSE"
-                    "Property" = "8:_135156627CC045AABAE1F69C0C7A137A"
-                        "Folders"
-                        {
-                        }
-                    }
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_8B47CC3B8527425FA36DCF7F62864AA3"
-                    {
-                    "Name" = "8:Sinotech"
-                    "AlwaysCreate" = "11:FALSE"
-                    "Condition" = "8:"
-                    "Transitive" = "11:FALSE"
-                    "Property" = "8:_1180494194034B298F06C186CEBB2D4B"
-                        "Folders"
-                        {
-                        }
-                    }
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_9A10DDA0EE5D44748718E3DBAA25A809"
-                    {
-                    "Name" = "8:2022"
-                    "AlwaysCreate" = "11:FALSE"
-                    "Condition" = "8:"
-                    "Transitive" = "11:FALSE"
-                    "Property" = "8:_BE9E1F0A4BEF441B9204C60023BCD58C"
-                        "Folders"
-                        {
-                        }
-                    }
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_BC75204E105B44169611EE9BB5560D47"
-                    {
-                    "Name" = "8:2020"
-                    "AlwaysCreate" = "11:FALSE"
-                    "Condition" = "8:"
-                    "Transitive" = "11:FALSE"
-                    "Property" = "8:_11B855F48577421E8C1B44E39468D120"
-                        "Folders"
-                        {
-                        }
-                    }
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_C3034155FCA74FC2A1DA1FCA2A8852DD"
-                    {
-                    "Name" = "8:2021"
-                    "AlwaysCreate" = "11:FALSE"
-                    "Condition" = "8:"
-                    "Transitive" = "11:FALSE"
-                    "Property" = "8:_049276C2BD784A1099F01982D9769E02"
-                        "Folders"
-                        {
-                        }
-                    }
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E35EEE6C1B964614A9C02224BC225691"
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_25530B80123E438A9C3708F6415EFC7A"
                     {
                     "Name" = "8:2018"
                     "AlwaysCreate" = "11:FALSE"
                     "Condition" = "8:"
                     "Transitive" = "11:FALSE"
-                    "Property" = "8:_30B91DA517EB43509ECD81AD665CA6B2"
+                    "Property" = "8:_44275DEB9FE241BE9BBE7B72A263D51D"
                         "Folders"
                         {
                         }
                     }
-                    "{9EF0B969-E518-4E46-987F-47570745A589}:_F8CF130E330D4ED7B2226E2D16BCD799"
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_28E9B00B519D48298987FBF7F4D700BB"
+                    {
+                    "Name" = "8:Sinotech"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_365C5E6FE0764FBABA1FBFA566ECBE07"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_35DB415978624CC2AC692C75C829CAED"
+                    {
+                    "Name" = "8:2022"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_03DA29B42F9C4C7291E4257045C9B67C"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_45108BE85B89420B98BD4F7342933028"
+                    {
+                    "Name" = "8:2024"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_ED1385F39F7D452FB200F2C56C0780BD"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_6D7E3B5F38F04997AA7B8B4BC68375DA"
+                    {
+                    "Name" = "8:2020"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_2BBB3B24034A44BEBD6EEFC94567D7CB"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_93DD4A058E634F17936EE3A7722DEF64"
+                    {
+                    "Name" = "8:2021"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_5F6311279C114ACDBB401DEBBF558A11"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_D1FD0EC6C1A14B479A0143DC936EC68F"
                     {
                     "Name" = "8:2019"
                     "AlwaysCreate" = "11:FALSE"
                     "Condition" = "8:"
                     "Transitive" = "11:FALSE"
-                    "Property" = "8:_89F008C56E04462291BBC112F3E5E426"
+                    "Property" = "8:_88D6129673B84AE3B61B980444A36A10"
+                        "Folders"
+                        {
+                        }
+                    }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_E3604AF59A1545A9980E6C773C69BC41"
+                    {
+                    "Name" = "8:2023"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_E1CCEBE2C94A43C981AB936F7ACBA403"
                         "Folders"
                         {
                         }
@@ -1921,16 +2354,16 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:Revit_Sinotech_V3.3"
-        "ProductCode" = "8:{14003CEE-F035-46B6-80C4-4BF65A6EC0B2}"
-        "PackageCode" = "8:{CC83BBC6-5F7B-424C-AC18-1DA3BE511050}"
+        "ProductName" = "8:Revit_Sinotech_V3.4"
+        "ProductCode" = "8:{9C3EB391-9991-45C4-B329-C29E724E1403}"
+        "PackageCode" = "8:{E4E94C0F-A007-4A35-94F2-B2737CD7A44C}"
         "UpgradeCode" = "8:{792C6593-F662-4AF1-83C5-61A837A7EE7F}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:FALSE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:3.3"
+        "ProductVersion" = "8:3.4"
         "Manufacturer" = "8:中興工程_軌道二部"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

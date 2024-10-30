@@ -54,7 +54,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoColumn.cs" />
-    <Compile Include="RevitAPI.cs" />
     <Compile Include="AutoPipe.cs" />
     <Compile Include="AutoPipeForm.cs">
       <SubType>Form</SubType>
@@ -77,6 +76,12 @@
     <EmbeddedResource Include="ColNamesForm.resx">
       <DependentUpon>ColNamesForm.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Revit_API\Revit_API.csproj">
+      <Project>{974D09BF-4099-4E9A-BEE5-6462E05BA880}</Project>
+      <Name>Revit_API</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

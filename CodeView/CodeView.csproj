@@ -64,7 +64,6 @@
       <DependentUpon>CrushReportForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RevitAPI.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="CrushReportForm.resx">
@@ -72,6 +71,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Revit_API\Revit_API.csproj">
+      <Project>{974D09BF-4099-4E9A-BEE5-6462E05BA880}</Project>
+      <Name>Revit_API</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Sinotech\Sinotech.csproj">
       <Project>{F11EF22E-0C35-4338-A413-7B7BBD44D1B3}</Project>
       <Name>Sinotech</Name>

@@ -86,7 +86,6 @@
     </Compile>
     <Compile Include="MoveView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RevitAPI.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ChooseFSForm.resx">
@@ -101,6 +100,12 @@
     <EmbeddedResource Include="MoveViewForm.resx">
       <DependentUpon>MoveViewForm.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Revit_API_Old\Revit_API_Old.csproj">
+      <Project>{965FD3F1-C7F0-442C-BC9C-6B8CCDE6B2EF}</Project>
+      <Name>Revit_API_Old</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

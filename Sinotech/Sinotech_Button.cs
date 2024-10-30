@@ -34,7 +34,6 @@ namespace Sinotech
             //string speedToolsAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "SpeedTools.dll"); // 快速工具
 
             // 創建一個新的選單
-            String tabName = "中興自動化";
             RibbonPanel ribbonPanel = null;
             try { application.CreateRibbonTab("中興自動化"); } catch { }
             try { ribbonPanel = application.CreateRibbonPanel("中興自動化", "圖紙更新"); }
@@ -59,6 +58,8 @@ namespace Sinotech
             detectionScaleBtn.LargeImage = convertFromBitmap(Properties.Resources.更新比例尺);
             PushButton updateExcelBtn = ribbonPanel.AddItem(new PushButtonData("UpdateExcel", "更新Excel", addinAssmeblyPath, "Sinotech.UpdateExcelCell")) as PushButton;
             updateExcelBtn.LargeImage = convertFromBitmap(Properties.Resources.更新Excel);
+            PushButton batchSignBtn = ribbonPanel.AddItem(new PushButtonData("BatchSign", "自動簽圖", addinAssmeblyPath, "Sinotech.BatchSign")) as PushButton;
+            batchSignBtn.LargeImage = convertFromBitmap(Properties.Resources.自動簽圖);
             PushButton editViewSheetNumberBtn = ribbonPanel.AddItem(new PushButtonData("EditViewSheetNumber", "更新圖號", addinAssmeblyPath, "Sinotech.EditViewSheetNumber")) as PushButton;
             editViewSheetNumberBtn.LargeImage = convertFromBitmap(Properties.Resources.更新圖號);
 

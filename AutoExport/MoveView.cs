@@ -1,14 +1,10 @@
-﻿using System;
+﻿using Autodesk.Revit.ApplicationServices;
+using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
+using Revit_API;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Autodesk.Revit.UI;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.Attributes;
-using Autodesk.Revit.ApplicationServices;
-
 using static AutoExport.CopyDrawings;
 
 namespace AutoExport
