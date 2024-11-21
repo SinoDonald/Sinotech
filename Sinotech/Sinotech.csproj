@@ -281,6 +281,12 @@
   <ItemGroup>
     <None Include="Resources\自動簽圖.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\元件解鎖.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\元件鎖定.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

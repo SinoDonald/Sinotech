@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.35130.168
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35514.174 d17.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sinotech", "Sinotech\Sinotech.csproj", "{F11EF22E-0C35-4338-A413-7B7BBD44D1B3}"
 EndProject
@@ -22,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Revit_API", "Revit_API\Revit_API.csproj", "{974D09BF-4099-4E9A-BEE5-6462E05BA880}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Revit_API_Old", "Revit_API_Old\Revit_API_Old.csproj", "{965FD3F1-C7F0-442C-BC9C-6B8CCDE6B2EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FamilyInstanceLock", "FamilyInstanceLock\FamilyInstanceLock.csproj", "{8A54280A-E63C-49CF-9040-73EABDAA95CF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,6 +69,10 @@ Global
 		{965FD3F1-C7F0-442C-BC9C-6B8CCDE6B2EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{965FD3F1-C7F0-442C-BC9C-6B8CCDE6B2EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{965FD3F1-C7F0-442C-BC9C-6B8CCDE6B2EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A54280A-E63C-49CF-9040-73EABDAA95CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A54280A-E63C-49CF-9040-73EABDAA95CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A54280A-E63C-49CF-9040-73EABDAA95CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A54280A-E63C-49CF-9040-73EABDAA95CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -25,6 +25,7 @@ namespace Sinotech
             string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView_Old.dll"); // 規範校核
             string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM_Old.dll"); // CSD/SEM
             string speedToolsAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "SpeedTools.dll"); // 快速工具
+            string familyInstanceLockAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "FamilyInstanceLock.dll"); // 元件保護
 
             //// 2024
             //string autoBuildAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoBuild.dll"); // 快速翻模
@@ -32,6 +33,7 @@ namespace Sinotech
             //string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView.dll"); // 規範校核
             //string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM.dll"); // CSD/SEM
             //string speedToolsAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "SpeedTools.dll"); // 快速工具
+            //string familyInstanceLockAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "FamilyInstanceLock.dll"); // 元件保護
 
             // 創建一個新的選單
             RibbonPanel ribbonPanel = null;
@@ -109,6 +111,19 @@ namespace Sinotech
             manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動標籤);
             PushButton PCCESBtn = ribbonPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", CSDSEMAsb, "CSDSEM.OutPutPCCES")) as PushButton;
             PCCESBtn.LargeImage = convertFromBitmap(Properties.Resources.PCCES);
+            
+            // 添加「元件保護」面板
+            try { ribbonPanel = application.CreateRibbonPanel("中興自動化", "元件保護"); }
+            catch
+            {
+                List<RibbonPanel> panel_list = new List<RibbonPanel>();
+                panel_list = application.GetRibbonPanels("中興自動化");
+                foreach (RibbonPanel rp in panel_list) { if (rp.Name == "元件保護") { ribbonPanel = rp; } }
+            }
+            PushButton familyInstanceLockBtn = ribbonPanel.AddItem(new PushButtonData("FamilyInstanceLock", "元件鎖定", familyInstanceLockAsb, "FamilyInstanceLock.FamilyConversionToDirectShape")) as PushButton;
+            familyInstanceLockBtn.LargeImage = convertFromBitmap(Properties.Resources.元件鎖定);
+            PushButton lockOneBtn = ribbonPanel.AddItem(new PushButtonData("LockOne", "單一元件鎖定", familyInstanceLockAsb, "FamilyInstanceLock.LockOne")) as PushButton;
+            lockOneBtn.LargeImage = convertFromBitmap(Properties.Resources.元件鎖定);
 
             //// 添加「快速翻模」面板
             //try { ribbonPanel = application.CreateRibbonPanel("中興自動化", "快速翻模"); }

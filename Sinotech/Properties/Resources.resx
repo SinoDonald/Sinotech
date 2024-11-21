@@ -121,6 +121,12 @@
   <data name="PCCES" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\PCCES.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="元件解鎖" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\元件解鎖.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="元件鎖定" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\元件鎖定.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="圖紙匯出" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\圖紙匯出.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
