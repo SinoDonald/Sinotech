@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.Exceptions;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using System;
@@ -23,6 +22,9 @@ namespace FamilyInstanceLock
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
 
+            // 搜尋所有專案中的FamilyInstance
+
+
             Reference pickOne = uidoc.Selection.PickObject(ObjectType.Element, new FamilyInstanceFilter());
             FamilyInstance familyInstance = doc.GetElement(pickOne) as FamilyInstance;
             FamilySymbol familySymbol = familyInstance.Symbol;
@@ -41,7 +43,7 @@ namespace FamilyInstanceLock
             tranGrp1.Start();
             List<Parameter> paraList = new List<Parameter>();
             foreach (Parameter para in familySymbol.Parameters) { paraList.Add(para); }
-            CreateSharedParameter(doc, familySymbol, paraList); // 新增共用參數
+            //CreateSharedParameter(doc, familySymbol, paraList); // 新增共用參數
 
             using (Transaction trans = new Transaction(doc, "建立模型"))
             {
@@ -57,6 +59,9 @@ namespace FamilyInstanceLock
                     List<GeometryObject> resultList = new List<GeometryObject>();
                     foreach (Solid solid in solids) { resultList.Add(solid); }
                     directShape.SetShape(resultList);
+                    directShape.Name = doc.GetElement(familySymbol.Id).Name;
+                    //SetParameterFromOriginalElement(directShape, familyInstance); // 修改參數
+                    //SetPropertyValueFromParameters(directShape, familySymbol, paraList);
                     //List<Dimension> dimensionList = GetDimension(doc, familyInstance);
                 }
                 trans.Commit();
@@ -133,6 +138,50 @@ namespace FamilyInstanceLock
                 }
                 trans.Commit();
             }
+        }
+        // 修改參數
+        public bool SetParameterFromOriginalElement(Element newElem, Element originalElem)
+        {
+            bool result;
+            try
+            {
+                foreach (Parameter parameter in originalElem.Parameters)
+                {
+                    Parameter para = newElem.LookupParameter(parameter.Definition.Name);
+                    if (para != null && !para.IsReadOnly)
+                    {
+                        if (parameter.StorageType == StorageType.Double) { para.Set(parameter.AsDouble()); }
+                        else if (parameter.StorageType == StorageType.ElementId) { para.Set(parameter.AsElementId()); }
+                        else if (parameter.StorageType == StorageType.Integer) { para.Set(parameter.AsInteger()); }
+                        else if (parameter.StorageType == StorageType.String) { para.Set(parameter.AsString()); }
+                    }
+                }
+                result = true;
+            }
+            catch (Exception ex) { TaskDialog.Show("Error", "修改參數失敗" + ex.Message); result = false; }
+            return result;
+        }
+        // 修改族群參數
+        public bool SetPropertyValueFromParameters(Element newElem, FamilySymbol familySymbol, List<Parameter> paraList)
+        {
+            bool result;
+            try
+            {
+                foreach (Parameter parameter in paraList)
+                {
+                    Parameter para = newElem.LookupParameter(parameter.Definition.Name.Contains("Type") ? ("_" + parameter.Definition.Name) : (familySymbol.FamilyName + "_" + parameter.Definition.Name));
+                    if (para != null && !para.IsReadOnly)
+                    {
+                        if (parameter.StorageType == StorageType.Double) { para.Set(parameter.AsDouble()); }
+                        else if (parameter.StorageType == StorageType.ElementId) { para.Set(parameter.AsElementId()); }
+                        else if (parameter.StorageType == StorageType.Integer) { para.Set(parameter.AsInteger()); }
+                        else if (parameter.StorageType == StorageType.String) { para.Set(parameter.AsString()); }
+                    }
+                }
+                result = true;
+            }
+            catch (Exception ex) { TaskDialog.Show("Error", "修改族群參數失敗" + ex.Message); result = false; }
+            return result;
         }
         /// <summary>
         /// 儲存所有元件的Solid
