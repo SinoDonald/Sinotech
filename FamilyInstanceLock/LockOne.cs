@@ -22,9 +22,6 @@ namespace FamilyInstanceLock
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
 
-            // 搜尋所有專案中的FamilyInstance
-
-
             Reference pickOne = uidoc.Selection.PickObject(ObjectType.Element, new FamilyInstanceFilter());
             FamilyInstance familyInstance = doc.GetElement(pickOne) as FamilyInstance;
             FamilySymbol familySymbol = familyInstance.Symbol;
