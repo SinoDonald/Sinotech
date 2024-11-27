@@ -58,12 +58,15 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="RevitAPI">
-      <HintPath>..\..\..\..\Program Files\Autodesk\Revit 2020\RevitAPI.dll</HintPath>
+      <HintPath>..\..\..\..\Program Files\Autodesk\Revit 2024\RevitAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="RevitAPIUI">
-      <HintPath>..\..\..\..\Program Files\Autodesk\Revit 2020\RevitAPIUI.dll</HintPath>
+      <HintPath>..\..\..\..\Program Files\Autodesk\Revit 2024\RevitAPIUI.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="Revit_API">
+      <HintPath>..\Revit_API\bin\Debug\Revit_API.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -216,10 +219,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Revit_API_Old\Revit_API_Old.csproj">
-      <Project>{965FD3F1-C7F0-442C-BC9C-6B8CCDE6B2EF}</Project>
-      <Name>Revit_API_Old</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Sinotech\Sinotech.csproj">
       <Project>{F11EF22E-0C35-4338-A413-7B7BBD44D1B3}</Project>
       <Name>Sinotech</Name>
