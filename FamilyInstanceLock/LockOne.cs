@@ -25,49 +25,87 @@ namespace FamilyInstanceLock
             Reference pickOne = uidoc.Selection.PickObject(ObjectType.Element, new FamilyInstanceFilter());
             FamilyInstance familyInstance = doc.GetElement(pickOne) as FamilyInstance;
             FamilySymbol familySymbol = familyInstance.Symbol;
-            List<FamilyInstance> familyInstances = new List<FamilyInstance>();
-            try
-            {
-                familyInstances = new FilteredElementCollector(doc).OfClass(typeof(FamilyInstance)).WhereElementIsNotElementType().Cast<FamilyInstance>()
-                                  .Where(x => x.Symbol.Family.Id.IntegerValue.Equals(familySymbol.Family.Id.IntegerValue) && x.Symbol.Id.Equals(familySymbol.Id)).ToList();
-            }
-            catch (Exception ex)
-            {
-                TaskDialog.Show("獲取同族群元件失敗", ex.Message + "\n" + familySymbol.FamilyName + "：" + familySymbol.Name);
-            }
+            // 獲取相關的Family
+            Family family = familyInstance.Symbol.Family;
+            // 獲取Family document
+            Document familyDoc = doc.EditFamily(family);
+            FamilyManager familyManager = familyDoc.FamilyManager;
 
-            TransactionGroup tranGrp1 = new TransactionGroup(doc, "元件保護");
-            tranGrp1.Start();
-            List<Parameter> paraList = new List<Parameter>();
-            foreach (Parameter para in familySymbol.Parameters) { paraList.Add(para); }
-            //CreateSharedParameter(doc, familySymbol, paraList); // 新增共用參數
-
-            using (Transaction trans = new Transaction(doc, "建立模型"))
+            using (Transaction trans = new Transaction(familyDoc, "元件保護"))
             {
                 trans.Start();
-                if (familySymbol == null) { }
-                else
-                {
-                    DirectShape directShape = DirectShape.CreateElement(doc, familyInstance.Category.Id);
-                    directShape.ApplicationId = "Donald";
-                    directShape.ApplicationDataId = "Sinotech";
-
-                    List<Solid> solids = GetSolids(doc, familyInstance);
-                    List<GeometryObject> resultList = new List<GeometryObject>();
-                    foreach (Solid solid in solids) { resultList.Add(solid); }
-                    directShape.SetShape(resultList);
-                    directShape.Name = doc.GetElement(familySymbol.Id).Name;
-                    //SetParameterFromOriginalElement(directShape, familyInstance); // 修改參數
-                    //SetPropertyValueFromParameters(directShape, familySymbol, paraList);
-                    //List<Dimension> dimensionList = GetDimension(doc, familyInstance);
-                }
+                string familyPath = @"D:\Donald的檔案\中興工程\專案\SinoStation\Model\族群\獨立式資訊板(SinoBIM-第1版).rfa";
+                LoadFamily(familyDoc, familyPath);
                 trans.Commit();
             }
+            //List<FamilyInstance> familyInstances = new List<FamilyInstance>();
+            //try
+            //{
+            //    familyInstances = new FilteredElementCollector(doc).OfClass(typeof(FamilyInstance)).WhereElementIsNotElementType().Cast<FamilyInstance>()
+            //                      .Where(x => x.Symbol.Family.Id.IntegerValue.Equals(familySymbol.Family.Id.IntegerValue) && x.Symbol.Id.Equals(familySymbol.Id)).ToList();
+            //}
+            //catch (Exception ex)
+            //{
+            //    TaskDialog.Show("獲取同族群元件失敗", ex.Message + "\n" + familySymbol.FamilyName + "：" + familySymbol.Name);
+            //}
 
-            tranGrp1.Assimilate();
+            //TransactionGroup tranGrp1 = new TransactionGroup(doc, "元件保護");
+            //tranGrp1.Start();
+            //List<Parameter> paraList = new List<Parameter>();
+            //foreach (Parameter para in familySymbol.Parameters) { paraList.Add(para); }
+            ////CreateSharedParameter(doc, familySymbol, paraList); // 新增共用參數
+
+            //using (Transaction trans = new Transaction(doc, "建立模型"))
+            //{
+            //    trans.Start();
+            //    if (familySymbol == null) { }
+            //    else
+            //    {
+            //        DirectShape directShape = DirectShape.CreateElement(doc, familyInstance.Category.Id);
+            //        directShape.ApplicationId = "Donald";
+            //        directShape.ApplicationDataId = "Sinotech";
+
+            //        List<Solid> solids = GetSolids(doc, familyInstance);
+            //        List<GeometryObject> resultList = new List<GeometryObject>();
+            //        foreach (Solid solid in solids) { resultList.Add(solid); }
+            //        directShape.SetShape(resultList);
+            //        directShape.Name = doc.GetElement(familySymbol.Id).Name;
+            //        //SetParameterFromOriginalElement(directShape, familyInstance); // 修改參數
+            //        //SetPropertyValueFromParameters(directShape, familySymbol, paraList);
+            //        //List<Dimension> dimensionList = GetDimension(doc, familyInstance);
+            //    }
+            //    trans.Commit();
+            //}
+
+            //tranGrp1.Assimilate();
 
             return Result.Succeeded;
         }
+        public class FamilyLoadOptions : IFamilyLoadOptions
+        {
+            public bool OnFamilyFound(bool familyInUse, out bool overwriteParameterValues)
+            {
+                overwriteParameterValues = true;
+                return true;
+            }
+
+            public bool OnSharedFamilyFound(Family sharedFamily, bool familyInUse, out FamilySource source, out bool overwriteParameterValues)
+            {
+                source = FamilySource.Family;
+                overwriteParameterValues = true;
+                return true;
+            }
+        }
+        public void LoadFamily(Document doc, string familyPath)
+        {
+            Family loadedFamily = null;
+            var success = doc.LoadFamily(familyPath, new FamilyLoadOptions(), out loadedFamily);
+            if (!success)
+            {
+                throw new Exception("Failed to load family.");
+            }
+        }
+
         // 新增共用參數
         private void CreateSharedParameter(Document doc, FamilySymbol familySymbol, List<Parameter> paraList)
         {
@@ -96,8 +134,8 @@ namespace FamilyInstanceLock
                     string text = para.Definition.Name.Contains("Type") ? ("_" + para.Definition.Name) : (familySymbol.FamilyName + "_" + para.Definition.Name);
                     if (definitionGroup.Definitions.get_Item(text) == null)
                     {
-                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType);
-                        ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, UnitTypeId.Meters);
+                        ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType);
+                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, UnitTypeId.Meters);
                         try { definitionGroup.Definitions.Create(externalDefinitionCreationOptions); }
                         catch(Autodesk.Revit.Exceptions.InvalidOperationException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                     }

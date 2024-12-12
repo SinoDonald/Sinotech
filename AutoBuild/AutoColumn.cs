@@ -153,28 +153,22 @@ namespace AutoBuild
             using (Transaction transFS = new Transaction(familyDoc, "新增類型"))
             {
                 transFS.Start();
-                var typeList = (from x in cadLinkValueList
-                                select x.type).Distinct();
+                List<string> typeList = cadLinkValueList.Select(x => x.type).Distinct().ToList();
                 foreach (string type in typeList)
                 {
-                    var cadLinkValue = (from x in cadLinkValueList
-                                        where x.type.Equals(type)
-                                        select x);
+                    List<CADLinkValue> cadLinkValue = cadLinkValueList.Where(x => x.type.Equals(type)).ToList();
                     if (type.Equals("PolyLine") || type.Equals("Line"))
                     {
-                        var names = (from x in cadLinkValue
-                                     select x.name).Distinct();
+                        List<string> names = cadLinkValue.Select(x => x.name).Distinct().ToList();
                         foreach (string name in names)
                         {
-                            string newName = name.Replace(" ", "");
-                            newName = newName.Replace("mm", "");
-                            string[] nameSplit = newName.Split('x');
-                            double length = Convert.ToDouble(nameSplit[0]);
-                            double width = Convert.ToDouble(nameSplit[1]);
-                            string newTypeName = length + " x " + width + "mm";
-
                             try
                             {
+                                string[] nameSplit = name.Replace(" ", "").Replace("mm", "").Split('x');
+                                double length = Convert.ToDouble(nameSplit[0]);
+                                double width = Convert.ToDouble(nameSplit[1]);
+                                string newTypeName = length + " x " + width + "mm";
+
                                 // 新增與編輯FamilyTypes
                                 FamilyType newFamilyType = familyManager.NewType(newTypeName);
                                 if (newFamilyType != null)
@@ -186,34 +180,25 @@ namespace AutoBuild
                                     {
                                         if (null != familyParamB)
                                         {
-                                            // 將英呎轉換成公分
-                                            //familyManager.Set(familyParamB, length / 30.4801 / 10);
                                             double bLength = RevitAPI.ConvertToInternalUnits(length, "millimeters");
                                             familyManager.Set(familyParamB, bLength);
                                         }
                                         if (null != familyParamH)
                                         {
-                                            // 將英呎轉換成公分
-                                            //familyManager.Set(familyParamH, width / 30.4801 / 10);
                                             double hWidth = RevitAPI.ConvertToInternalUnits(width, "millimeters");
                                             familyManager.Set(familyParamH, hWidth);
                                         }
                                     }
                                 }
-
-                                LoadOpts loadOptions = new LoadOpts(); // 更新Revit項目, Family有一個新的類型                    
-                                familyDoc = doc.EditFamily(columnFamily); // 取得族群編輯
-                                // 這個Overload對於重新加載是有必要的, 將更新項目回傳到Revit Document中
-                                columnFamily = familyDoc.LoadFamily(doc, loadOptions);
+                
+                                familyDoc = doc.EditFamily(columnFamily); // 取得族群編輯                                
+                                columnFamily = familyDoc.LoadFamily(doc, new LoadOpts()); // 將更新項目回傳到Revit Document中
                                 //UpdateRevitItems(doc, columnFamily, newTypeName, familyInstance);
                             }
                             catch (Autodesk.Revit.Exceptions.ArgumentException) // FamilyType名稱重複
                             {
-                                LoadOpts loadOptions = new LoadOpts(); // 更新Revit項目, Family有一個新的類型                    
                                 familyDoc = doc.EditFamily(columnFamily); // 取得族群編輯
-                                // 這個Overload對於重新加載是有必要的, 將更新項目回傳到Revit Document中
-                                columnFamily = familyDoc.LoadFamily(doc, loadOptions);
-                                //UpdateRevitItems(doc, columnFamily, newTypeName, familyInstance);
+                                columnFamily = familyDoc.LoadFamily(doc, new LoadOpts()); // 將更新項目回傳到Revit Document中
                             }
                         }
                     }
