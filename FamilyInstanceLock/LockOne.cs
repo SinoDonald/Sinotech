@@ -25,59 +25,60 @@ namespace FamilyInstanceLock
             Reference pickOne = uidoc.Selection.PickObject(ObjectType.Element, new FamilyInstanceFilter());
             FamilyInstance familyInstance = doc.GetElement(pickOne) as FamilyInstance;
             FamilySymbol familySymbol = familyInstance.Symbol;
-            // 獲取相關的Family
-            Family family = familyInstance.Symbol.Family;
-            // 獲取Family document
-            Document familyDoc = doc.EditFamily(family);
-            FamilyManager familyManager = familyDoc.FamilyManager;
 
-            using (Transaction trans = new Transaction(familyDoc, "元件保護"))
-            {
-                trans.Start();
-                string familyPath = @"D:\Donald的檔案\中興工程\專案\SinoStation\Model\族群\獨立式資訊板(SinoBIM-第1版).rfa";
-                LoadFamily(familyDoc, familyPath);
-                trans.Commit();
-            }
-            //List<FamilyInstance> familyInstances = new List<FamilyInstance>();
-            //try
-            //{
-            //    familyInstances = new FilteredElementCollector(doc).OfClass(typeof(FamilyInstance)).WhereElementIsNotElementType().Cast<FamilyInstance>()
-            //                      .Where(x => x.Symbol.Family.Id.IntegerValue.Equals(familySymbol.Family.Id.IntegerValue) && x.Symbol.Id.Equals(familySymbol.Id)).ToList();
-            //}
-            //catch (Exception ex)
-            //{
-            //    TaskDialog.Show("獲取同族群元件失敗", ex.Message + "\n" + familySymbol.FamilyName + "：" + familySymbol.Name);
-            //}
-
-            //TransactionGroup tranGrp1 = new TransactionGroup(doc, "元件保護");
-            //tranGrp1.Start();
-            //List<Parameter> paraList = new List<Parameter>();
-            //foreach (Parameter para in familySymbol.Parameters) { paraList.Add(para); }
-            ////CreateSharedParameter(doc, familySymbol, paraList); // 新增共用參數
-
-            //using (Transaction trans = new Transaction(doc, "建立模型"))
+            //Family family = familyInstance.Symbol.Family;            
+            //Document familyDoc = doc.EditFamily(family);
+            //FamilyManager familyManager = familyDoc.FamilyManager;
+            //using (Transaction trans = new Transaction(familyDoc, "元件保護"))
             //{
             //    trans.Start();
-            //    if (familySymbol == null) { }
-            //    else
-            //    {
-            //        DirectShape directShape = DirectShape.CreateElement(doc, familyInstance.Category.Id);
-            //        directShape.ApplicationId = "Donald";
-            //        directShape.ApplicationDataId = "Sinotech";
-
-            //        List<Solid> solids = GetSolids(doc, familyInstance);
-            //        List<GeometryObject> resultList = new List<GeometryObject>();
-            //        foreach (Solid solid in solids) { resultList.Add(solid); }
-            //        directShape.SetShape(resultList);
-            //        directShape.Name = doc.GetElement(familySymbol.Id).Name;
-            //        //SetParameterFromOriginalElement(directShape, familyInstance); // 修改參數
-            //        //SetPropertyValueFromParameters(directShape, familySymbol, paraList);
-            //        //List<Dimension> dimensionList = GetDimension(doc, familyInstance);
-            //    }
+            //    string familyPath = @"D:\Donald的檔案\中興工程\專案\SinoStation\Model\族群\獨立式資訊板(SinoBIM-第1版).rfa";
+            //    LoadFamily(familyDoc, familyPath);
             //    trans.Commit();
             //}
 
-            //tranGrp1.Assimilate();
+            List<FamilyInstance> familyInstances = new List<FamilyInstance>();
+            try
+            {
+                familyInstances = new FilteredElementCollector(doc).OfClass(typeof(FamilyInstance)).WhereElementIsNotElementType().Cast<FamilyInstance>()
+                                  .Where(x => x.Symbol.Family.Id.IntegerValue.Equals(familySymbol.Family.Id.IntegerValue) && x.Symbol.Id.Equals(familySymbol.Id)).ToList();
+            }
+            catch (Exception ex)
+            {
+                TaskDialog.Show("獲取同族群元件失敗", ex.Message + "\n" + familySymbol.FamilyName + "：" + familySymbol.Name);
+            }
+
+            TransactionGroup tranGrp1 = new TransactionGroup(doc, "元件保護");
+            tranGrp1.Start();
+            List<Parameter> paraList = new List<Parameter>();
+            foreach (Parameter para in familySymbol.Parameters) { paraList.Add(para); }
+            //CreateSharedParameter(doc, familySymbol, paraList); // 新增共用參數
+
+            using (Transaction trans = new Transaction(doc, "建立模型"))
+            {
+                trans.Start();
+                if (familySymbol == null) { }
+                else
+                {
+                    DirectShape directShape = DirectShape.CreateElement(doc, familyInstance.Category.Id);
+                    directShape.ApplicationId = "Donald";
+                    directShape.ApplicationDataId = "Sinotech";
+
+                    List<Solid> solids = GetSolids(doc, familyInstance);
+                    List<GeometryObject> resultList = new List<GeometryObject>();
+                    foreach (Solid solid in solids) { resultList.Add(solid); }
+                    directShape.SetShape(resultList);
+                    directShape.Name = doc.GetElement(familySymbol.Id).Name;
+                    List<Dimension> dimensionList = GetDimension(doc, familyInstance);
+                    foreach(Dimension dimension in dimensionList) { }
+                    doc.Delete(familyInstance.Id);
+                    //SetParameterFromOriginalElement(directShape, familyInstance); // 修改參數
+                    //SetPropertyValueFromParameters(directShape, familySymbol, paraList);
+                }
+                trans.Commit();
+            }
+
+            tranGrp1.Assimilate();
 
             return Result.Succeeded;
         }
@@ -274,19 +275,20 @@ namespace FamilyInstanceLock
 
         public List<Dimension> GetDimension(Document doc, Element selectedElem)
         {
-            List<Dimension> list = new List<Dimension>();
+            List<Dimension> dimensions = new List<Dimension>();
+            List<Dimension> dimensionList = new FilteredElementCollector(doc).OfClass(typeof(Dimension)).Cast<Dimension>().ToList<Dimension>();
             try
             {
-                foreach (Dimension current in new FilteredElementCollector(doc).OfClass(typeof(Dimension)).Cast<Dimension>().ToList<Dimension>())
+                foreach (Dimension dimension in dimensionList)
                 {
-                    IEnumerator enumerator2 = current.References.GetEnumerator();
+                    IEnumerator enumerator2 = dimension.References.GetEnumerator();
                     //using (IEnumerator enumerator2 = current.References.GetEnumerator())
                     //{
                     while (enumerator2.MoveNext())
                     {
                         if (((Reference)enumerator2.Current).ElementId.IntegerValue == selectedElem.Id.IntegerValue)
                         {
-                            list.Add(current);
+                            dimensions.Add(dimension);
                             break;
                         }
                     }
@@ -295,9 +297,9 @@ namespace FamilyInstanceLock
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("抓取關聯尺寸標註失敗", ex.Message);
+                //TaskDialog.Show("抓取關聯尺寸標註失敗", ex.Message);
             }
-            return list;
+            return dimensions;
         }
         /// <summary>
         /// 僅能點選FamilyInstance

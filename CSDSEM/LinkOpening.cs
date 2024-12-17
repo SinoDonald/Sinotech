@@ -1234,39 +1234,19 @@ namespace CSDSEM
             string useFS = string.Empty;
             if (crushElemInfo.hostType.Equals("Wall") || crushElemInfo.hostType.Equals("Beam"))
             {
-                if (crushElemInfo.type.Equals("Pipe") || crushElemInfo.type.Equals("PipeFitting"))
-                {
-                    useFS = "圓形水管牆開口";
-                }
-                else if (crushElemInfo.type.Equals("Duct") || crushElemInfo.type.Equals("DuctAccessory"))
-                {
-                    useFS = "矩形風管牆開口";
-                }
-                else if (crushElemInfo.type.Equals("CableTray") || crushElemInfo.type.Equals("CableTrayFitting"))
-                {
-                    useFS = "電纜架牆開口";
-                }
+                if (crushElemInfo.type.Equals("Pipe") || crushElemInfo.type.Equals("PipeFitting")) { useFS = "圓形水管牆開口"; }
+                else if (crushElemInfo.type.Equals("Duct") || crushElemInfo.type.Equals("DuctAccessory")) { useFS = "矩形風管牆開口"; }
+                else if (crushElemInfo.type.Equals("CableTray") || crushElemInfo.type.Equals("CableTrayFitting")) { useFS = "電纜架牆開口"; }
             }
             else if (crushElemInfo.hostType.Equals("Floor"))
             {
-                if (crushElemInfo.type.Equals("Pipe") || crushElemInfo.type.Equals("PipeFitting"))
-                {
-                    useFS = "圓形水管樓版開口";
-                }
-                else if (crushElemInfo.type.Equals("Duct") || crushElemInfo.type.Equals("DuctAccessory"))
-                {
-                    useFS = "矩形風管樓版開口";
-                }
-                else if (crushElemInfo.type.Equals("CableTray") || crushElemInfo.type.Equals("CableTrayFitting"))
-                {
-                    useFS = "電纜架樓版開口";
-                }
+                if (crushElemInfo.type.Equals("Pipe") || crushElemInfo.type.Equals("PipeFitting")) { useFS = "圓形水管樓版開口"; }
+                else if (crushElemInfo.type.Equals("Duct") || crushElemInfo.type.Equals("DuctAccessory")) { useFS = "矩形風管樓版開口"; }
+                else if (crushElemInfo.type.Equals("CableTray") || crushElemInfo.type.Equals("CableTrayFitting")) { useFS = "電纜架樓版開口"; }
             }
             crushElemInfo.useFS = useFS; // 使用的族群
             // 找到開口與連結所碰觸到Element的Level
-            FamilySymbol openFS = (from x in openFSList
-                                   where x.FamilyName.Equals(useFS)
-                                   select x).FirstOrDefault();
+            FamilySymbol openFS = openFSList.Where(x => x.FamilyName.Equals(useFS)).FirstOrDefault();
             foreach (XYZ xyz in crushElemInfo.xyzs)
             {
                 FamilyInstance pipeOpen = null;
@@ -1295,10 +1275,7 @@ namespace CSDSEM
                         amount++;
                     }
                 }
-                catch(Exception ex)
-                {
-                    string str = ex.Message + "\n" + ex.ToString();
-                }
+                catch(Exception ex) { string str = ex.Message + "\n" + ex.ToString(); }
             }
             return amount;
         }
@@ -1428,14 +1405,8 @@ namespace CSDSEM
                 {
                     // 修改底部高程
                     double offset = 0.0;
-                    try
-                    {
-                        offset = opening.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsDouble(); // 偏移
-                    }
-                    catch (Exception)
-                    {
-                        offset = opening.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble(); // 距離樓層的高程
-                    }
+                    try { offset = opening.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsDouble(); } // 偏移
+                    catch (Exception) { offset = opening.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble(); } // 距離樓層的高程
                     Parameter para = null;
                     if (opening.Name.Equals("圓形水管牆開口"))
                     {

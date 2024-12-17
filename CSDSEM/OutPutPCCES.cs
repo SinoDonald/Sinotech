@@ -100,7 +100,7 @@ namespace CSDSEM
             }
             if (!filePath.Equals("") && filePath != null)
             {
-                CloseExcel(filePath); // 查詢Excel是否開啟中
+                //CloseExcel(filePath); // 查詢Excel是否開啟中
 
                 DateTime timeStart = DateTime.Now; // 計時開始 取得目前時間
 
@@ -117,12 +117,10 @@ namespace CSDSEM
                 // 讀取並儲存所有的Element
                 List<ModelInfo> modelDB = ModelDB(doc);
                 // 篩選各樓層, 高程由上而下
-                List<string> disLevelNames = (from x in modelDB
-                                              orderby x.elevation descending
-                                              select x.levelName).Distinct().ToList();
+                List<string> disLevelNames = modelDB.OrderByDescending(x => x.elevation).Select(x => x.levelName).Distinct().ToList();
+
                 // 篩選連結的檔案
-                List<string> disLinkPrjs = (from x in modelDB
-                                            select x.linkPrj).Distinct().OrderBy(x => x).ToList();
+                List<string> disLinkPrjs = modelDB.Select(x => x.linkPrj).Distinct().OrderBy(x => x).ToList();
                 // 如果條件為"開口"+"樓板", 則計算該條件下的止水墩周長, 並加入modelDB
                 CurbStopCalcul(modelDB, disLevelNames, disLinkPrjs);
                 try
@@ -377,14 +375,9 @@ namespace CSDSEM
             LogicalOrFilter logicalOrFilter = new LogicalOrFilter(openingFilters);
             List<Element> openings = new FilteredElementCollector(doc).WherePasses(logicalOrFilter).WhereElementIsNotElementType().ToElements().ToList();
             // 基座
-            List<Element> familyInstances = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_GenericModel).WhereElementIsNotElementType().ToList();
-            List<Element> platforms = (from x in familyInstances
-                                       where x.Name.Contains("基座")
-                                       select x).ToList();
-            foreach(Element platform in platforms)
-            {
-                openings.Add(platform);
-            }
+            List<Element> platforms = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_GenericModel).WhereElementIsNotElementType().Where(x => x.Name.Contains("基座")).ToList();
+            openings.AddRange(platforms);
+
             int i = 1;
             foreach (Element opening in openings)
             {
@@ -405,52 +398,26 @@ namespace CSDSEM
                             if (para != null)
                             {
                                 modelInfo.linkPrj = CommentsLinkPrj(opening, modelInfo); // 連結專案
+                                if (modelInfo.linkPrj.Equals("A3")) { }
                                 modelInfo.pCode = opening.LookupParameter("專業代碼").AsString(); // 專業代碼
                             }
                         }
-                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex)
-                        {
-                            string error = ex.Message + "\n" + ex.ToString();
-                        }
-                        catch (Exception ex)
-                        {
-                            string error = ex.Message + "\n" + ex.ToString();
-                        }
+                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         modelInfo.diameter = Convert.ToDouble(opening.LookupParameter("指定圓形套管直徑").AsValueString());
-                        if(modelInfo.diameter == 0)
-                        {
-                            modelInfo.diameter = Convert.ToDouble(opening.LookupParameter("預設圓形套管直徑").AsValueString());
-                        }
+                        if(modelInfo.diameter == 0) { modelInfo.diameter = Convert.ToDouble(opening.LookupParameter("預設圓形套管直徑").AsValueString()); }
                         // 開口對象(牆、樑、板)
-                        if (opening.Name.Contains("牆"))
-                        {
-                            modelInfo.host = "牆";
-                        }
-                        else if (opening.Name.Contains("樓板") || opening.Name.Contains("樓版"))
-                        {
-                            modelInfo.host = "樓板";
-                        }
-                        // 項目及說明
-                        string description = (from x in openingContrastList
-                                              where x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host) && x.diameter.Equals(modelInfo.diameter)
-                                              select x.name).LastOrDefault();
-                        modelInfo.description = description;
-                        // 工程項目編號
-                        string prjNumber = (from x in openingContrastList
-                                            where x.name.Equals(description)
-                                            select x.prjNumber).LastOrDefault();
+                        if (opening.Name.Contains("牆")) { modelInfo.host = "牆"; }
+                        else if (opening.Name.Contains("樓板") || opening.Name.Contains("樓版")) { modelInfo.host = "樓板"; }                        
+                        string description = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host) && x.diameter.Equals(modelInfo.diameter)).Select(x => x.name).LastOrDefault(); // 項目及說明
+                        modelInfo.description = description;                        
+                        string prjNumber = openingContrastList.Where(x => x.name.Equals(description)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                         modelInfo.prjNumber = prjNumber;
                     }
                     else if (opening.Name.Contains("風管") || opening.Name.Contains("電纜架"))
                     {
-                        if (opening.Name.Contains("風管"))
-                        {
-                            modelInfo.type = "風管";
-                        }
-                        else if (opening.Name.Contains("電纜架"))
-                        {
-                            modelInfo.type = "電纜架";
-                        }
+                        if (opening.Name.Contains("風管")) { modelInfo.type = "風管"; }
+                        else if (opening.Name.Contains("電纜架")) { modelInfo.type = "電纜架"; }
                         modelInfo.pipeOrDuct = "開口";
                         modelInfo.pipeOrDuctInt = 2;
                         modelInfo.unit = "個";
@@ -463,56 +430,37 @@ namespace CSDSEM
                                 modelInfo.pCode = opening.LookupParameter("專業代碼").AsString(); // 專業代碼
                             }
                         }
-                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex)
-                        {
-                            string error = ex.Message + "\n" + ex.ToString();
-                        }
-                        catch (Exception ex)
-                        {
-                            string error = ex.Message + "\n" + ex.ToString();
-                        }
+                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         modelInfo.area = Convert.ToDouble(opening.LookupParameter("矩形開口面積").AsValueString());
                         // 開口對象(牆、樑、板)
-                        if (opening.Name.Contains("牆"))
-                        {
-                            modelInfo.host = "牆";
-                        }
-                        else if (opening.Name.Contains("樓板") || opening.Name.Contains("樓版"))
+                        if (opening.Name.Contains("牆")) { modelInfo.host = "牆"; }
+                        else if (opening.Name.Contains("樓板") || opening.Name.Contains("樓版")) 
                         {
                             modelInfo.host = "樓板";
                             modelInfo.floorLength = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsValueString());
                             modelInfo.floorWidth = Convert.ToDouble(opening.LookupParameter("矩形開口寬度").AsValueString());
                         }
                         // 項目及說明
-                        OpeningContrast item = (from x in openingContrastList
-                                                where x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host)
-                                                where x.min < modelInfo.area && modelInfo.area <= x.max
-                                                select x).FirstOrDefault();
+                        OpeningContrast item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host))
+                                               .Where(x => x.min < modelInfo.area && modelInfo.area <= x.max).FirstOrDefault();
                         if (item != null)
                         {
                             if (item.min < modelInfo.area && modelInfo.area <= item.max)
                             {
-                                modelInfo.description = item.name;
-                                // 工程項目編號
-                                string prjNumber = (from x in openingContrastList
-                                                    where x.name.Equals(item.name)
-                                                    select x.prjNumber).LastOrDefault();
+                                modelInfo.description = item.name;                                
+                                string prjNumber = openingContrastList.Where(x => x.name.Equals(item.name)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                                 modelInfo.prjNumber = prjNumber;
                             }
                         }
                         else
                         {
-                            item = (from x in openingContrastList
-                                    where x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host)
-                                    where x.min < modelInfo.area && x.max == 0
-                                    select x).FirstOrDefault();
+                            item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host))
+                                   .Where(x => x.min < modelInfo.area && x.max == 0).FirstOrDefault();
                             if (item.min < modelInfo.area && item.max == 0)
                             {
                                 modelInfo.description = item.name;
-                                // 工程項目編號
-                                string prjNumber = (from x in openingContrastList
-                                                    where x.name.Equals(item.name)
-                                                    select x.prjNumber).LastOrDefault();
+                                string prjNumber = openingContrastList.Where(x => x.name.Equals(item.name)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                                 modelInfo.prjNumber = prjNumber;
                             }
                         }
@@ -533,14 +481,8 @@ namespace CSDSEM
                                 //modelInfo.pCode = opening.LookupParameter("專業代碼").AsString(); // 專業代碼
                             }
                         }
-                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex)
-                        {
-                            string error = ex.Message + "\n" + ex.ToString();
-                        }
-                        catch (Exception ex)
-                        {
-                            string error = ex.Message + "\n" + ex.ToString();
-                        }
+                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         modelInfo.floorLength = Convert.ToDouble(opening.LookupParameter("長度").AsValueString()); // 基座止水墩長度
                         modelInfo.floorWidth = Convert.ToDouble(opening.LookupParameter("寬度").AsValueString()); // 基座止水墩寬度
                         //modelInfo.floorHeight = Convert.ToDouble(opening.LookupParameter("高度").AsValueString()); // 基座止水墩高度
@@ -553,59 +495,33 @@ namespace CSDSEM
                                 double width = modelInfo.floorWidth; // 寬度計算                                
                                 int crush1 = opening.LookupParameter("周長(長)").AsInteger(); // 如果碰觸牆的為長度
                                 int crush2 = opening.LookupParameter("周長(寬)").AsInteger(); // 如果碰觸牆的為寬度
-                                if (crush1.Equals(0) && crush2.Equals(0))
-                                {
-                                    modelInfo.interference = ((length + 20) * 2 + (width + 20) * 2) * 2;
-                                }
-                                else if (crush1.Equals(1) && crush2.Equals(0))
-                                {
-                                    modelInfo.interference = ((length + 20) + (width + 10) * 2) * 2;
-                                }
-                                else if (crush1.Equals(0) && crush2.Equals(1))
-                                {
-                                    modelInfo.interference = ((length + 10) * 2 + (width + 20)) * 2;
-                                }
-                                else if (crush1.Equals(1) && crush2.Equals(1))
-                                {
-                                    modelInfo.interference = ((length + 10) + (width + 10)) * 2;
-                                }
+                                if (crush1.Equals(0) && crush2.Equals(0)) { modelInfo.interference = ((length + 20) * 2 + (width + 20) * 2) * 2; }
+                                else if (crush1.Equals(1) && crush2.Equals(0)) { modelInfo.interference = ((length + 20) + (width + 10) * 2) * 2; }
+                                else if (crush1.Equals(0) && crush2.Equals(1)) { modelInfo.interference = ((length + 10) * 2 + (width + 20)) * 2; }
+                                else if (crush1.Equals(1) && crush2.Equals(1)) { modelInfo.interference = ((length + 10) + (width + 10)) * 2; }
                             }
                         }
-                        catch (Exception)
-                        {
-
-                        }
+                        catch (Exception) { }
                         modelInfo.volume = Convert.ToDouble(opening.get_Parameter(BuiltInParameter.HOST_VOLUME_COMPUTED).AsValueString().Replace("m³", "")); // 體積
                         // 項目及說明
-                        OpeningContrast item = (from x in openingContrastList
-                                                where x.type.Equals(modelInfo.pipeOrDuct)
-                                                where x.min < modelInfo.volume && modelInfo.volume <= x.max
-                                                select x).FirstOrDefault();
+                        OpeningContrast item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct)).Where(x => x.min < modelInfo.volume && modelInfo.volume <= x.max).FirstOrDefault();
                         if(item != null)
                         {
                             if (item.min < modelInfo.volume && modelInfo.volume <= item.max)
                             {
-                                modelInfo.description = item.name;
-                                // 工程項目編號
-                                string prjNumber = (from x in openingContrastList
-                                                    where x.name.Equals(item.name)
-                                                    select x.prjNumber).LastOrDefault();
+                                modelInfo.description = item.name;                                
+                                string prjNumber = openingContrastList.Where(x => x.name.Equals(item.name)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                                 modelInfo.prjNumber = prjNumber;
                             }
                         }
                         else
                         {
-                            item = (from x in openingContrastList
-                                    where x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host)
-                                    where x.min < modelInfo.volume && x.max == 0
-                                    select x).FirstOrDefault();
+                            item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host))
+                                   .Where(x => x.min < modelInfo.volume && x.max == 0).FirstOrDefault();
                             if (item.min < modelInfo.volume && item.max == 0)
                             {
                                 modelInfo.description = item.name;
-                                // 工程項目編號
-                                string prjNumber = (from x in openingContrastList
-                                                    where x.name.Equals(item.name)
-                                                    select x.prjNumber).LastOrDefault();
+                                string prjNumber = openingContrastList.Where(x => x.name.Equals(item.name)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                                 modelInfo.prjNumber = prjNumber;
                             }
                         }
@@ -620,67 +536,43 @@ namespace CSDSEM
                         try
                         {
                             Parameter para = opening.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
-                            if (para != null)
-                            {
-                                modelInfo.linkPrj = "A1"/*CommentsLinkPrj(opening, modelInfo)*/; // 連結專案
-                            }
+                            if (para != null) { modelInfo.linkPrj = "A1"/*CommentsLinkPrj(opening, modelInfo)*/; } // 連結專案
                         }
-                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex)
-                        {
-                            string error = ex.Message + "\n" + ex.ToString();
-                        }
-                        catch (Exception ex)
-                        {
-                            string error = ex.Message + "\n" + ex.ToString();
-                        }
-                        // 長度
-                        modelInfo.length = Convert.ToDouble(opening.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH).AsValueString());
+                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        
+                        modelInfo.length = Convert.ToDouble(opening.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH).AsValueString()); // 長度
                         // 取Excel資料庫中的最近數值
                         double diameter = Convert.ToDouble(opening.get_Parameter(BuiltInParameter.RBS_CONDUIT_DIAMETER_PARAM).AsValueString().Replace("mm", "")); // 直徑 (標稱尺寸)
-                        List<double> values = (from x in openingContrastList
-                                               where x.type.Equals(modelInfo.pipeOrDuct)
-                                               select x.diameter).Distinct().ToList();
-                        diameter = values.OrderBy(x => Math.Abs(x - diameter)).First();
-                        modelInfo.diameter = diameter;
-                        // 項目及說明
-                        string description = (from x in openingContrastList
-                                              where x.type.Equals(modelInfo.pipeOrDuct) && x.diameter.Equals(modelInfo.diameter)
-                                              select x.name).LastOrDefault();
-                        modelInfo.description = description;
-                        // 工程項目編號
-                        string prjNumber = (from x in openingContrastList
-                                            where x.name.Equals(description)
-                                            select x.prjNumber).LastOrDefault();
+                        List<double> values = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct)).Select(x => x.diameter).Distinct().ToList();
+                        diameter = values.OrderBy(x => Math.Abs(x - diameter)).FirstOrDefault();
+                        modelInfo.diameter = diameter;                        
+                        string description = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.diameter.Equals(modelInfo.diameter)).Select(x => x.name).LastOrDefault(); // 項目及說明
+                        modelInfo.description = description;                        
+                        string prjNumber = openingContrastList.Where(x => x.name.Equals(description)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                         modelInfo.prjNumber = prjNumber;
                     }
                     // 樓層
                     //if (opening.Name.Contains("導線管") || opening.Name.Contains("硬質非金屬導管"))
                     if(opening.Category.Name.Equals("電管"))
                     {
-                        Conduit conduit = opening as Conduit;
-                        Level level = (from x in levelList
-                                       where x.Name.Equals("軌道層")
-                                       select x).FirstOrDefault();
-                        //modelInfo.level = conduit.ReferenceLevel;
+                        Level level = levelList.Where(x => x.Name.Contains("軌道層")).FirstOrDefault();
+                        try
+                        {
+                            ElementId levelId = opening.get_Parameter(BuiltInParameter.RBS_START_LEVEL_PARAM).AsElementId(); // 參考樓層
+                            level = doc.GetElement(levelId) as Level;
+                        }
+                        catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         modelInfo.level = level;
                     }
-                    else
-                    {
-                        modelInfo.level = doc.GetElement(opening.LevelId) as Level; // 樓層
-                    }
+                    else { modelInfo.level = doc.GetElement(opening.LevelId) as Level; } // 樓層
                     modelInfo.elevation = modelInfo.level.Elevation; // 高程
                     modelInfo.levelName = modelInfo.level.Name; // 樓層名稱
                     modelInfo.elementId = opening.Id; // ElementId
-                    if (modelInfo.description != "")
-                    {
-                        modelInfoList.Add(modelInfo);
-                    }
+                    if (!String.IsNullOrEmpty(modelInfo.description)) { modelInfoList.Add(modelInfo); }
                     i++;
                 }
-                catch (Exception)
-                {
-
-                }
+                catch (Exception) { }
             }
 
             return modelInfoList;
@@ -695,20 +587,11 @@ namespace CSDSEM
                 modelInfo.comments = para.AsString(); // 備註
                 string[] comments = para.AsString().Split('_');
                 linkPrj = comments[0];
-                if (linkPrj.Equals("PS") || linkPrj.Equals("COM") || linkPrj.Equals("SN") || linkPrj.Equals("COM/SN") || linkPrj.Equals("AFC"))
-                {
-                    linkPrj = "A1";
-                }
+                if (linkPrj.Equals("PS") || linkPrj.Equals("COM") || linkPrj.Equals("SN") || linkPrj.Equals("COM/SN") || linkPrj.Equals("AFC")) { linkPrj = "A1"; }
                 else if (linkPrj.Equals("AD") || linkPrj.Equals("AP") || linkPrj.Equals("EE") || linkPrj.Equals("EP") ||
                          linkPrj.Equals("WS") || linkPrj.Equals("DS") || linkPrj.Equals("FP") || linkPrj.Equals("ECS") ||
-                         linkPrj.Equals("E") || linkPrj.Equals("M") || linkPrj.Equals("CDA"))
-                {
-                    linkPrj = "A2";
-                }
-                else // Test
-                {
-                    linkPrj = "A3";
-                }
+                         linkPrj.Equals("E") || linkPrj.Equals("M") || linkPrj.Equals("CDA")) { linkPrj = "A2"; }
+                else { linkPrj = "A3"; } // Test
                 modelInfo.linkPrj = linkPrj; // 連結專案
             }
 
@@ -721,43 +604,21 @@ namespace CSDSEM
             {
                 foreach (string disLinkPrj in disLinkPrjs)
                 {
-                    List<string> descriptions = (from x in modelDB
-                                                 where x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
-                                                 x.pipeOrDuct.Equals("開口") && x.host.Equals("樓板")
-                                                 select x.description).Distinct().ToList();
+                    List<string> descriptions = modelDB.Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) && 
+                                                x.pipeOrDuct.Equals("開口") && x.host.Equals("樓板")).Select(x => x.description).Distinct().ToList();
                     foreach (string description in descriptions)
                     {
                         double perimeter = 0.0;
-                        List<ModelInfo> modelDBFilter = (from x in modelDB
-                                                         where x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
-                                                         x.pipeOrDuct.Equals("開口") && x.host.Equals("樓板") && x.description.Equals(description)
-                                                         select x).ToList();
+                        List<ModelInfo> modelDBFilter = modelDB.Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
+                                                        x.pipeOrDuct.Equals("開口") && x.host.Equals("樓板") && x.description.Equals(description)).ToList();
                         foreach (ModelInfo curbStopCalcul in modelDBFilter)
                         {
-                            if (description.Contains("面積≦0.1m2"))
-                            {
-                                perimeter += 2.56;
-                            }
-                            else if (description.Contains("0.1m2＜面積≦0.5m2"))
-                            {
-                                perimeter += 5.68;
-                            }
-                            else if (description.Contains("0.5m2＜面積≦1.0m2"))
-                            {
-                                perimeter += 8.0;
-                            }
-                            else if (description.Contains("1.0m2＜面積≦1.5m2"))
-                            {
-                                perimeter += 9.84;
-                            }
-                            else if (description.Contains("1.5m2＜面積≦2.0m2"))
-                            {
-                                perimeter += 11.36;
-                            }
-                            else
-                            {
-                                perimeter += (curbStopCalcul.floorLength / 1000 + curbStopCalcul.floorWidth / 1000) * 2;
-                            }
+                            if (description.Contains("面積≦0.1m2")) { perimeter += 2.56; }
+                            else if (description.Contains("0.1m2＜面積≦0.5m2")) { perimeter += 5.68; }
+                            else if (description.Contains("0.5m2＜面積≦1.0m2")) { perimeter += 8.0; }
+                            else if (description.Contains("1.0m2＜面積≦1.5m2")) { perimeter += 9.84; }
+                            else if (description.Contains("1.5m2＜面積≦2.0m2")) { perimeter += 11.36; }
+                            else { perimeter += (curbStopCalcul.floorLength / 1000 + curbStopCalcul.floorWidth / 1000) * 2; }
                         }
                         ModelInfo modelInfo = new ModelInfo();
                         modelInfo.levelName = disLevelName;
@@ -770,18 +631,13 @@ namespace CSDSEM
                         modelInfo.length = perimeter;
                         modelDB.Add(modelInfo);
                     }
-
-                    List<string> stopPillars = (from x in modelDB
-                                               where x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
-                                               x.pipeOrDuct.Equals("基座") && x.isPillar.Equals(1)
-                                               select x.description).Distinct().ToList();
+                    List<string> stopPillars = modelDB.Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
+                                               x.pipeOrDuct.Equals("基座") && x.isPillar.Equals(1)).Select(x => x.description).Distinct().ToList();
                     foreach (string stopPillar in stopPillars)
                     {
                         double perimeter = 0.0;
-                        List<ModelInfo> modelDBFilter = (from x in modelDB
-                                                         where x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
-                                                         x.pipeOrDuct.Equals("基座") && x.isPillar.Equals(1) && x.description.Equals(stopPillar)
-                                                         select x).ToList();
+                        List<ModelInfo> modelDBFilter = modelDB.Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
+                                                        x.pipeOrDuct.Equals("基座") && x.isPillar.Equals(1) && x.description.Equals(stopPillar)).ToList();
                         foreach (ModelInfo curbStopCalcul in modelDBFilter)
                         {
                             //if (stopPillar.Contains("體積≦0.15m3"))

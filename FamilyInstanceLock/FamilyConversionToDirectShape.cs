@@ -55,11 +55,11 @@ namespace FamilyInstanceLock
                         }
                         directShape.SetShape(resultList);
                         directShape.Name = doc.GetElement(chooseFamily.Symbol.Id).Name;
-                        doc.Delete(chooseFamily.Id);
-                        count++;
                         //SetParameterFromOriginalElement(directShape, familyInstance); // 修改參數
                         //SetPropertyValueFromParameters(directShape, familySymbol, paraList);
-                        //List<Dimension> dimensionList = GetDimension(doc, familyInstance);
+                        List<Dimension> dimensionList = GetDimension(doc, chooseFamily);
+                        doc.Delete(chooseFamily.Id);
+                        count++;
                     }
                     catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
@@ -258,7 +258,7 @@ namespace FamilyInstanceLock
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("抓取關聯尺寸標註失敗", ex.Message);
+                //TaskDialog.Show("抓取關聯尺寸標註失敗", ex.Message);
             }
             return list;
         }
