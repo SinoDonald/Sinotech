@@ -1436,10 +1436,7 @@ namespace CSDSEM
                     {
                         string value = "0";
                         para = opening.LookupParameter("矩形開口底部高程");
-                        if(para == null)
-                        {
-                            para = opening.LookupParameter("圓形套管底部高程");
-                        }
+                        if(para == null) { para = opening.LookupParameter("圓形套管底部高程"); }
                         para.Set(value);
                         //// 查詢開口與元件的旋轉角度
                         //LocationPoint lp = OpeningRotate(doc, opening);
