@@ -7,6 +7,7 @@ using Autodesk.Revit.UI;
 using Revit_API;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace CSDSEM
@@ -40,8 +41,15 @@ namespace CSDSEM
             public List<PipingSystem> pypingSystems = new List<PipingSystem>();
             public List<MechanicalSystem> mechanicalSystems = new List<MechanicalSystem>();
         }
+        public class ErrorId
+        {
+            public string errorMessge { get; set; }
+            public string id { get; set; }
+        }
         private List<OpeningInfo> openingInfoList = new List<OpeningInfo>(); // 依座標點排序的開口
         private static List<Level> docLevels = new List<Level>(); // Document內所有的Level
+        private List<ErrorId> errorIds = new List<ErrorId>(); // 無法編號的開口元件
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             UIApplication uiapp = commandData.Application;
@@ -122,6 +130,7 @@ namespace CSDSEM
                                 List<OpeningInfo> otherList = levelOpeningList.Where(x => x.opening.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsString().Split('_')[0] == casingProjectName).ToList();
                                 foreach(OpeningInfo other in otherList)
                                 {
+                                    ErrorId errorId = new ErrorId();
                                     FamilyInstance opening = other.opening;
                                     try
                                     {
@@ -130,7 +139,15 @@ namespace CSDSEM
                                         para.Set(sn);
                                         sn++;
                                     }
-                                    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                                    catch (Exception ex) 
+                                    {
+                                        string error = ex.Message + "\n" + ex.ToString();
+                                        errorId.errorMessge = ex.Message;
+                                        if (ex.Message.Equals("索引在陣列的界限之外。")) { errorId.errorMessge += "(【備註】資訊不足)"; }
+                                        else if (ex.Message.Equals("並未將物件參考設定為物件的執行個體。")) { errorId.errorMessge += "(缺少【樓層】資訊)"; }
+                                        errorId.id = opening.Id.ToString();
+                                        if (errorIds.Where(x => x.id.Equals(opening.Id.ToString())).ToList().Count() == 0) { errorIds.Add(errorId); }
+                                    }
                                 }
                                 revitPipeType.pypingSystems = pipingSystems;
                                 revitPipeTypeList.Add(revitPipeType);
@@ -197,9 +214,14 @@ namespace CSDSEM
                 trans.Commit();
             }
 
+            if(errorIds.Count > 0) { CreateErrorMessage(); } // 自動標籤錯誤訊息
+
             DateTime timeEnd = DateTime.Now; // 計時結束 取得目前時間
             TimeSpan totalTime = timeEnd - timeStart;
-            TaskDialog.Show("Revit", "完成！\n耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒。");
+            string info = string.Empty;
+            if(errorIds.Count == 0) { info = "完成！\n"; }
+            else { info = "尚有 " + errorIds.Count + " 筆元件需檢查\n"; }
+            TaskDialog.Show("Revit", info + "耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒。");
 
             return Result.Succeeded;
         }
@@ -209,6 +231,7 @@ namespace CSDSEM
             List<OpeningInfo> opList = new List<OpeningInfo>();
             foreach (FamilyInstance familyInstance in openingList)
             {
+                ErrorId errorId = new ErrorId();
                 OpeningInfo opening = new OpeningInfo();
                 opening.opening = familyInstance; // 開口
                 try
@@ -225,14 +248,28 @@ namespace CSDSEM
                         opening.crushElemId = Convert.ToInt32(comments[2]); // 干涉的牆樑板
                     }
                     catch (FormatException) { opening.crushElemId = Convert.ToInt32(comments[3]); } // 干涉的牆樑板
-                    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                    catch (Exception ex)
+                    { 
+                        string error = ex.Message + "\n" + ex.ToString();
+                        errorId.errorMessge = ex.Message;
+                        if (ex.Message.Equals("索引在陣列的界限之外。")) { errorId.errorMessge += "(【備註】資訊不足)"; }
+                        errorId.id = familyInstance.Id.ToString();
+                        if (errorIds.Where(x => x.id.Equals(familyInstance.Id.ToString())).ToList().Count() == 0) { errorIds.Add(errorId); }
+                    }
                     LocationPoint lp = familyInstance.Location as LocationPoint;
                     opening.x = lp.Point.X; // 座標點X
                     opening.y = lp.Point.Y; // 座標點Y
                     opening.z = lp.Point.Z; // 座標點Z
                     opList.Add(opening);
                 }
-                catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                catch(Exception ex)
+                {
+                    string error = ex.Message + "\n" + ex.ToString();
+                    errorId.errorMessge = ex.Message;
+                    if (ex.Message.Equals("並未將物件參考設定為物件的執行個體。")) { errorId.errorMessge += "(缺少【樓層】資訊)"; }
+                    errorId.id = familyInstance.Id.ToString();
+                    if (errorIds.Where(x => x.id.Equals(familyInstance.Id.ToString())).ToList().Count() == 0) { errorIds.Add(errorId); }
+                }
             }
             openingInfoList = opList.OrderBy(x => x.x).ThenBy(x => x.y).ToList();
             return openingInfoList;
@@ -357,12 +394,10 @@ namespace CSDSEM
             if (pipeDatas.Count.Equals(0))
             {
                 pipeDatas = pipeDataList.Where(x => {
-                    foreach (Element elem in x.connectors)
-                    {
-                        if (elem is MechanicalSystem) { return true; }
-                    }
+                    foreach (Element elem in x.connectors) { if (elem is MechanicalSystem) { return true; } }
                     return false;
                 }).ToList();
+                //pipeDatas = pipeDataList.Where(x => x.connectors.Where(y => y is MechanicalSystem).ToList().Count > 0).ToList();
             }            
             PipeData pipeData = pipeDatas.OrderBy(p => p.start.X).FirstOrDefault(); // 找到List中最小的x座標, 從左往右排序            
             RemoveRepeat(pipeDataList, pipeData, pipeDataSort); // 重複查詢執行排序
@@ -377,18 +412,11 @@ namespace CSDSEM
                 pipeDataList.Remove(pipeData); // 排序後將pipeDataList移除, 避免重複計算
                 foreach (Element connectElem in pipeData.connectors)
                 {
-                    PipeData notRepeat = (from x in pipeDataSort
-                                          where x.elem.Id.Equals(connectElem.Id)
-                                          select x).FirstOrDefault();
+                    PipeData notRepeat = pipeDataSort.Where(x => x.elem.Id.Equals(connectElem.Id)).FirstOrDefault();
                     if (notRepeat == null)
                     {
-                        PipeData connectorPipeData = (from x in pipeDataList
-                                                      where x.elem.Id.Equals(connectElem.Id)
-                                                      select x).FirstOrDefault();
-                        if (connectorPipeData != null)
-                        {
-                            RemoveRepeat(pipeDataList, connectorPipeData, pipeDataSort); // Repeat
-                        }
+                        PipeData connectorPipeData = pipeDataList.Where(x => x.elem.Id.Equals(connectElem.Id)).FirstOrDefault();
+                        if (connectorPipeData != null) { RemoveRepeat(pipeDataList, connectorPipeData, pipeDataSort); } // Repeat
                     }
                 }
             }
@@ -398,11 +426,10 @@ namespace CSDSEM
         {
             foreach(PipeData pipeData in pipeDataSort)
             {
+                ErrorId errorId = new ErrorId();
                 // 儲存修改過編號的開口
                 List<OpeningInfo> removeOpenings = new List<OpeningInfo>();
-                List<OpeningInfo> sameCrushPipes = (from x in openingInfoList
-                                                    where x.crushPipeId.Equals(RevitAPI.GetValue(pipeData.elem.Id))
-                                                    select x).ToList();
+                List<OpeningInfo> sameCrushPipes = openingInfoList.Where(x => x.crushPipeId.Equals(RevitAPI.GetValue(pipeData.elem.Id))).ToList();
                 foreach (OpeningInfo sameCrushPipe in sameCrushPipes)
                 {
                     FamilyInstance opening = sameCrushPipe.opening;
@@ -413,32 +440,52 @@ namespace CSDSEM
                         {
                             string info = pipeData.elem.Id + "_" + opening.Id;
                             Parameter para = null;
-                            if(pipeData.elem is Pipe)
-                            {
-                                para = opening.LookupParameter("圓形牆開口流水號");
-                            }
-                            else if(pipeData.elem is Duct || pipeData.elem is CableTray || pipeData.elem is FamilyInstance)
-                            {
-                                para = opening.LookupParameter("矩形牆開口流水號");
-                            }
+                            if(pipeData.elem is Pipe) { para = opening.LookupParameter("圓形牆開口流水號"); }
+                            else if(pipeData.elem is Duct || pipeData.elem is CableTray || pipeData.elem is FamilyInstance) { para = opening.LookupParameter("矩形牆開口流水號"); }
                             para.Set(sn);
                             removeOpenings.Add(sameCrushPipe);
                             sn++;
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
-
+                            string error = ex.Message + "\n" + ex.ToString();
+                            errorId.errorMessge = ex.Message;
+                            if (ex.Message.Equals("並未將物件參考設定為物件的執行個體。")) { errorId.errorMessge += "(缺少【牆開口流水號】資訊)"; }
+                            errorId.id = opening.Id.ToString();
+                            if (errorIds.Where(x => x.id.Equals(opening.Id.ToString())).ToList().Count() == 0) { errorIds.Add(errorId); }
                         }
                     }
                 }
                 // 移除已編號的開口
-                foreach(OpeningInfo removeOpening in removeOpenings)
-                {
-                    openingInfoList.Remove(removeOpening);
-                }
+                foreach(OpeningInfo removeOpening in removeOpenings) { openingInfoList.Remove(removeOpening); }
             }
 
             return sn;
+        }
+        // 自動標籤錯誤訊息
+        private void CreateErrorMessage()
+        {
+            try
+            {
+                string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "自動標籤錯誤訊息.txt");
+                // 先檢查是否有此檔案, 沒有的話則新增
+                string folderPath = Path.GetDirectoryName(filePath);
+                if (!File.Exists(filePath)) { using (FileStream fs = File.Create(filePath)) { } }
+                using (StreamWriter sw = new StreamWriter(filePath))
+                {
+                    string content = string.Empty;
+                    List<string> messages = errorIds.Select(x => x.errorMessge).Distinct().ToList();
+                    foreach (string info in messages)
+                    {
+                        content += "\n\n" + info + "\n\n";
+                        List<string> ids = errorIds.Where(x => x.errorMessge.Equals(info)).Distinct().OrderBy(x => x.id).Select(x => x.id).ToList();
+                        foreach (string id in ids) { content += id + "\n"; }
+                    }
+                    sw.WriteLine(content);
+                    sw.Close();
+                }
+            }
+            catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
         }
         // 創建標籤
         private IndependentTag CreateIndependentTag(Document doc, Pipe pipe, int i)
@@ -460,10 +507,7 @@ namespace CSDSEM
             try
             {
                 newTag = IndependentTag.Create(doc, view.Id, pipeRef, true, tagMode, tagorn, pipeMid);
-                if (null == newTag)
-                {
-                    throw new Exception("建立標籤失敗.");
-                }
+                if (null == newTag) { throw new Exception("建立標籤失敗."); }
 
                 // 修改管道「備註」的資訊, 於標籤顯示
                 string number = i.ToString();
@@ -477,10 +521,7 @@ namespace CSDSEM
                 //XYZ headerPnt = pipeMid + new XYZ(5.0, 10.0, 0.0);
                 //newTag.TagHeadPosition = headerPnt;
             }
-            catch (Exception)
-            {
-
-            }
+            catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
 
             return newTag;
         }

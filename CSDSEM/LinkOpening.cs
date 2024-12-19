@@ -1454,24 +1454,12 @@ namespace CSDSEM
                         ProfessionalCode combinePCode = combinePCodes.Where(x => x.comments.Any(y => pipeCode.Contains(y))).FirstOrDefault();
                         para.Set(combinePCode.professionalCode);
                     }
-                    catch (Exception) { }
-                    //if (comment.Contains("AD") || comment.Contains("AP") || comment.Contains("EP"))
-                    //{
-                    //    para.Set("CQ824A-ECS");
-                    //}
-                    //else if (comment.Contains("EE"))
-                    //{
-                    //    para.Set("CQ824A-E");
-                    //}
-                    //else if(comment.Contains("DS") || comment.Contains("FP") || comment.Contains("WS"))
-                    //{
-                    //    para.Set("CQ824A-M");
-                    //}
+                    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                    //if (comment.Contains("AD") || comment.Contains("AP") || comment.Contains("EP")) { para.Set("CQ824A-ECS"); }
+                    //else if (comment.Contains("EE")) { para.Set("CQ824A-E"); }
+                    //else if (comment.Contains("DS") || comment.Contains("FP") || comment.Contains("WS")) { para.Set("CQ824A-M"); }
                 }
-                catch (Exception)
-                {
-
-                }
+                catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
             }
         }
         // 取得元件Solid
@@ -1526,10 +1514,7 @@ namespace CSDSEM
             {
                 String transactionName = failuresAccessor.GetTransactionName();
                 IList<FailureMessageAccessor> fmas = failuresAccessor.GetFailureMessages();
-                if (fmas.Count == 0)
-                {
-                    return FailureProcessingResult.Continue;
-                }
+                if (fmas.Count == 0) { return FailureProcessingResult.Continue; }
                 if (transactionName.Equals("放置開口") || transactionName.Equals("旋轉修改開口參數"))
                 {
                     //foreach (FailureMessageAccessor fma in fmas)
