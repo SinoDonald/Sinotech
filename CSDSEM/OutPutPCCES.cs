@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace CSDSEM
@@ -432,14 +433,18 @@ namespace CSDSEM
                         }
                         catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                        modelInfo.area = Convert.ToDouble(opening.LookupParameter("矩形開口面積").AsValueString());
+                        double value = opening.LookupParameter("矩形開口面積").AsDouble();
+                        double openingArea = UnitUtils.ConvertFromInternalUnits(value, DisplayUnitType.DUT_SQUARE_METERS);
+                        modelInfo.area = openingArea;
                         // 開口對象(牆、樑、板)
                         if (opening.Name.Contains("牆")) { modelInfo.host = "牆"; }
                         else if (opening.Name.Contains("樓板") || opening.Name.Contains("樓版")) 
                         {
                             modelInfo.host = "樓板";
-                            modelInfo.floorLength = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsValueString());
-                            modelInfo.floorWidth = Convert.ToDouble(opening.LookupParameter("矩形開口寬度").AsValueString());
+                            string floorLength = Regex.Replace(opening.LookupParameter("矩形開口高度").AsValueString(), "[^0-9.]", ""); //僅保留數字
+                            string floorWidth = Regex.Replace(opening.LookupParameter("矩形開口寬度").AsValueString(), "[^0-9.]", ""); //僅保留數字
+                            modelInfo.floorLength = Convert.ToDouble(floorLength);
+                            modelInfo.floorWidth = Convert.ToDouble(floorWidth);
                         }
                         // 項目及說明
                         OpeningContrast item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host))
@@ -502,7 +507,9 @@ namespace CSDSEM
                             }
                         }
                         catch (Exception) { }
-                        modelInfo.volume = Convert.ToDouble(opening.get_Parameter(BuiltInParameter.HOST_VOLUME_COMPUTED).AsValueString().Replace("m³", "")); // 體積
+                        string value = opening.get_Parameter(BuiltInParameter.HOST_VOLUME_COMPUTED).AsValueString();
+                        string volume = Regex.Replace(opening.get_Parameter(BuiltInParameter.HOST_VOLUME_COMPUTED).AsValueString(), "[^0-9.]", ""); //僅保留數字
+                        modelInfo.volume = Convert.ToDouble(volume); // 體積
                         // 項目及說明
                         OpeningContrast item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct)).Where(x => x.min < modelInfo.volume && modelInfo.volume <= x.max).FirstOrDefault();
                         if(item != null)
@@ -543,7 +550,7 @@ namespace CSDSEM
                         
                         modelInfo.length = Convert.ToDouble(opening.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH).AsValueString()); // 長度
                         // 取Excel資料庫中的最近數值
-                        double diameter = Convert.ToDouble(opening.get_Parameter(BuiltInParameter.RBS_CONDUIT_DIAMETER_PARAM).AsValueString().Replace("mm", "")); // 直徑 (標稱尺寸)
+                        double diameter = Convert.ToDouble(Regex.Replace(opening.get_Parameter(BuiltInParameter.RBS_CONDUIT_DIAMETER_PARAM).AsValueString(), "[^0-9.]", "")); // 直徑 (標稱尺寸)
                         List<double> values = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct)).Select(x => x.diameter).Distinct().ToList();
                         diameter = values.OrderBy(x => Math.Abs(x - diameter)).FirstOrDefault();
                         modelInfo.diameter = diameter;                        
