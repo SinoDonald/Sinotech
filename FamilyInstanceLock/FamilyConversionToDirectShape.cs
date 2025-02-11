@@ -35,6 +35,7 @@ namespace FamilyInstanceLock
             {
                 trans.Start();
                 List<FamilyInstance> chooseFamilys = ChooseElems.chooseFamilys;
+                List<ElementId> familySymbolIds = new List<ElementId>();
                 foreach (FamilyInstance chooseFamily in chooseFamilys)
                 {
                     try
@@ -57,12 +58,16 @@ namespace FamilyInstanceLock
                         directShape.Name = doc.GetElement(chooseFamily.Symbol.Id).Name;
                         //SetParameterFromOriginalElement(directShape, familyInstance); // 修改參數
                         //SetPropertyValueFromParameters(directShape, familySymbol, paraList);
-                        List<Dimension> dimensionList = GetDimension(doc, chooseFamily);
+                        List<Dimension> dimensionList = GetDimension(doc, chooseFamily); 
+                        familySymbolIds.Add(chooseFamily.Symbol.Id);
                         doc.Delete(chooseFamily.Id);
                         count++;
                     }
                     catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
+                // 移除未使用的元件
+                familySymbolIds = familySymbolIds.Distinct().ToList();
+                foreach (ElementId familySymbolId in familySymbolIds) { doc.Delete(familySymbolId); }
                 trans.Commit();
             }
             TaskDialog.Show("Revit", "成功鎖定 " + count + " 個元件。");

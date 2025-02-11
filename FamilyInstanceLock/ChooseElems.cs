@@ -69,7 +69,12 @@ namespace FamilyInstanceLock
             {
                 ElementCategoryFilter genericModels = new ElementCategoryFilter(BuiltInCategory.OST_GenericModel); // 一般模型
                 ElementCategoryFilter plumbingFixtures = new ElementCategoryFilter(BuiltInCategory.OST_PlumbingFixtures); // 衛工裝置
-                LogicalOrFilter familyInsFilter = new LogicalOrFilter(genericModels, plumbingFixtures);
+                ElementCategoryFilter furnitures = new ElementCategoryFilter(BuiltInCategory.OST_Furniture); // 傢俱
+                ElementCategoryFilter sites = new ElementCategoryFilter(BuiltInCategory.OST_Site); // 敷地
+                ElementCategoryFilter mechanicalEquipments = new ElementCategoryFilter(BuiltInCategory.OST_MechanicalEquipment); // 機械設備
+                ElementCategoryFilter specialityEquipments = new ElementCategoryFilter(BuiltInCategory.OST_SpecialityEquipment); // 特製設備                
+                List<ElementFilter> filters = new List<ElementFilter>() { genericModels, plumbingFixtures, furnitures, sites, mechanicalEquipments, specialityEquipments };
+                LogicalOrFilter familyInsFilter = new LogicalOrFilter(filters);
                 familyInstances = new FilteredElementCollector(doc).WherePasses(familyInsFilter).WhereElementIsNotElementType()
                                  .OfClass(typeof(FamilyInstance)).Cast<FamilyInstance>().OrderBy(x => x.Symbol.Family.Name).ToList();
                 List<string> familyNames = familyInstances.Select(x => x.Symbol.Family.Name).Distinct().ToList();
