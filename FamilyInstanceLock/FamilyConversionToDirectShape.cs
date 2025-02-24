@@ -26,9 +26,6 @@ namespace FamilyInstanceLock
 
             TransactionGroup tranGrp1 = new TransactionGroup(doc, "元件保護");
             tranGrp1.Start();
-            //List<Parameter> paraList = new List<Parameter>();
-            //foreach (Parameter para in familySymbol.Parameters) { paraList.Add(para); }
-            //CreateSharedParameter(doc, familySymbol, paraList); // 新增共用參數
 
             int count = 0;
             using (Transaction trans = new Transaction(doc, "建立模型"))
@@ -40,6 +37,14 @@ namespace FamilyInstanceLock
                 {
                     try
                     {
+                        try
+                        {
+                            List<Parameter> paraList = new List<Parameter>();
+                            foreach (Parameter para in chooseFamily.Symbol.Parameters) { paraList.Add(para); }
+                            CreateSharedParameter(doc, chooseFamily.Symbol, paraList); // 新增共用參數
+                        }
+                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+
                         DirectShape directShape = DirectShape.CreateElement(doc, chooseFamily.Category.Id);
                         directShape.ApplicationId = "Donald";
                         directShape.ApplicationDataId = "Sinotech";
@@ -79,68 +84,48 @@ namespace FamilyInstanceLock
         {
             string directoryName = Path.GetDirectoryName(doc.PathName);
             doc.Application.SharedParametersFilename = Path.Combine(directoryName, "SinotechSharedParameter.txt");
-            using (Transaction trans = new Transaction(doc, "新增共用參數"))
+            DefinitionFile definitionFile = doc.Application.OpenSharedParameterFile();
+            if (definitionFile == null)
             {
-                trans.Start();
-                DefinitionFile definitionFile = doc.Application.OpenSharedParameterFile();
-                if (definitionFile == null)
+                if (File.Exists(doc.Application.SharedParametersFilename)) { File.Delete(doc.Application.SharedParametersFilename); }
+                File.Create(doc.Application.SharedParametersFilename).Close();
+                definitionFile = doc.Application.OpenSharedParameterFile();
+            }
+            DefinitionGroup definitionGroup = definitionFile.Groups.get_Item("Sinotech");
+            if (definitionGroup == null) { definitionGroup = definitionFile.Groups.Create("Sinotech"); }
+            foreach (Parameter para in paraList)
+            {
+                //string text = para.Definition.Name.Contains("Type") ? ("_" + para.Definition.Name) : (familySymbol.FamilyName + "_" + para.Definition.Name);
+                string text = para.Definition.Name;
+                if (definitionGroup.Definitions.get_Item(text) == null)
                 {
-                    if (File.Exists(doc.Application.SharedParametersFilename))
-                    {
-                        File.Delete(doc.Application.SharedParametersFilename);
-                    }
-                    File.Create(doc.Application.SharedParametersFilename).Close();
-                    definitionFile = doc.Application.OpenSharedParameterFile();
+                    ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType);
+                    //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, UnitTypeId.Meters);
+                    try { definitionGroup.Definitions.Create(externalDefinitionCreationOptions); }
+                    catch (Autodesk.Revit.Exceptions.InvalidOperationException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
-                DefinitionGroup definitionGroup = definitionFile.Groups.get_Item("Sinotech");
-                if (definitionGroup == null)
+                Definition definition = definitionGroup.Definitions.get_Item(text);
+                Category category = familySymbol.Category;
+                CategorySet categorySet = doc.Application.Create.NewCategorySet();
+                DefinitionBindingMapIterator definitionBindingMapIterator = doc.ParameterBindings.ForwardIterator();
+                while (definitionBindingMapIterator.MoveNext())
                 {
-                    definitionGroup = definitionFile.Groups.Create("Sinotech");
-                }
-                foreach (Parameter para in paraList)
-                {
-                    string text = para.Definition.Name.Contains("Type") ? ("_" + para.Definition.Name) : (familySymbol.FamilyName + "_" + para.Definition.Name);
-                    if (definitionGroup.Definitions.get_Item(text) == null)
+                    Definition key = definitionBindingMapIterator.Key;
+                    ElementBinding elementBinding = (ElementBinding)definitionBindingMapIterator.Current;
+                    if (text == key.Name)
                     {
-                        ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType);
-                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, UnitTypeId.Meters);
-                        try { definitionGroup.Definitions.Create(externalDefinitionCreationOptions); }
-                        catch (Autodesk.Revit.Exceptions.InvalidOperationException ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                    }
-                    Definition definition = definitionGroup.Definitions.get_Item(text);
-                    Category category = familySymbol.Category;
-                    CategorySet categorySet = doc.Application.Create.NewCategorySet();
-                    DefinitionBindingMapIterator definitionBindingMapIterator = doc.ParameterBindings.ForwardIterator();
-                    while (definitionBindingMapIterator.MoveNext())
-                    {
-                        Definition key = definitionBindingMapIterator.Key;
-                        ElementBinding elementBinding = (ElementBinding)definitionBindingMapIterator.Current;
-                        if (text == key.Name)
-                        {
-                            IEnumerator enumerator2 = elementBinding.Categories.GetEnumerator();
-                            //using (IEnumerator enumerator2 = elementBinding.Categories.GetEnumerator())
-                            //{
-                            while (enumerator2.MoveNext())
-                            {
-                                Category category2 = (Category)enumerator2.Current;
-                                categorySet.Insert(category2);
-                            }
-                            break;
-                            //}
-                        }
-                    }
-                    categorySet.Insert(category);
-                    InstanceBinding instanceBinding = doc.Application.Create.NewInstanceBinding(categorySet);
-                    if (categorySet.Size > 1)
-                    {
-                        doc.ParameterBindings.ReInsert(definition, instanceBinding);
-                    }
-                    else
-                    {
-                        doc.ParameterBindings.Insert(definition, instanceBinding);
+                        IEnumerator enumerator2 = elementBinding.Categories.GetEnumerator();
+                        //using (IEnumerator enumerator2 = elementBinding.Categories.GetEnumerator())
+                        //{
+                        while (enumerator2.MoveNext()) { Category category2 = (Category)enumerator2.Current; categorySet.Insert(category2); }
+                        break;
+                        //}
                     }
                 }
-                trans.Commit();
+                categorySet.Insert(category);
+                InstanceBinding instanceBinding = doc.Application.Create.NewInstanceBinding(categorySet);
+                if (categorySet.Size > 1) { doc.ParameterBindings.ReInsert(definition, instanceBinding); }
+                else { doc.ParameterBindings.Insert(definition, instanceBinding); }
             }
         }
         // 修改參數
