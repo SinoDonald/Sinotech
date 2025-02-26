@@ -111,7 +111,9 @@ namespace FamilyInstanceLock
             {
                 if (item.Checked == true)
                 {
-                    List<FamilyInstance> familys = familyInstances.Where(x => x.Symbol.Family.Name.Equals(item.Text)).ToList();
+                    List<FamilyInstance> familys = familyInstances.Where(x => x.Symbol.Family.Name.Equals(item.Text)).Where(x => x.DesignOption == null).ToList();
+                    foreach (FamilyInstance family in familys) { chooseFamilys.Add(family); }
+                    familys = familyInstances.Where(x => x.Symbol.Family.Name.Equals(item.Text)).Where(x => x.DesignOption != null).Where(x => x.DesignOption.IsPrimary.Equals(true)).ToList();
                     foreach (FamilyInstance family in familys) { chooseFamilys.Add(family); }
                 }
             }

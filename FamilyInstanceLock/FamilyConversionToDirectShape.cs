@@ -33,21 +33,28 @@ namespace FamilyInstanceLock
                 trans.Start();
                 List<FamilyInstance> chooseFamilys = ChooseElems.chooseFamilys;
                 List<ElementId> familySymbolIds = new List<ElementId>();
+                // 建立共享元件
+                List<ElementId> fsIds = chooseFamilys.Select(x => x.Symbol.Id).Distinct().ToList();
+                foreach(ElementId fsId in fsIds)
+                {
+                    try
+                    {
+                        FamilySymbol familySymbol = doc.GetElement(fsId) as FamilySymbol;
+                        List<Parameter> paraList = new List<Parameter>();
+                        foreach (Parameter para in familySymbol.Parameters) { paraList.Add(para); }
+                        paraList = paraList.OrderBy(x => x.Definition.Name).ToList();
+                        CreateSharedParameter(doc, familySymbol, paraList); // 新增共用參數
+                    }
+                    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                }
                 foreach (FamilyInstance chooseFamily in chooseFamilys)
                 {
                     try
                     {
-                        try
-                        {
-                            List<Parameter> paraList = new List<Parameter>();
-                            foreach (Parameter para in chooseFamily.Symbol.Parameters) { paraList.Add(para); }
-                            CreateSharedParameter(doc, chooseFamily.Symbol, paraList); // 新增共用參數
-                        }
-                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
-
                         DirectShape directShape = DirectShape.CreateElement(doc, chooseFamily.Category.Id);
-                        directShape.ApplicationId = "Donald";
                         directShape.ApplicationDataId = "Sinotech";
+                        //directShape.ApplicationId = "Donald";
+                        directShape.ApplicationId = chooseFamily.Id.ToString();
 
                         List<Solid> solids = GetSolids(doc, chooseFamily);
                         List<ElementId> subComponentIds = chooseFamily.GetSubComponentIds().ToList();
@@ -61,7 +68,7 @@ namespace FamilyInstanceLock
                         }
                         directShape.SetShape(resultList);
                         directShape.Name = doc.GetElement(chooseFamily.Symbol.Id).Name;
-                        //SetParameterFromOriginalElement(directShape, familyInstance); // 修改參數
+                        SetParameterFromOriginalElement(directShape, directShape); // 修改參數
                         //SetPropertyValueFromParameters(directShape, familySymbol, paraList);
                         List<Dimension> dimensionList = GetDimension(doc, chooseFamily); 
                         familySymbolIds.Add(chooseFamily.Symbol.Id);
