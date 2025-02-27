@@ -28,25 +28,62 @@ namespace FamilyInstanceLock
             tranGrp1.Start();
 
             int count = 0;
+            List<string> familyNames = new List<string>();
             using (Transaction trans = new Transaction(doc, "建立模型"))
             {
-                trans.Start();
                 List<FamilyInstance> chooseFamilys = ChooseElems.chooseFamilys;
                 List<ElementId> familySymbolIds = new List<ElementId>();
-                // 建立共享元件
-                List<ElementId> fsIds = chooseFamilys.Select(x => x.Symbol.Id).Distinct().ToList();
-                foreach(ElementId fsId in fsIds)
+                // 新增共用參數
+                familyNames = chooseFamilys.Select(x => x.Symbol.FamilyName).Distinct().ToList();
+                List<string> containWords = new List<string>() { "長度", "管線" };
+                List<Parameter> paraList = new List<Parameter>();
+
+                string templatePath = @"E:\Donald的檔案\中興工程\測試檔案\公制通用模型.rft";
+                foreach (string familyName in familyNames)
                 {
+                    string tempFamilyPath = Path.Combine(@"E:\Donald的檔案\中興工程\測試檔案\", familyName + ".rfa");
                     try
                     {
-                        FamilySymbol familySymbol = doc.GetElement(fsId) as FamilySymbol;
-                        List<Parameter> paraList = new List<Parameter>();
-                        foreach (Parameter para in familySymbol.Parameters) { paraList.Add(para); }
-                        paraList = paraList.OrderBy(x => x.Definition.Name).ToList();
-                        CreateSharedParameter(doc, familySymbol, paraList); // 新增共用參數
+                        Document familyDoc = doc.Application.NewFamilyDocument(templatePath);
+                        FamilyInstance familyInstance = chooseFamilys.Where(x => x.Symbol.FamilyName.Equals(familyName)).FirstOrDefault();
+                        List<GeometryObject> resultList = new List<GeometryObject>();
+                        List<Solid> solids = GetSolids(doc, familyInstance);
+                        foreach (Solid solid in solids) { resultList.Add(solid); }
+                        List<ElementId> subComponentIds = familyInstance.GetSubComponentIds().ToList();
+                        foreach (ElementId subComponentId in subComponentIds)
+                        {
+                            Element subElem = doc.GetElement(subComponentId);
+                            List<Solid> subSolids = GetSolids(doc, subElem);
+                            foreach (Solid subSolid in subSolids) { resultList.Add(subSolid); }
+                        }
+                        //using (Transaction famTrans = new Transaction(familyDoc, "創建幾何體"))
+                        //{
+                        //    famTrans.Start();
+                        //    foreach (Solid solid in resultList) { FreeFormElement.Create(familyDoc, solid); }
+                        //    famTrans.Commit();
+                        //}
+                        //// 另存新檔
+                        //SaveAsOptions saveOpt = new SaveAsOptions();
+                        //saveOpt.OverwriteExistingFile = true;
+                        //familyDoc.SaveAs(tempFamilyPath, saveOpt);
+                        //familyDoc.Close();
+
+                        CreateNewFamily(doc, resultList, familyName, out Family newFamily); // 建立相同的族群
+                        string test = "Test";
+                        //foreach (Parameter para in familyInstances.Parameters)
+                        //{                   
+                        //    if (containWords.Where(x => para.Definition.Name.Contains(x)).FirstOrDefault() != null)
+                        //    {
+                        //        paraList.Add(para); 
+                        //    }
+                        //}
+                        //paraList = paraList.OrderBy(x => x.Definition.Name).ToList();
+                        //List<string> paraNames = paraList.Select(x => x.Definition.Name).ToList();
+                        //CreateSharedParameter(doc, familyInstances.Symbol, paraList);
                     }
                     catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
+                trans.Start();
                 foreach (FamilyInstance chooseFamily in chooseFamilys)
                 {
                     try
@@ -56,11 +93,11 @@ namespace FamilyInstanceLock
                         //directShape.ApplicationId = "Donald";
                         directShape.ApplicationId = chooseFamily.Id.ToString();
 
-                        List<Solid> solids = GetSolids(doc, chooseFamily);
-                        List<ElementId> subComponentIds = chooseFamily.GetSubComponentIds().ToList();
                         List<GeometryObject> resultList = new List<GeometryObject>();
+                        List<Solid> solids = GetSolids(doc, chooseFamily);
                         foreach (Solid solid in solids) { resultList.Add(solid); }
-                        foreach(ElementId subComponentId in subComponentIds)
+                        List<ElementId> subComponentIds = chooseFamily.GetSubComponentIds().ToList();
+                        foreach (ElementId subComponentId in subComponentIds)
                         {
                             Element subElem = doc.GetElement(subComponentId);
                             List<Solid> subSolids = GetSolids(doc, subElem);
@@ -68,23 +105,88 @@ namespace FamilyInstanceLock
                         }
                         directShape.SetShape(resultList);
                         directShape.Name = doc.GetElement(chooseFamily.Symbol.Id).Name;
-                        SetParameterFromOriginalElement(directShape, directShape); // 修改參數
-                        //SetPropertyValueFromParameters(directShape, familySymbol, paraList);
+                        //SetParameterFromOriginalElement(directShape, chooseFamily); // 修改參數
+                        //SetPropertyValueFromParameters(directShape, chooseFamily.Symbol, paraList);
                         List<Dimension> dimensionList = GetDimension(doc, chooseFamily); 
                         familySymbolIds.Add(chooseFamily.Symbol.Id);
-                        doc.Delete(chooseFamily.Id);
+                        //doc.Delete(chooseFamily.Id);
                         count++;
                     }
                     catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
-                // 移除未使用的元件
-                familySymbolIds = familySymbolIds.Distinct().ToList();
-                foreach (ElementId familySymbolId in familySymbolIds) { doc.Delete(familySymbolId); }
+                //// 移除未使用的元件
+                //familySymbolIds = familySymbolIds.Distinct().ToList();
+                //foreach (ElementId familySymbolId in familySymbolIds) { doc.Delete(familySymbolId); }
                 trans.Commit();
             }
             TaskDialog.Show("Revit", "成功鎖定 " + count + " 個元件。");
 
             tranGrp1.Assimilate();
+        }
+        /// <summary>
+        /// 建立相同的族群
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="resultList"></param>
+        /// <param name="familyName"></param>
+        /// <param name="newFamily"></param>
+        /// <returns></returns>
+        public bool CreateNewFamily(Document doc, List<GeometryObject> resultList, string familyName, out Family newFamily)
+        {
+            newFamily = null;
+            try
+            {
+                string templatePath = @"E:\Donald的檔案\中興工程\測試檔案\公制通用模型.rft"; 
+                string tempFamilyPath = Path.Combine(@"E:\Donald的檔案\中興工程\測試檔案\", familyName + ".rfa");
+
+                Document familyDoc = doc.Application.NewFamilyDocument(templatePath);
+                using (Transaction famTrans = new Transaction(familyDoc, "創建幾何體"))
+                {
+                    famTrans.Start(); 
+                    foreach (Solid solid in resultList) { FreeFormElement.Create(familyDoc, solid); }
+                    famTrans.Commit();
+                }
+                // 另存新檔
+                SaveAsOptions saveOpt = new SaveAsOptions();
+                saveOpt.OverwriteExistingFile = true;
+                familyDoc.SaveAs(tempFamilyPath, saveOpt);
+                // 關閉
+                familyDoc.Close(false);
+
+                //// 將新族群載入到當前文件
+                //using (Transaction loadTrans = new Transaction(doc, "載入新族群"))
+                //{
+                //    loadTrans.Start();
+                //    Family loadedFamily = null;
+                //    try
+                //    {
+                //        //doc.LoadFamily(tempFamilyPath, out loadedFamily);
+                //        bool a = doc.LoadFamily(tempFamilyPath);
+
+                //        if (loadedFamily != null)
+                //        {
+                //            // 重命名族
+                //            loadedFamily.Name = familyName;
+                //            newFamily = loadedFamily;
+                //        }
+                //    }
+                //    catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                //    loadTrans.Commit();
+                //}
+
+                //// 移除檔案
+                //if (File.Exists(tempFamilyPath))
+                //{
+                //    try { File.Delete(tempFamilyPath); } catch { }
+                //}
+
+                return newFamily != null;
+            }
+            catch (Exception ex)
+            {
+                TaskDialog.Show("Error", "發生錯誤: " + ex.Message);
+                return false;
+            }
         }
         // 新增共用參數
         private void CreateSharedParameter(Document doc, FamilySymbol familySymbol, List<Parameter> paraList)
@@ -104,6 +206,7 @@ namespace FamilyInstanceLock
             {
                 //string text = para.Definition.Name.Contains("Type") ? ("_" + para.Definition.Name) : (familySymbol.FamilyName + "_" + para.Definition.Name);
                 string text = para.Definition.Name;
+                if (text.Contains("平台")) { string test = text; }
                 if (definitionGroup.Definitions.get_Item(text) == null)
                 {
                     ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType);
@@ -131,6 +234,7 @@ namespace FamilyInstanceLock
                 }
                 categorySet.Insert(category);
                 InstanceBinding instanceBinding = doc.Application.Create.NewInstanceBinding(categorySet);
+                doc.ParameterBindings.Insert(definition, instanceBinding);
                 if (categorySet.Size > 1) { doc.ParameterBindings.ReInsert(definition, instanceBinding); }
                 else { doc.ParameterBindings.Insert(definition, instanceBinding); }
             }
