@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using Autodesk.Revit.UI.Selection;
@@ -9,6 +10,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,11 +20,14 @@ namespace FamilyInstanceLock
     [Regeneration(RegenerationOption.Manual)]
     public class FamilyConversionToDirectShape : IExternalEventHandler
     {
+        string genericModelPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Autodesk", "Revit", "Addins", "Sinotech", "公制通用模型.rft"); // 公制通用模型
+        string tempPath = @"E:\Donald的檔案\中興工程\測試檔案\";
         public void Execute(UIApplication uiapp)
         {
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
+            genericModelPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Autodesk", "RVT " + app.VersionNumber, "Family Templates", "Traditional Chinese", "公制通用模型.rft"); // 公制通用模型
 
             TransactionGroup tranGrp1 = new TransactionGroup(doc, "元件保護");
             tranGrp1.Start();
@@ -33,56 +38,32 @@ namespace FamilyInstanceLock
             {
                 List<FamilyInstance> chooseFamilys = ChooseElems.chooseFamilys;
                 List<ElementId> familySymbolIds = new List<ElementId>();
-                // 新增共用參數
                 familyNames = chooseFamilys.Select(x => x.Symbol.FamilyName).Distinct().ToList();
                 List<string> containWords = new List<string>() { "長度", "管線" };
                 List<Parameter> paraList = new List<Parameter>();
-
-                string templatePath = @"E:\Donald的檔案\中興工程\測試檔案\公制通用模型.rft";
                 foreach (string familyName in familyNames)
                 {
-                    string tempFamilyPath = Path.Combine(@"E:\Donald的檔案\中興工程\測試檔案\", familyName + ".rfa");
                     try
                     {
-                        Document familyDoc = doc.Application.NewFamilyDocument(templatePath);
+                        trans.Start();
                         FamilyInstance familyInstance = chooseFamilys.Where(x => x.Symbol.FamilyName.Equals(familyName)).FirstOrDefault();
-                        List<GeometryObject> resultList = new List<GeometryObject>();
-                        List<Solid> solids = GetSolids(doc, familyInstance);
-                        foreach (Solid solid in solids) { resultList.Add(solid); }
-                        List<ElementId> subComponentIds = familyInstance.GetSubComponentIds().ToList();
-                        foreach (ElementId subComponentId in subComponentIds)
+                        foreach (Parameter para in familyInstance.Parameters)
                         {
-                            Element subElem = doc.GetElement(subComponentId);
-                            List<Solid> subSolids = GetSolids(doc, subElem);
-                            foreach (Solid subSolid in subSolids) { resultList.Add(subSolid); }
+                            if (containWords.Where(x => para.Definition.Name.Contains(x)).FirstOrDefault() != null)
+                            {
+                                paraList.Add(para);
+                            }
                         }
-                        //using (Transaction famTrans = new Transaction(familyDoc, "創建幾何體"))
-                        //{
-                        //    famTrans.Start();
-                        //    foreach (Solid solid in resultList) { FreeFormElement.Create(familyDoc, solid); }
-                        //    famTrans.Commit();
-                        //}
-                        //// 另存新檔
-                        //SaveAsOptions saveOpt = new SaveAsOptions();
-                        //saveOpt.OverwriteExistingFile = true;
-                        //familyDoc.SaveAs(tempFamilyPath, saveOpt);
-                        //familyDoc.Close();
+                        paraList = paraList.OrderBy(x => x.Definition.Name).ToList();
+                        List<string> paraNames = paraList.Select(x => x.Definition.Name).ToList();
+                        CreateSharedParameter(doc, familyInstance.Symbol, paraList); // 新增共用參數
+                        trans.Commit();
 
-                        CreateNewFamily(doc, resultList, familyName, out Family newFamily); // 建立相同的族群
-                        string test = "Test";
-                        //foreach (Parameter para in familyInstances.Parameters)
-                        //{                   
-                        //    if (containWords.Where(x => para.Definition.Name.Contains(x)).FirstOrDefault() != null)
-                        //    {
-                        //        paraList.Add(para); 
-                        //    }
-                        //}
-                        //paraList = paraList.OrderBy(x => x.Definition.Name).ToList();
-                        //List<string> paraNames = paraList.Select(x => x.Definition.Name).ToList();
-                        //CreateSharedParameter(doc, familyInstances.Symbol, paraList);
+                        //Family newFamily = CreateNewFamily(uiapp, familyInstance); // 建立相同的族群, 可編輯族群, 參數都消失
                     }
                     catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
+
                 trans.Start();
                 foreach (FamilyInstance chooseFamily in chooseFamilys)
                 {
@@ -105,11 +86,11 @@ namespace FamilyInstanceLock
                         }
                         directShape.SetShape(resultList);
                         directShape.Name = doc.GetElement(chooseFamily.Symbol.Id).Name;
-                        //SetParameterFromOriginalElement(directShape, chooseFamily); // 修改參數
-                        //SetPropertyValueFromParameters(directShape, chooseFamily.Symbol, paraList);
-                        List<Dimension> dimensionList = GetDimension(doc, chooseFamily); 
+                        SetParameterFromOriginalElement(directShape, chooseFamily); // 修改參數
+                        SetPropertyValueFromParameters(directShape, chooseFamily.Symbol, paraList);
+                        List<Dimension> dimensionList = GetDimension(doc, chooseFamily);
                         familySymbolIds.Add(chooseFamily.Symbol.Id);
-                        //doc.Delete(chooseFamily.Id);
+                        doc.Delete(chooseFamily.Id);
                         count++;
                     }
                     catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
@@ -124,71 +105,76 @@ namespace FamilyInstanceLock
             tranGrp1.Assimilate();
         }
         /// <summary>
-        /// 建立相同的族群
+        /// 建立相同的族群, 可編輯族群, 參數都消失
         /// </summary>
         /// <param name="doc"></param>
         /// <param name="resultList"></param>
-        /// <param name="familyName"></param>
+        /// <param name="familyInstance"></param>
         /// <param name="newFamily"></param>
         /// <returns></returns>
-        public bool CreateNewFamily(Document doc, List<GeometryObject> resultList, string familyName, out Family newFamily)
+        public Family CreateNewFamily(UIApplication uiapp, FamilyInstance familyInstance)
         {
-            newFamily = null;
+            Family newFamily = null;
             try
             {
-                string templatePath = @"E:\Donald的檔案\中興工程\測試檔案\公制通用模型.rft"; 
-                string tempFamilyPath = Path.Combine(@"E:\Donald的檔案\中興工程\測試檔案\", familyName + ".rfa");
+                Document doc = uiapp.ActiveUIDocument.Document;
+                string tempFamilyPath = Path.Combine(tempPath, familyInstance.Symbol.FamilyName + ".rfa");
+                Document familyDoc = doc.Application.NewFamilyDocument(genericModelPath);
+                // 儲存Solid的形狀塑型
+                List<GeometryObject> resultList = new List<GeometryObject>();
+                List<Solid> solids = GetSolids(doc, familyInstance);
+                foreach (Solid solid in solids) { resultList.Add(solid); }
+                List<ElementId> subComponentIds = familyInstance.GetSubComponentIds().ToList();
+                foreach (ElementId subComponentId in subComponentIds)
+                {
+                    Element subElem = doc.GetElement(subComponentId);
+                    List<Solid> subSolids = GetSolids(doc, subElem);
+                    foreach (Solid subSolid in subSolids) { resultList.Add(subSolid); }
+                }
 
-                Document familyDoc = doc.Application.NewFamilyDocument(templatePath);
                 using (Transaction famTrans = new Transaction(familyDoc, "創建幾何體"))
                 {
                     famTrans.Start(); 
                     foreach (Solid solid in resultList) { FreeFormElement.Create(familyDoc, solid); }
+                    List<Dimension> dimensionList = GetDimension(doc, familyInstance);
                     famTrans.Commit();
                 }
                 // 另存新檔
                 SaveAsOptions saveOpt = new SaveAsOptions();
                 saveOpt.OverwriteExistingFile = true;
                 familyDoc.SaveAs(tempFamilyPath, saveOpt);
-                // 關閉
-                familyDoc.Close(false);
 
-                //// 將新族群載入到當前文件
-                //using (Transaction loadTrans = new Transaction(doc, "載入新族群"))
-                //{
-                //    loadTrans.Start();
-                //    Family loadedFamily = null;
-                //    try
-                //    {
-                //        //doc.LoadFamily(tempFamilyPath, out loadedFamily);
-                //        bool a = doc.LoadFamily(tempFamilyPath);
-
-                //        if (loadedFamily != null)
-                //        {
-                //            // 重命名族
-                //            loadedFamily.Name = familyName;
-                //            newFamily = loadedFamily;
-                //        }
-                //    }
-                //    catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                //    loadTrans.Commit();
-                //}
-
-                //// 移除檔案
-                //if (File.Exists(tempFamilyPath))
-                //{
-                //    try { File.Delete(tempFamilyPath); } catch { }
-                //}
-
-                return newFamily != null;
+                // 更新專案內Family的參數
+                Family loadedFamily = null;
+                using (Transaction loadTrans = new Transaction(familyDoc, "載入新族群"))
+                {
+                    loadTrans.Start();
+                    try 
+                    { 
+                        familyDoc.LoadFamily(tempFamilyPath, new LoadOptions(), out loadedFamily);
+                        if (loadedFamily != null)
+                        {
+                            loadedFamily.Name = familyInstance.Symbol.FamilyName;
+                            newFamily = loadedFamily;
+                        }
+                        familyDoc.LoadFamily(doc, new LoadOptions()); // 更新專案的Family
+                    }
+                    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                    loadTrans.Commit();
+                }
+                familyDoc.Close(false); // 關閉
+                if (File.Exists(tempFamilyPath)) { try { File.Delete(tempFamilyPath); } catch { } } // 移除檔案
             }
-            catch (Exception ex)
-            {
-                TaskDialog.Show("Error", "發生錯誤: " + ex.Message);
-                return false;
-            }
+            catch (Exception ex) { string error = "發生錯誤: " + ex.Message; }
+
+            return newFamily;
         }
-        // 新增共用參數
+        /// <summary>
+        ///  新增共用參數
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="familySymbol"></param>
+        /// <param name="paraList"></param>
         private void CreateSharedParameter(Document doc, FamilySymbol familySymbol, List<Parameter> paraList)
         {
             string directoryName = Path.GetDirectoryName(doc.PathName);
@@ -206,7 +192,6 @@ namespace FamilyInstanceLock
             {
                 //string text = para.Definition.Name.Contains("Type") ? ("_" + para.Definition.Name) : (familySymbol.FamilyName + "_" + para.Definition.Name);
                 string text = para.Definition.Name;
-                if (text.Contains("平台")) { string test = text; }
                 if (definitionGroup.Definitions.get_Item(text) == null)
                 {
                     ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType);
@@ -239,7 +224,12 @@ namespace FamilyInstanceLock
                 else { doc.ParameterBindings.Insert(definition, instanceBinding); }
             }
         }
-        // 修改參數
+        /// <summary>
+        /// 修改參數
+        /// </summary>
+        /// <param name="newElem"></param>
+        /// <param name="originalElem"></param>
+        /// <returns></returns>
         public bool SetParameterFromOriginalElement(Element newElem, Element originalElem)
         {
             bool result;
@@ -261,7 +251,13 @@ namespace FamilyInstanceLock
             catch (Exception ex) { TaskDialog.Show("Error", "修改參數失敗" + ex.Message); result = false; }
             return result;
         }
-        // 修改族群參數
+        /// <summary>
+        /// 修改族群參數
+        /// </summary>
+        /// <param name="newElem"></param>
+        /// <param name="familySymbol"></param>
+        /// <param name="paraList"></param>
+        /// <returns></returns>
         public bool SetPropertyValueFromParameters(Element newElem, FamilySymbol familySymbol, List<Parameter> paraList)
         {
             bool result;
@@ -374,6 +370,21 @@ namespace FamilyInstanceLock
             }
             public bool AllowReference(Reference reference, XYZ position)
             {
+                return true;
+            }
+        }
+        // 更新專案內Family的參數
+        public class LoadOptions : IFamilyLoadOptions
+        {
+            public bool OnFamilyFound(bool familyInUse, out bool overwriteParameterValues)
+            {
+                overwriteParameterValues = true;
+                return true;
+            }
+            public bool OnSharedFamilyFound(Family sharedFamily, bool familyInUse, out FamilySource source, out bool overwriteParameterValues)
+            {
+                source = FamilySource.Family;
+                overwriteParameterValues = true;
                 return true;
             }
         }
