@@ -21,17 +21,25 @@ namespace FamilyInstanceLock
     public class FamilyConversionToDirectShape : IExternalEventHandler
     {
         string genericModelPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Autodesk", "Revit", "Addins", "Sinotech", "公制通用模型.rft"); // 公制通用模型
-        string tempPath = @"E:\Donald的檔案\中興工程\測試檔案\";
+        string tempPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "元件保護");
+        public class OriginalElemParas
+        {
+            public string familyName { get; set; }
+            public List<string> paraNames = new List<string>();
+            public List<Parameter> paraList = new List<Parameter>();
+        }
+        public List<OriginalElemParas> originalElemParaList = new List<OriginalElemParas>();
         public void Execute(UIApplication uiapp)
         {
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
             genericModelPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Autodesk", "RVT " + app.VersionNumber, "Family Templates", "Traditional Chinese", "公制通用模型.rft"); // 公制通用模型
+            tempPath = Path.GetDirectoryName(doc.PathName);
+            originalElemParaList = new List<OriginalElemParas>(); // 重置
 
             TransactionGroup tranGrp1 = new TransactionGroup(doc, "元件保護");
             tranGrp1.Start();
-
             int count = 0;
             List<string> familyNames = new List<string>();
             using (Transaction trans = new Transaction(doc, "建立模型"))
@@ -40,28 +48,43 @@ namespace FamilyInstanceLock
                 List<ElementId> familySymbolIds = new List<ElementId>();
                 familyNames = chooseFamilys.Select(x => x.Symbol.FamilyName).Distinct().ToList();
                 List<string> containWords = new List<string>() { "長度", "管線" };
-                List<Parameter> paraList = new List<Parameter>();
+                foreach (string familyName in familyNames)
+                {
+                    try
+                    {
+                        FamilyInstance familyInstance = chooseFamilys.Where(x => x.Symbol.FamilyName.Equals(familyName)).FirstOrDefault();
+                        List<Parameter> paraList = new List<Parameter>();
+                        foreach (Parameter para in familyInstance.Parameters)
+                        {
+                            //if (containWords.Where(x => para.Definition.Name.Contains(x)).FirstOrDefault() != null)
+                            //{
+                                paraList.Add(para);
+                            //}
+                        }
+                        paraList = paraList.OrderBy(x => x.Definition.Name).ToList();
+                        List<string> paraNames = paraList.Select(x => x.Definition.Name).ToList();
+
+                        // 儲存原族群所擁有的參數
+                        OriginalElemParas originalElemParas = new OriginalElemParas();
+                        originalElemParas.familyName = familyInstance.Symbol.FamilyName;
+                        originalElemParas.paraNames = paraNames;
+                        originalElemParas.paraList = paraList;
+                        originalElemParaList.Add(originalElemParas);
+                    }
+                    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                }
                 foreach (string familyName in familyNames)
                 {
                     try
                     {
                         trans.Start();
                         FamilyInstance familyInstance = chooseFamilys.Where(x => x.Symbol.FamilyName.Equals(familyName)).FirstOrDefault();
-                        foreach (Parameter para in familyInstance.Parameters)
-                        {
-                            if (containWords.Where(x => para.Definition.Name.Contains(x)).FirstOrDefault() != null)
-                            {
-                                paraList.Add(para);
-                            }
-                        }
-                        paraList = paraList.OrderBy(x => x.Definition.Name).ToList();
-                        List<string> paraNames = paraList.Select(x => x.Definition.Name).ToList();
+                        List<Parameter> paraList = originalElemParaList.Where(x => x.familyName.Equals(familyInstance.Symbol.FamilyName)).Select(x => x.paraList).FirstOrDefault();
                         CreateSharedParameter(doc, familyInstance.Symbol, paraList); // 新增共用參數
-                        trans.Commit();
-
                         //Family newFamily = CreateNewFamily(uiapp, familyInstance); // 建立相同的族群, 可編輯族群, 參數都消失
+                        trans.Commit();
                     }
-                    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                    catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
 
                 trans.Start();
@@ -85,9 +108,9 @@ namespace FamilyInstanceLock
                             foreach (Solid subSolid in subSolids) { resultList.Add(subSolid); }
                         }
                         directShape.SetShape(resultList);
-                        directShape.Name = doc.GetElement(chooseFamily.Symbol.Id).Name;
+                        directShape.Name = chooseFamily.Symbol.FamilyName;
                         SetParameterFromOriginalElement(directShape, chooseFamily); // 修改參數
-                        SetPropertyValueFromParameters(directShape, chooseFamily.Symbol, paraList);
+                        //SetPropertyValueFromParameters(directShape, chooseFamily.Symbol, paraList);
                         List<Dimension> dimensionList = GetDimension(doc, chooseFamily);
                         familySymbolIds.Add(chooseFamily.Symbol.Id);
                         doc.Delete(chooseFamily.Id);
@@ -95,9 +118,9 @@ namespace FamilyInstanceLock
                     }
                     catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
-                //// 移除未使用的元件
-                //familySymbolIds = familySymbolIds.Distinct().ToList();
-                //foreach (ElementId familySymbolId in familySymbolIds) { doc.Delete(familySymbolId); }
+                // 移除未使用的元件
+                familySymbolIds = familySymbolIds.Distinct().ToList();
+                foreach (ElementId familySymbolId in familySymbolIds) { doc.Delete(familySymbolId); }
                 trans.Commit();
             }
             TaskDialog.Show("Revit", "成功鎖定 " + count + " 個元件。");
@@ -178,30 +201,31 @@ namespace FamilyInstanceLock
         private void CreateSharedParameter(Document doc, FamilySymbol familySymbol, List<Parameter> paraList)
         {
             string directoryName = Path.GetDirectoryName(doc.PathName);
-            doc.Application.SharedParametersFilename = Path.Combine(directoryName, "SinotechSharedParameter.txt");
+            doc.Application.SharedParametersFilename = Path.Combine(directoryName, "SinotechSharedParameter.txt"); // 共用參數檔案路徑
+            //DefinitionFile definitionFile = doc.Application.OpenSharedParameterFile(); // 讀取共用參數訊息
+            //if (definitionFile == null)
+            //{
+            if (File.Exists(doc.Application.SharedParametersFilename)) { File.Delete(doc.Application.SharedParametersFilename); }
+            File.Create(doc.Application.SharedParametersFilename).Close();
             DefinitionFile definitionFile = doc.Application.OpenSharedParameterFile();
-            if (definitionFile == null)
-            {
-                if (File.Exists(doc.Application.SharedParametersFilename)) { File.Delete(doc.Application.SharedParametersFilename); }
-                File.Create(doc.Application.SharedParametersFilename).Close();
-                definitionFile = doc.Application.OpenSharedParameterFile();
-            }
-            DefinitionGroup definitionGroup = definitionFile.Groups.get_Item("Sinotech");
+            //}
+            DefinitionGroup definitionGroup = definitionFile.Groups.get_Item("Sinotech"); // 讀取共用參數中的Sinotech群組
             if (definitionGroup == null) { definitionGroup = definitionFile.Groups.Create("Sinotech"); }
             foreach (Parameter para in paraList)
             {
                 //string text = para.Definition.Name.Contains("Type") ? ("_" + para.Definition.Name) : (familySymbol.FamilyName + "_" + para.Definition.Name);
                 string text = para.Definition.Name;
                 if (definitionGroup.Definitions.get_Item(text) == null)
-                {
-                    ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType);
+                {                    
+                    ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType); // 定義一個參數
+                    externalDefinitionCreationOptions.UserModifiable = false; // 唯讀
+                    externalDefinitionCreationOptions.HideWhenNoValue = true; // 無資料則隱藏
                     //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, UnitTypeId.Meters);
                     try { definitionGroup.Definitions.Create(externalDefinitionCreationOptions); }
                     catch (Autodesk.Revit.Exceptions.InvalidOperationException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
-                Definition definition = definitionGroup.Definitions.get_Item(text);
                 Category category = familySymbol.Category;
-                CategorySet categorySet = doc.Application.Create.NewCategorySet();
+                CategorySet categorySet = doc.Application.Create.NewCategorySet(); // 創建一個類別集合用於綁定, 把品類加入
                 DefinitionBindingMapIterator definitionBindingMapIterator = doc.ParameterBindings.ForwardIterator();
                 while (definitionBindingMapIterator.MoveNext())
                 {
@@ -210,18 +234,24 @@ namespace FamilyInstanceLock
                     if (text == key.Name)
                     {
                         IEnumerator enumerator2 = elementBinding.Categories.GetEnumerator();
-                        //using (IEnumerator enumerator2 = elementBinding.Categories.GetEnumerator())
-                        //{
-                        while (enumerator2.MoveNext()) { Category category2 = (Category)enumerator2.Current; categorySet.Insert(category2); }
+                        while (enumerator2.MoveNext())
+                        {
+                            Category category2 = (Category)enumerator2.Current; 
+                            categorySet.Insert(category2); 
+                        }
                         break;
-                        //}
                     }
                 }
-                categorySet.Insert(category);
-                InstanceBinding instanceBinding = doc.Application.Create.NewInstanceBinding(categorySet);
-                doc.ParameterBindings.Insert(definition, instanceBinding);
-                if (categorySet.Size > 1) { doc.ParameterBindings.ReInsert(definition, instanceBinding); }
-                else { doc.ParameterBindings.Insert(definition, instanceBinding); }
+                if (!categorySet.Contains(category))
+                { 
+                    categorySet.Insert(category);
+                    // 取得當前檔案的BindingMap, 並將建立的InstanceBinding綁定上去
+                    Definition definition = definitionGroup.Definitions.get_Item(text);
+                    InstanceBinding instanceBinding = doc.Application.Create.NewInstanceBinding(categorySet);
+                    BindingMap bindingMap = doc.ParameterBindings;
+                    if (categorySet.Size > 1) { bindingMap.ReInsert(definition, instanceBinding); }
+                    else { bindingMap.Insert(definition, instanceBinding); }
+                }
             }
         }
         /// <summary>
@@ -235,20 +265,30 @@ namespace FamilyInstanceLock
             bool result;
             try
             {
-                foreach (Parameter parameter in originalElem.Parameters)
+                List<Parameter> paras = new List<Parameter>();
+                foreach (Parameter para in originalElem.Parameters) { paras.Add(para); }
+                OriginalElemParas originalElemParas = originalElemParaList.Where(x => x.familyName.Equals(newElem.Name)).FirstOrDefault();
+                foreach (string paraName in originalElemParas.paraNames)
                 {
-                    Parameter para = newElem.LookupParameter(parameter.Definition.Name);
-                    if (para != null && !para.IsReadOnly)
+                    List<Parameter> originalElemParameters = paras.Where(x => x.Definition.Name.Equals(paraName)).ToList();
+                    foreach (Parameter parameter in originalElemParameters)
                     {
-                        if (parameter.StorageType == StorageType.Double) { para.Set(parameter.AsDouble()); }
-                        else if (parameter.StorageType == StorageType.ElementId) { para.Set(parameter.AsElementId()); }
-                        else if (parameter.StorageType == StorageType.Integer) { para.Set(parameter.AsInteger()); }
-                        else if (parameter.StorageType == StorageType.String) { para.Set(parameter.AsString()); }
+                        if(parameter.Definition.ParameterGroup != BuiltInParameterGroup.INVALID)
+                        {
+                            Parameter para = newElem.LookupParameter(paraName);
+                            if (para != null && !para.IsReadOnly)
+                            {
+                                if (parameter.StorageType == StorageType.Double) { para.Set(parameter.AsDouble()); }
+                                else if (parameter.StorageType == StorageType.ElementId) { para.Set(parameter.AsElementId()); }
+                                else if (parameter.StorageType == StorageType.Integer) { para.Set(parameter.AsInteger()); }
+                                else if (parameter.StorageType == StorageType.String) { para.Set(parameter.AsString()); }
+                            }
+                        }
                     }
                 }
                 result = true;
             }
-            catch (Exception ex) { TaskDialog.Show("Error", "修改參數失敗" + ex.Message); result = false; }
+            catch (Exception ex) { string error = "修改參數失敗" + ex.Message + "\n" + ex.ToString(); result = false; }
             return result;
         }
         /// <summary>
@@ -266,6 +306,7 @@ namespace FamilyInstanceLock
                 foreach (Parameter parameter in paraList)
                 {
                     Parameter para = newElem.LookupParameter(parameter.Definition.Name.Contains("Type") ? ("_" + parameter.Definition.Name) : (familySymbol.FamilyName + "_" + parameter.Definition.Name));
+                    para = newElem.LookupParameter(parameter.Definition.Name);
                     if (para != null && !para.IsReadOnly)
                     {
                         if (parameter.StorageType == StorageType.Double) { para.Set(parameter.AsDouble()); }
@@ -276,7 +317,7 @@ namespace FamilyInstanceLock
                 }
                 result = true;
             }
-            catch (Exception ex) { TaskDialog.Show("Error", "修改族群參數失敗" + ex.Message); result = false; }
+            catch (Exception ex) { string error = "修改參數失敗" + ex.Message + "\n" + ex.ToString(); result = false; }
             return result;
         }
         /// <summary>

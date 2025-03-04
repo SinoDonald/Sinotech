@@ -80,15 +80,15 @@ namespace FamilyInstanceLock
                 List<string> familyNames = familyInstances.Select(x => x.Symbol.Family.Name).Distinct().ToList();
                 foreach (string familyName in familyNames)
                 {
-                    List<string> symbolNames = familyInstances.Where(x => x.Symbol.Family.Name.Equals(familyName)).Select(x => x.Symbol.Name).Distinct().ToList();
-                    foreach (string symbolName in symbolNames)
-                    {
+                    //List<string> symbolNames = familyInstances.Where(x => x.Symbol.Family.Name.Equals(familyName)).Select(x => x.Symbol.Name).Distinct().ToList();
+                    //foreach (string symbolName in symbolNames)
+                    //{
                         FamilyAndSymbol familyAndSymbol = new FamilyAndSymbol();
                         familyAndSymbol.familyName = familyName;
-                        familyAndSymbol.symbolName = symbolName;
+                        //familyAndSymbol.symbolName = symbolName;
                         familyAndSymbolNames.Add(familyAndSymbol);
-                    }
-                }                
+                    //}
+                }
             }
             catch (Exception ex) { TaskDialog.Show("獲取同族群元件失敗", ex.Message); }
             familyLV.Items.Clear();

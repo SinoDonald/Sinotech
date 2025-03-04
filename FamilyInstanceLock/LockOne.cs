@@ -195,7 +195,7 @@ namespace FamilyInstanceLock
                 }
                 result = true;
             }
-            catch (Exception ex) { TaskDialog.Show("Error", "修改參數失敗" + ex.Message); result = false; }
+            catch (Exception ex) { string error = "修改參數失敗" + ex.Message + "\n" + ex.ToString(); result = false; }
             return result;
         }
         // 修改族群參數
@@ -217,7 +217,7 @@ namespace FamilyInstanceLock
                 }
                 result = true;
             }
-            catch (Exception ex) { TaskDialog.Show("Error", "修改族群參數失敗" + ex.Message); result = false; }
+            catch (Exception ex) { string error = "修改參數失敗" + ex.Message + "\n" + ex.ToString(); result = false; }
             return result;
         }
         /// <summary>
