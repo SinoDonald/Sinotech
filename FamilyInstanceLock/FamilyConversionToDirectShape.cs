@@ -3,7 +3,6 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
-using Revit_API;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -215,12 +214,17 @@ namespace FamilyInstanceLock
                 string text = para.Definition.Name;
                 if (definitionGroup.Definitions.get_Item(text) == null)
                 {
-                    ExternalDefinitionCreationOptions externalDefinitionCreationOptions = RevitAPI.GetExternalDefinitionOptions(text, para.Definition.ParameterType);
-                    //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = RevitAPI.GetExternalDefinitionOptions(text);
-                    externalDefinitionCreationOptions.UserModifiable = false; // 唯讀
-                    externalDefinitionCreationOptions.HideWhenNoValue = true; // 無資料則隱藏
-                    try { definitionGroup.Definitions.Create(externalDefinitionCreationOptions); }
-                    catch (Autodesk.Revit.Exceptions.InvalidOperationException ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                    try
+                    {
+                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = RevitAPI.GetExternalDefinitionOptions(text, para.Definition.ParameterType); // 2020
+                        ForgeTypeId forgeTypeId = para.Definition.GetDataType();
+                        ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, forgeTypeId); // 2024
+                        externalDefinitionCreationOptions.UserModifiable = false; // 唯讀
+                        externalDefinitionCreationOptions.HideWhenNoValue = true; // 無資料則隱藏
+                        try { definitionGroup.Definitions.Create(externalDefinitionCreationOptions); }
+                        catch (Autodesk.Revit.Exceptions.InvalidOperationException ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                    }
+                    catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
                 Category category = familySymbol.Category;
                 CategorySet categorySet = doc.Application.Create.NewCategorySet(); // 創建一個類別集合用於綁定, 把品類加入
@@ -245,10 +249,13 @@ namespace FamilyInstanceLock
                     categorySet.Insert(category);
                     // 取得當前檔案的BindingMap, 並將建立的InstanceBinding綁定上去
                     Definition definition = definitionGroup.Definitions.get_Item(text);
-                    InstanceBinding instanceBinding = doc.Application.Create.NewInstanceBinding(categorySet);
-                    BindingMap bindingMap = doc.ParameterBindings;
-                    if (categorySet.Size > 1) { bindingMap.ReInsert(definition, instanceBinding); }
-                    else { bindingMap.Insert(definition, instanceBinding); }
+                    if(definition != null)
+                    {
+                        InstanceBinding instanceBinding = doc.Application.Create.NewInstanceBinding(categorySet);
+                        BindingMap bindingMap = doc.ParameterBindings;
+                        if (categorySet.Size > 1) { bindingMap.ReInsert(definition, instanceBinding); }
+                        else { bindingMap.Insert(definition, instanceBinding); }
+                    }
                 }
             }
         }
@@ -271,7 +278,9 @@ namespace FamilyInstanceLock
                     List<Parameter> originalElemParameters = paras.Where(x => x.Definition.Name.Equals(paraName)).ToList();
                     foreach (Parameter parameter in originalElemParameters)
                     {
-                        if(parameter.Definition.ParameterGroup != BuiltInParameterGroup.INVALID)
+                        if (parameter.Definition.Name.Contains("管線")) { }
+                        //if(parameter.Definition.ParameterGroup != BuiltInParameterGroup.INVALID)
+                        if (parameter.Definition.GetGroupTypeId().IsValidObject)
                         {
                             Parameter para = newElem.LookupParameter(paraName);
                             if (para != null && !para.IsReadOnly)

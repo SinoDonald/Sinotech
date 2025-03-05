@@ -23,9 +23,9 @@ namespace Revit_API
         {
             return elemId.IntegerValue; // 2020
         }
-        public static ExternalDefinitionCreationOptions GetExternalDefinitionOptions(string text, ParameterType paraType)
+        public static ExternalDefinitionCreationOptions GetExternalDefinitionOptions(string text, Parameter para)
         {
-            return new ExternalDefinitionCreationOptions(text, paraType);
+            return new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType);
         }
         /// <summary>
         /// 轉換單位

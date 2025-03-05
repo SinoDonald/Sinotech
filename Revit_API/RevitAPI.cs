@@ -23,9 +23,10 @@ namespace Revit_API
         {
             return ((int)elemId.Value); // 2024
         }
-        public static ExternalDefinitionCreationOptions GetExternalDefinitionOptions(string text)
+        public static ExternalDefinitionCreationOptions GetExternalDefinitionOptions(string text, Parameter para)
         {
-            return new ExternalDefinitionCreationOptions(text, UnitTypeId.Meters);
+            ForgeTypeId forgeTypeId = para.Definition.GetDataType();
+            return new ExternalDefinitionCreationOptions(text, forgeTypeId);
         }
         /// <summary>
         /// 轉換單位
