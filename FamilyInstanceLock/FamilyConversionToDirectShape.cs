@@ -1,18 +1,14 @@
 ﻿using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Events;
 using Autodesk.Revit.UI.Selection;
+using Revit_API;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FamilyInstanceLock
 {
@@ -35,6 +31,10 @@ namespace FamilyInstanceLock
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
             genericModelPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Autodesk", "RVT " + app.VersionNumber, "Family Templates", "Traditional Chinese", "公制通用模型.rft"); // 公制通用模型
+            if (!File.Exists(genericModelPath)) 
+            {
+                genericModelPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Autodesk", "RVT " + app.VersionNumber, "Family Templates", "English", "Metric Generic Model.rft");
+            }
             tempPath = Path.GetDirectoryName(doc.PathName);
             originalElemParaList = new List<OriginalElemParas>(); // 重置
 
@@ -73,20 +73,21 @@ namespace FamilyInstanceLock
                     }
                     catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
+                // 新增共用參數
+                trans.Start();
                 foreach (string familyName in familyNames)
                 {
                     try
                     {
-                        trans.Start();
                         FamilyInstance familyInstance = chooseFamilys.Where(x => x.Symbol.FamilyName.Equals(familyName)).FirstOrDefault();
                         List<Parameter> paraList = originalElemParaList.Where(x => x.familyName.Equals(familyInstance.Symbol.FamilyName)).Select(x => x.paraList).FirstOrDefault();
-                        CreateSharedParameter(doc, familyInstance.Symbol, paraList); // 新增共用參數
+                        CreateSharedParameter(doc, familyInstance.Symbol, paraList);
                         //Family newFamily = CreateNewFamily(uiapp, familyInstance); // 建立相同的族群, 可編輯族群, 參數都消失
-                        trans.Commit();
                     }
                     catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
-
+                trans.Commit();
+                // 建立無法編輯之元件
                 trans.Start();
                 foreach (FamilyInstance chooseFamily in chooseFamilys)
                 {
@@ -94,9 +95,7 @@ namespace FamilyInstanceLock
                     {
                         DirectShape directShape = DirectShape.CreateElement(doc, chooseFamily.Category.Id);
                         directShape.ApplicationDataId = "Sinotech";
-                        //directShape.ApplicationId = "Donald";
                         directShape.ApplicationId = chooseFamily.Id.ToString();
-
                         List<GeometryObject> resultList = new List<GeometryObject>();
                         List<Solid> solids = GetSolids(doc, chooseFamily);
                         foreach (Solid solid in solids) { resultList.Add(solid); }
@@ -110,7 +109,6 @@ namespace FamilyInstanceLock
                         directShape.SetShape(resultList);
                         directShape.Name = chooseFamily.Symbol.FamilyName;
                         SetParameterFromOriginalElement(directShape, chooseFamily); // 修改參數
-                        //SetPropertyValueFromParameters(directShape, chooseFamily.Symbol, paraList);
                         List<Dimension> dimensionList = GetDimension(doc, chooseFamily);
                         familySymbolIds.Add(chooseFamily.Symbol.Id);
                         doc.Delete(chooseFamily.Id);
@@ -123,6 +121,7 @@ namespace FamilyInstanceLock
                 foreach (ElementId familySymbolId in familySymbolIds) { doc.Delete(familySymbolId); }
                 trans.Commit();
             }
+            if (File.Exists(doc.Application.SharedParametersFilename)) { File.Delete(doc.Application.SharedParametersFilename); }
             TaskDialog.Show("Revit", "成功鎖定 " + count + " 個元件。");
 
             tranGrp1.Assimilate();
@@ -213,14 +212,13 @@ namespace FamilyInstanceLock
             if (definitionGroup == null) { definitionGroup = definitionFile.Groups.Create("Sinotech"); }
             foreach (Parameter para in paraList)
             {
-                //string text = para.Definition.Name.Contains("Type") ? ("_" + para.Definition.Name) : (familySymbol.FamilyName + "_" + para.Definition.Name);
                 string text = para.Definition.Name;
                 if (definitionGroup.Definitions.get_Item(text) == null)
-                {                    
-                    ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType); // 定義一個參數
+                {
+                    ExternalDefinitionCreationOptions externalDefinitionCreationOptions = RevitAPI.GetExternalDefinitionOptions(text, para.Definition.ParameterType);
+                    //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = RevitAPI.GetExternalDefinitionOptions(text);
                     externalDefinitionCreationOptions.UserModifiable = false; // 唯讀
                     externalDefinitionCreationOptions.HideWhenNoValue = true; // 無資料則隱藏
-                    //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, UnitTypeId.Meters);
                     try { definitionGroup.Definitions.Create(externalDefinitionCreationOptions); }
                     catch (Autodesk.Revit.Exceptions.InvalidOperationException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
@@ -284,35 +282,6 @@ namespace FamilyInstanceLock
                                 else if (parameter.StorageType == StorageType.String) { para.Set(parameter.AsString()); }
                             }
                         }
-                    }
-                }
-                result = true;
-            }
-            catch (Exception ex) { string error = "修改參數失敗" + ex.Message + "\n" + ex.ToString(); result = false; }
-            return result;
-        }
-        /// <summary>
-        /// 修改族群參數
-        /// </summary>
-        /// <param name="newElem"></param>
-        /// <param name="familySymbol"></param>
-        /// <param name="paraList"></param>
-        /// <returns></returns>
-        public bool SetPropertyValueFromParameters(Element newElem, FamilySymbol familySymbol, List<Parameter> paraList)
-        {
-            bool result;
-            try
-            {
-                foreach (Parameter parameter in paraList)
-                {
-                    Parameter para = newElem.LookupParameter(parameter.Definition.Name.Contains("Type") ? ("_" + parameter.Definition.Name) : (familySymbol.FamilyName + "_" + parameter.Definition.Name));
-                    para = newElem.LookupParameter(parameter.Definition.Name);
-                    if (para != null && !para.IsReadOnly)
-                    {
-                        if (parameter.StorageType == StorageType.Double) { para.Set(parameter.AsDouble()); }
-                        else if (parameter.StorageType == StorageType.ElementId) { para.Set(parameter.AsElementId()); }
-                        else if (parameter.StorageType == StorageType.Integer) { para.Set(parameter.AsInteger()); }
-                        else if (parameter.StorageType == StorageType.String) { para.Set(parameter.AsString()); }
                     }
                 }
                 result = true;
@@ -394,10 +363,7 @@ namespace FamilyInstanceLock
                     //}
                 }
             }
-            catch (Exception ex)
-            {
-                //TaskDialog.Show("抓取關聯尺寸標註失敗", ex.Message);
-            }
+            catch (Exception ex) { string error = "抓取關聯尺寸標註失敗" + "\n" + ex.Message + "\n" + ex.ToString(); }
             return list;
         }
         /// <summary>
@@ -429,7 +395,6 @@ namespace FamilyInstanceLock
                 return true;
             }
         }
-
         public string GetName()
         {
             return "元件保護";

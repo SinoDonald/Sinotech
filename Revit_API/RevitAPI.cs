@@ -23,6 +23,10 @@ namespace Revit_API
         {
             return ((int)elemId.Value); // 2024
         }
+        public static ExternalDefinitionCreationOptions GetExternalDefinitionOptions(string text)
+        {
+            return new ExternalDefinitionCreationOptions(text, UnitTypeId.Meters);
+        }
         /// <summary>
         /// 轉換單位
         /// </summary>

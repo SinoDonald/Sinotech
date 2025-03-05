@@ -3,6 +3,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using Revit_API;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -135,8 +136,8 @@ namespace FamilyInstanceLock
                     string text = para.Definition.Name.Contains("Type") ? ("_" + para.Definition.Name) : (familySymbol.FamilyName + "_" + para.Definition.Name);
                     if (definitionGroup.Definitions.get_Item(text) == null)
                     {
-                        ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType);
-                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, UnitTypeId.Meters);
+                        ExternalDefinitionCreationOptions externalDefinitionCreationOptions = RevitAPI.GetExternalDefinitionOptions(text, para.Definition.ParameterType);
+                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = RevitAPI.GetExternalDefinitionOptions(text);
                         try { definitionGroup.Definitions.Create(externalDefinitionCreationOptions); }
                         catch(Autodesk.Revit.Exceptions.InvalidOperationException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                     }
@@ -295,10 +296,7 @@ namespace FamilyInstanceLock
                     //}
                 }
             }
-            catch (Exception ex)
-            {
-                //TaskDialog.Show("抓取關聯尺寸標註失敗", ex.Message);
-            }
+            catch (Exception ex) {string error = "抓取關聯尺寸標註失敗" + "\n" + ex.Message + "\n" + ex.ToString(); }
             return dimensions;
         }
         /// <summary>

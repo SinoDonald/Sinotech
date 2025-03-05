@@ -19,21 +19,21 @@ namespace Sinotech
         public string addinAssmeblyPath = Assembly.GetExecutingAssembly().Location; // 封包版路徑位址
         public Result OnStartup(UIControlledApplication application)
         {
-            //// 2020
-            //string autoBuildAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoBuild_Old.dll"); // 快速翻模
-            //string autoExportAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoExport_Old.dll"); // 自動出圖
-            //string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView_Old.dll"); // 規範校核
-            //string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM_Old.dll"); // CSD/SEM
-            //string speedToolsAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "SpeedTools.dll"); // 快速工具
-            //string familyInstanceLockAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "FamilyInstanceLock_Old.dll"); // 元件保護
-
-            // 2024
-            string autoBuildAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoBuild.dll"); // 快速翻模
-            string autoExportAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoExport.dll"); // 自動出圖
-            string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView.dll"); // 規範校核
-            string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM.dll"); // CSD/SEM
+            // 2020
+            string autoBuildAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoBuild_Old.dll"); // 快速翻模
+            string autoExportAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoExport_Old.dll"); // 自動出圖
+            string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView_Old.dll"); // 規範校核
+            string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM_Old.dll"); // CSD/SEM
             string speedToolsAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "SpeedTools.dll"); // 快速工具
-            string familyInstanceLockAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "FamilyInstanceLock.dll"); // 元件保護
+            string familyInstanceLockAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "FamilyInstanceLock_Old.dll"); // 元件保護
+
+            //// 2024
+            //string autoBuildAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoBuild.dll"); // 快速翻模
+            //string autoExportAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoExport.dll"); // 自動出圖
+            //string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView.dll"); // 規範校核
+            //string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM.dll"); // CSD/SEM
+            //string speedToolsAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "SpeedTools.dll"); // 快速工具
+            //string familyInstanceLockAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "FamilyInstanceLock.dll"); // 元件保護
 
             // 創建一個新的選單
             RibbonPanel ribbonPanel = null;
