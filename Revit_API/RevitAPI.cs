@@ -25,7 +25,7 @@ namespace Revit_API
         }
         public static ExternalDefinitionCreationOptions GetExternalDefinitionOptions(string text, Parameter para)
         {
-            ForgeTypeId forgeTypeId = para.Definition.GetDataType();
+            ForgeTypeId forgeTypeId = para.Definition.GetDataType(); // 2024
             return new ExternalDefinitionCreationOptions(text, forgeTypeId);
         }
         /// <summary>

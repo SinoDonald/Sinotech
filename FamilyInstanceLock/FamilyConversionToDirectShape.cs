@@ -216,7 +216,8 @@ namespace FamilyInstanceLock
                 {
                     try
                     {
-                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = RevitAPI.GetExternalDefinitionOptions(text, para.Definition.ParameterType); // 2020
+                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = RevitAPI.GetExternalDefinitionOptions(text, para);
+                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType); // 2020
                         ForgeTypeId forgeTypeId = para.Definition.GetDataType();
                         ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, forgeTypeId); // 2024
                         externalDefinitionCreationOptions.UserModifiable = false; // 唯讀
@@ -276,22 +277,22 @@ namespace FamilyInstanceLock
                 foreach (string paraName in originalElemParas.paraNames)
                 {
                     List<Parameter> originalElemParameters = paras.Where(x => x.Definition.Name.Equals(paraName)).ToList();
-                    foreach (Parameter parameter in originalElemParameters)
-                    {
-                        if (parameter.Definition.Name.Contains("管線")) { }
+                    Parameter parameter = paras.Where(x => x.Definition.Name.Equals(paraName)).FirstOrDefault();
+                    //foreach (Parameter parameter in originalElemParameters)
+                    //{
                         //if(parameter.Definition.ParameterGroup != BuiltInParameterGroup.INVALID)
-                        if (parameter.Definition.GetGroupTypeId().IsValidObject)
+                        if (parameter.Definition.GetDataType().IsValidObject)
                         {
                             Parameter para = newElem.LookupParameter(paraName);
                             if (para != null && !para.IsReadOnly)
                             {
-                                if (parameter.StorageType == StorageType.Double) { para.Set(parameter.AsDouble()); }
-                                else if (parameter.StorageType == StorageType.ElementId) { para.Set(parameter.AsElementId()); }
-                                else if (parameter.StorageType == StorageType.Integer) { para.Set(parameter.AsInteger()); }
-                                else if (parameter.StorageType == StorageType.String) { para.Set(parameter.AsString()); }
+                                if (parameter.StorageType == StorageType.Double) { double value = parameter.AsDouble(); para.Set(parameter.AsDouble()); }
+                                else if (parameter.StorageType == StorageType.ElementId) { ElementId value = parameter.AsElementId(); para.Set(parameter.AsElementId()); }
+                                else if (parameter.StorageType == StorageType.Integer) { int value = parameter.AsInteger(); para.Set(parameter.AsInteger()); }
+                                else if (parameter.StorageType == StorageType.String) { string value = parameter.AsString(); if (!String.IsNullOrEmpty(value)) { para.Set(parameter.AsString()); } }
                             }
                         }
-                    }
+                    //}
                 }
                 result = true;
             }
@@ -363,7 +364,9 @@ namespace FamilyInstanceLock
                     //{
                     while (enumerator2.MoveNext())
                     {
-                        if (((Reference)enumerator2.Current).ElementId.IntegerValue == selectedElem.Id.IntegerValue)
+                        if (((Reference)enumerator2.Current).ElementId.ToString() == selectedElem.Id.ToString())
+                        //if (((Reference)enumerator2.Current).ElementId.IntegerValue == selectedElem.Id.IntegerValue)
+                        //if (RevitAPI.NewElementId(((Reference)enumerator2.Current).ElementId.ToString()) == RevitAPI.NewElementId(selectedElem.Id.ToString()))
                         {
                             list.Add(current);
                             break;

@@ -41,7 +41,8 @@ namespace FamilyInstanceLock
             try
             {
                 familyInstances = new FilteredElementCollector(doc).OfClass(typeof(FamilyInstance)).WhereElementIsNotElementType().Cast<FamilyInstance>()
-                                  .Where(x => x.Symbol.Family.Id.IntegerValue.Equals(familySymbol.Family.Id.IntegerValue) && x.Symbol.Id.Equals(familySymbol.Id)).ToList();
+                                  .Where(x => x.Symbol.Family.Id.ToString().Equals(familySymbol.Family.Id.ToString()) && x.Symbol.Id.Equals(familySymbol.Id)).ToList();
+                                //.Where(x => RevitAPI.NewElementId(x.Symbol.Family.Id.ToString()).Equals(RevitAPI.NewElementId(familySymbol.Family.Id.ToString())) && x.Symbol.Id.Equals(familySymbol.Id)).ToList();
             }
             catch (Exception ex)
             {
@@ -287,7 +288,9 @@ namespace FamilyInstanceLock
                     //{
                     while (enumerator2.MoveNext())
                     {
-                        if (((Reference)enumerator2.Current).ElementId.IntegerValue == selectedElem.Id.IntegerValue)
+                        if (((Reference)enumerator2.Current).ElementId.ToString() == selectedElem.Id.ToString())
+                        //if (((Reference)enumerator2.Current).ElementId.IntegerValue == selectedElem.Id.IntegerValue)
+                        //if (RevitAPI.NewElementId(((Reference)enumerator2.Current).ElementId.ToString()) == RevitAPI.NewElementId(selectedElem.Id.ToString()))
                         {
                             dimensions.Add(dimension);
                             break;
