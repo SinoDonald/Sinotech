@@ -136,7 +136,8 @@ namespace FamilyInstanceLock
                     string text = para.Definition.Name.Contains("Type") ? ("_" + para.Definition.Name) : (familySymbol.FamilyName + "_" + para.Definition.Name);
                     if (definitionGroup.Definitions.get_Item(text) == null)
                     {
-                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = RevitAPI.GetExternalDefinitionOptions(text, para.Definition.ParameterType); // 2020
+                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = RevitAPI.GetExternalDefinitionOptions(text, para);
+                        //ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, para.Definition.ParameterType); // 2020
                         ForgeTypeId forgeTypeId = para.Definition.GetDataType();
                         ExternalDefinitionCreationOptions externalDefinitionCreationOptions = new ExternalDefinitionCreationOptions(text, forgeTypeId); // 2024
                         try { definitionGroup.Definitions.Create(externalDefinitionCreationOptions); }

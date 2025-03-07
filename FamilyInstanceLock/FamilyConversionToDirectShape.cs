@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace FamilyInstanceLock
 {
@@ -44,7 +45,7 @@ namespace FamilyInstanceLock
             using (Transaction trans = new Transaction(doc, "建立模型"))
             {
                 List<FamilyInstance> chooseFamilys = ChooseElems.chooseFamilys;
-                List<ElementId> familySymbolIds = new List<ElementId>();
+                List<ElementId> deleteElemIds = new List<ElementId>();
                 familyNames = chooseFamilys.Select(x => x.Symbol.FamilyName).Distinct().ToList();
                 List<string> containWords = new List<string>() { "長度", "管線" };
                 foreach (string familyName in familyNames)
@@ -109,15 +110,21 @@ namespace FamilyInstanceLock
                         directShape.Name = chooseFamily.Symbol.FamilyName;
                         SetParameterFromOriginalElement(directShape, chooseFamily); // 修改參數
                         List<Dimension> dimensionList = GetDimension(doc, chooseFamily);
-                        familySymbolIds.Add(chooseFamily.Symbol.Id);
+                        deleteElemIds.Add(chooseFamily.Symbol.Id); // 移除元件的FamilySymbol
+                        deleteElemIds.Add(chooseFamily.Symbol.Family.Id); // 移除元件的Family
                         doc.Delete(chooseFamily.Id);
                         count++;
                     }
                     catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                 }
                 // 移除未使用的元件
-                familySymbolIds = familySymbolIds.Distinct().ToList();
-                foreach (ElementId familySymbolId in familySymbolIds) { doc.Delete(familySymbolId); }
+                deleteElemIds = deleteElemIds.Distinct().ToList(); // 移除重複ID
+                foreach (ElementId deleteElemId in deleteElemIds)
+                {
+                    try { doc.Delete(deleteElemId); }
+                    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                }
+                doc.Regenerate(); uidoc.RefreshActiveView();
                 trans.Commit();
             }
             if (File.Exists(doc.Application.SharedParametersFilename)) { File.Delete(doc.Application.SharedParametersFilename); }
@@ -133,7 +140,7 @@ namespace FamilyInstanceLock
         /// <param name="familyInstance"></param>
         /// <param name="newFamily"></param>
         /// <returns></returns>
-        public Family CreateNewFamily(UIApplication uiapp, FamilyInstance familyInstance)
+        private Family CreateNewFamily(UIApplication uiapp, FamilyInstance familyInstance)
         {
             Family newFamily = null;
             try
@@ -266,7 +273,7 @@ namespace FamilyInstanceLock
         /// <param name="newElem"></param>
         /// <param name="originalElem"></param>
         /// <returns></returns>
-        public bool SetParameterFromOriginalElement(Element newElem, Element originalElem)
+        private bool SetParameterFromOriginalElement(Element newElem, Element originalElem)
         {
             bool result;
             try
@@ -280,9 +287,9 @@ namespace FamilyInstanceLock
                     Parameter parameter = paras.Where(x => x.Definition.Name.Equals(paraName)).FirstOrDefault();
                     //foreach (Parameter parameter in originalElemParameters)
                     //{
-                        //if(parameter.Definition.ParameterGroup != BuiltInParameterGroup.INVALID)
-                        if (parameter.Definition.GetDataType().IsValidObject)
-                        {
+                    //if (parameter.Definition.ParameterGroup != BuiltInParameterGroup.INVALID)
+                    if (parameter.Definition.GetDataType().IsValidObject)
+                    {
                             Parameter para = newElem.LookupParameter(paraName);
                             if (para != null && !para.IsReadOnly)
                             {
@@ -351,8 +358,13 @@ namespace FamilyInstanceLock
             }
             return solids;
         }
-
-        public List<Dimension> GetDimension(Document doc, Element selectedElem)
+        /// <summary>
+        /// 取得關聯尺寸標註
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="selectedElem"></param>
+        /// <returns></returns>
+        private List<Dimension> GetDimension(Document doc, Element selectedElem)
         {
             List<Dimension> list = new List<Dimension>();
             try
@@ -378,6 +390,54 @@ namespace FamilyInstanceLock
             catch (Exception ex) { string error = "抓取關聯尺寸標註失敗" + "\n" + ex.Message + "\n" + ex.ToString(); }
             return list;
         }
+        /// <summary>
+        /// 移除未使用的元件
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <returns></returns>
+        private List<ElementId> UnUsedElemIds(Document doc)
+        {
+            List<ElementId> unUsedElemIds = new List<ElementId>();
+            PerformanceAdviser performanceAdviser = PerformanceAdviser.GetPerformanceAdviser();
+            List<PerformanceAdviserRuleId> performanceAdviserRuleIds = performanceAdviser.GetAllRuleIds().ToList();
+            IList<FailureMessage> failureMessages = performanceAdviser.ExecuteRules(doc, performanceAdviserRuleIds);
+            foreach (FailureMessage failureMessage in failureMessages)
+            {
+                foreach (ElementId unUsedId in failureMessage.GetFailingElements().ToList())
+                {
+                    unUsedElemIds.Add(unUsedId);
+                }
+            }
+            unUsedElemIds = unUsedElemIds.Distinct().ToList();
+
+            //if (failureMessages.Count > 0)
+            //{
+            //    failureMessages.ToList().ForEach(p =>
+            //    {
+            //        try
+            //        {
+            //            var ids = p.GetFailingElements().ToList();
+            //            if (ids.Count > 0)
+            //            {
+            //                ids.ForEach(n =>
+            //                {
+            //                    if (unUsedElemIds.FindIndex(m => m.Equals(n)) != -1) { return; }
+            //                    unUsedElemIds.Add(n);
+            //                });
+            //            }
+            //        }
+            //        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+            //    });
+            //}
+            //unUsedElemIds.ForEach(p =>
+            //{
+            //    try { doc.Delete(p); }
+            //    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+            //});
+
+            return unUsedElemIds;
+        }
+
         /// <summary>
         /// 僅能點選FamilyInstance
         /// </summary>
