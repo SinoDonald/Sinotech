@@ -41,6 +41,8 @@
             this.deleteBtn = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.comboBox2 = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // label1
@@ -87,7 +89,7 @@
             // sureBtn
             // 
             this.sureBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.sureBtn.Location = new System.Drawing.Point(359, 133);
+            this.sureBtn.Location = new System.Drawing.Point(359, 207);
             this.sureBtn.Name = "sureBtn";
             this.sureBtn.Size = new System.Drawing.Size(75, 34);
             this.sureBtn.TabIndex = 22;
@@ -166,16 +168,38 @@
             this.label5.TabIndex = 0;
             this.label5.Text = "(例：D-AR-LG10-B)";
             // 
+            // label6
+            // 
+            this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(232, 132);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(213, 17);
+            this.label6.TabIndex = 24;
+            this.label6.Text = "選擇要解析的簡碼位置(0-1-2-3-...)";
+            // 
+            // comboBox2
+            // 
+            this.comboBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboBox2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox2.FormattingEnabled = true;
+            this.comboBox2.Location = new System.Drawing.Point(235, 155);
+            this.comboBox2.Name = "comboBox2";
+            this.comboBox2.Size = new System.Drawing.Size(199, 25);
+            this.comboBox2.TabIndex = 21;
+            // 
             // ProfessionalCodeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(452, 303);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.cancelBtn);
             this.Controls.Add(this.deleteBtn);
             this.Controls.Add(this.finishBtn);
             this.Controls.Add(this.sureBtn);
+            this.Controls.Add(this.comboBox2);
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.checkedListBox1);
             this.Controls.Add(this.label3);
@@ -208,5 +232,7 @@
         private System.Windows.Forms.Button deleteBtn;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ComboBox comboBox2;
     }
 }

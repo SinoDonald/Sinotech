@@ -2,6 +2,7 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Electrical;
 using Autodesk.Revit.UI;
+using Revit_API;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -434,7 +435,8 @@ namespace CSDSEM
                         catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         double value = opening.LookupParameter("矩形開口面積").AsDouble();
-                        double openingArea = UnitUtils.ConvertFromInternalUnits(value, DisplayUnitType.DUT_SQUARE_METERS);
+                        //double openingArea = UnitUtils.ConvertFromInternalUnits(value, DisplayUnitType.DUT_SQUARE_METERS);
+                        double openingArea = RevitAPI.ConvertFromInternalUnits(value, "millimeters");
                         modelInfo.area = openingArea;
                         // 開口對象(牆、樑、板)
                         if (opening.Name.Contains("牆")) { modelInfo.host = "牆"; }

@@ -12,6 +12,8 @@ namespace CSDSEM
     public partial class ProfessionalCodeForm : System.Windows.Forms.Form
     {
         public string filePath = string.Empty; // 專業代碼路徑
+        public int prjCount = 0; // 專案名稱解析"-"
+        public int prjCode = 0; // 專案代碼
         public List<ProfessionalCode> professionalCodeList = new List<ProfessionalCode>();
         public List<ProfessionalCode> combinePCodes = new List<ProfessionalCode>(); // 整合重複的專業代碼
         public class ProfessionalCode
@@ -20,11 +22,12 @@ namespace CSDSEM
             public string professionalCode { get; set;}
         }
         public bool trueOrFalse = false;
-        public ProfessionalCodeForm(List<RevitLinkInstance> rvtLinkInsList)
+        public ProfessionalCodeForm(List<RevitLinkInstance> rvtLinkInsList, int prjCount)
         {
             InitializeComponent();
             Sinotech_Button sinotech_Button = new Sinotech_Button();
             this.filePath = Path.Combine(Directory.GetParent(sinotech_Button.addinAssmeblyPath).FullName, "專業代碼.txt");
+            this.prjCount = prjCount;
             LoadProfessionalCode(); // 載入專業代碼
             CreateNodes(rvtLinkInsList); // 新增節點
             CenterToParent();
@@ -80,6 +83,12 @@ namespace CSDSEM
                 }
             }
             catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+
+            comboBox2.Items.Clear(); // 清空
+            for(int i = 0; i < prjCount; i++)
+            {
+                comboBox2.Items.Add(i);
+            }
             return professionalCodes;
         }
         // 確定
@@ -174,6 +183,11 @@ namespace CSDSEM
                 }
                 combinePCodes.Add(combinePCode);
             }
+            if (String.IsNullOrEmpty(comboBox2.Text))
+            {
+                comboBox2.Text = "1";
+            }
+            prjCode = Convert.ToInt32(comboBox2.Text);
             trueOrFalse = true;
             Close();
         }
