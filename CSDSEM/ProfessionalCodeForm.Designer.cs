@@ -43,6 +43,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.comboBox2 = new System.Windows.Forms.ComboBox();
+            this.prjCodeBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -62,16 +63,16 @@
             this.checkedListBox1.CheckOnClick = true;
             this.checkedListBox1.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.checkedListBox1.FormattingEnabled = true;
-            this.checkedListBox1.Location = new System.Drawing.Point(16, 77);
+            this.checkedListBox1.Location = new System.Drawing.Point(16, 81);
             this.checkedListBox1.Name = "checkedListBox1";
-            this.checkedListBox1.Size = new System.Drawing.Size(199, 164);
+            this.checkedListBox1.Size = new System.Drawing.Size(201, 144);
             this.checkedListBox1.TabIndex = 20;
             // 
             // label2
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(232, 13);
+            this.label2.Location = new System.Drawing.Point(234, 77);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(151, 17);
             this.label2.TabIndex = 0;
@@ -81,7 +82,7 @@
             // 
             this.comboBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(235, 33);
+            this.comboBox1.Location = new System.Drawing.Point(237, 98);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(199, 25);
             this.comboBox1.TabIndex = 21;
@@ -89,7 +90,7 @@
             // sureBtn
             // 
             this.sureBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.sureBtn.Location = new System.Drawing.Point(359, 207);
+            this.sureBtn.Location = new System.Drawing.Point(361, 197);
             this.sureBtn.Name = "sureBtn";
             this.sureBtn.Size = new System.Drawing.Size(75, 34);
             this.sureBtn.TabIndex = 22;
@@ -100,7 +101,7 @@
             // finishBtn
             // 
             this.finishBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.finishBtn.Location = new System.Drawing.Point(269, 257);
+            this.finishBtn.Location = new System.Drawing.Point(271, 240);
             this.finishBtn.Name = "finishBtn";
             this.finishBtn.Size = new System.Drawing.Size(75, 34);
             this.finishBtn.TabIndex = 22;
@@ -111,7 +112,7 @@
             // cancelBtn
             // 
             this.cancelBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.cancelBtn.Location = new System.Drawing.Point(359, 257);
+            this.cancelBtn.Location = new System.Drawing.Point(361, 240);
             this.cancelBtn.Name = "cancelBtn";
             this.cancelBtn.Size = new System.Drawing.Size(75, 34);
             this.cancelBtn.TabIndex = 22;
@@ -122,7 +123,7 @@
             // textBox1
             // 
             this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.Location = new System.Drawing.Point(235, 91);
+            this.textBox1.Location = new System.Drawing.Point(237, 156);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(199, 25);
             this.textBox1.TabIndex = 23;
@@ -131,7 +132,7 @@
             // 
             this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(232, 71);
+            this.label3.Location = new System.Drawing.Point(234, 135);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(125, 17);
             this.label3.TabIndex = 0;
@@ -140,7 +141,7 @@
             // deleteBtn
             // 
             this.deleteBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.deleteBtn.Location = new System.Drawing.Point(16, 257);
+            this.deleteBtn.Location = new System.Drawing.Point(16, 240);
             this.deleteBtn.Name = "deleteBtn";
             this.deleteBtn.Size = new System.Drawing.Size(96, 34);
             this.deleteBtn.TabIndex = 22;
@@ -172,7 +173,7 @@
             // 
             this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(232, 132);
+            this.label6.Location = new System.Drawing.Point(234, 13);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(213, 17);
             this.label6.TabIndex = 24;
@@ -183,21 +184,33 @@
             this.comboBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBox2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBox2.FormattingEnabled = true;
-            this.comboBox2.Location = new System.Drawing.Point(235, 155);
+            this.comboBox2.Location = new System.Drawing.Point(237, 42);
             this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(199, 25);
+            this.comboBox2.Size = new System.Drawing.Size(118, 25);
             this.comboBox2.TabIndex = 21;
+            // 
+            // prjCodeBtn
+            // 
+            this.prjCodeBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.prjCodeBtn.Location = new System.Drawing.Point(361, 36);
+            this.prjCodeBtn.Name = "prjCodeBtn";
+            this.prjCodeBtn.Size = new System.Drawing.Size(75, 34);
+            this.prjCodeBtn.TabIndex = 22;
+            this.prjCodeBtn.Text = "確定";
+            this.prjCodeBtn.UseVisualStyleBackColor = true;
+            this.prjCodeBtn.Click += new System.EventHandler(this.prjCodeBtn_Click);
             // 
             // ProfessionalCodeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(452, 303);
+            this.ClientSize = new System.Drawing.Size(454, 286);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.cancelBtn);
             this.Controls.Add(this.deleteBtn);
             this.Controls.Add(this.finishBtn);
+            this.Controls.Add(this.prjCodeBtn);
             this.Controls.Add(this.sureBtn);
             this.Controls.Add(this.comboBox2);
             this.Controls.Add(this.comboBox1);
@@ -210,7 +223,7 @@
             this.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4);
-            this.MinimumSize = new System.Drawing.Size(468, 342);
+            this.MinimumSize = new System.Drawing.Size(470, 325);
             this.Name = "ProfessionalCodeForm";
             this.Text = "修改專業代碼";
             this.ResumeLayout(false);
@@ -234,5 +247,6 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox comboBox2;
+        private System.Windows.Forms.Button prjCodeBtn;
     }
 }

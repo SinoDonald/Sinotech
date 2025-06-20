@@ -13,7 +13,7 @@ namespace CSDSEM
     {
         public string filePath = string.Empty; // 專業代碼路徑
         public int prjCount = 0; // 專案名稱解析"-"
-        public int prjCode = 0; // 專案代碼
+        public int prjCode = 1; // 專案代碼
         public List<ProfessionalCode> professionalCodeList = new List<ProfessionalCode>();
         public List<ProfessionalCode> combinePCodes = new List<ProfessionalCode>(); // 整合重複的專業代碼
         public class ProfessionalCode
@@ -25,6 +25,7 @@ namespace CSDSEM
         public ProfessionalCodeForm(List<RevitLinkInstance> rvtLinkInsList, int prjCount)
         {
             InitializeComponent();
+            this.prjCode = 1; // 專案代碼
             Sinotech_Button sinotech_Button = new Sinotech_Button();
             this.filePath = Path.Combine(Directory.GetParent(sinotech_Button.addinAssmeblyPath).FullName, "專業代碼.txt");
             this.prjCount = prjCount;
@@ -38,7 +39,7 @@ namespace CSDSEM
             checkedListBox1.Items.Clear(); // 清空節點
             try
             {
-                List<string> hostNames = rvtLinkInsList.Select(x => x.Name.Trim().Split(':')[0]).Distinct().ToList();
+                List<string> hostNames = rvtLinkInsList.Select(x => x.Name.Trim().Split(':')[0]).Distinct().OrderBy(x => x).ToList();
                 foreach (string hostName in hostNames)
                 {
                     checkedListBox1.Items.Add(hostName);
@@ -91,6 +92,12 @@ namespace CSDSEM
             }
             return professionalCodes;
         }
+        // 專業代碼
+        private void prjCodeBtn_Click(object sender, EventArgs e)
+        {
+            if (String.IsNullOrEmpty(comboBox2.Text)) { comboBox2.Text = "1"; }
+            prjCode = Convert.ToInt32(comboBox2.Text);
+        }
         // 確定
         private void sureBtn_Click(object sender, EventArgs e)
         {
@@ -140,7 +147,7 @@ namespace CSDSEM
                     {
                         try
                         {
-                            string comment = projectName.Split('-')[1];
+                            string comment = projectName.Split('-')[prjCode];
                             professionalCode.comments.Add(comment);
                             removeProjectNames.Add(projectName);
                         }
@@ -183,11 +190,6 @@ namespace CSDSEM
                 }
                 combinePCodes.Add(combinePCode);
             }
-            if (String.IsNullOrEmpty(comboBox2.Text))
-            {
-                comboBox2.Text = "1";
-            }
-            prjCode = Convert.ToInt32(comboBox2.Text);
             trueOrFalse = true;
             Close();
         }
