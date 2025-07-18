@@ -19,21 +19,21 @@ namespace Sinotech
         public string addinAssmeblyPath = Assembly.GetExecutingAssembly().Location; // 封包版路徑位址
         public Result OnStartup(UIControlledApplication application)
         {
-            // 2020
-            string autoBuildAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoBuild_Old.dll"); // 快速翻模
-            string autoExportAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoExport_Old.dll"); // 自動出圖
-            string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView_Old.dll"); // 規範校核
-            string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM_Old.dll"); // CSD/SEM
-            string speedToolsAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "SpeedTools.dll"); // 快速工具
-            string familyInstanceLockAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "FamilyInstanceLock_Old.dll"); // 元件保護
-
-            //// 2024
-            //string autoBuildAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoBuild.dll"); // 快速翻模
-            //string autoExportAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoExport.dll"); // 自動出圖
-            //string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView.dll"); // 規範校核
-            //string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM.dll"); // CSD/SEM
+            //// 2020
+            //string autoBuildAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoBuild_Old.dll"); // 快速翻模
+            //string autoExportAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoExport_Old.dll"); // 自動出圖
+            //string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView_Old.dll"); // 規範校核
+            //string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM_Old.dll"); // CSD/SEM
             //string speedToolsAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "SpeedTools.dll"); // 快速工具
-            //string familyInstanceLockAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "FamilyInstanceLock.dll"); // 元件保護
+            //string familyInstanceLockAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "FamilyInstanceLock_Old.dll"); // 元件保護
+
+            // 2024
+            string autoBuildAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoBuild.dll"); // 快速翻模
+            string autoExportAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "AutoExport.dll"); // 自動出圖
+            string codeViewAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CodeView.dll"); // 規範校核
+            string CSDSEMAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "CSDSEM.dll"); // CSD/SEM
+            string speedToolsAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "SpeedTools.dll"); // 快速工具
+            string familyInstanceLockAsb = Path.Combine(Directory.GetParent(addinAssmeblyPath).FullName, "FamilyInstanceLock.dll"); // 元件保護
 
             // 創建一個新的選單
             RibbonPanel ribbonPanel = null;
@@ -51,7 +51,6 @@ namespace Sinotech
                     }
                 }
             }
-
             // 添加「圖紙更新」面板
             PushButton sinotechBtn = ribbonPanel.AddItem(new PushButtonData("Sinotech_API", "圖紙更新", addinAssmeblyPath, "Sinotech.Sinotech_API")) as PushButton;
             //sinotechBtn.LargeImage = new BitmapImage(new Uri(picPath + "圖紙更新.png")); <-- 舊版寫法
@@ -111,7 +110,7 @@ namespace Sinotech
             manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動標籤);
             PushButton PCCESBtn = ribbonPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", CSDSEMAsb, "CSDSEM.OutPutPCCES")) as PushButton;
             PCCESBtn.LargeImage = convertFromBitmap(Properties.Resources.PCCES);
-            
+
             // 添加「元件保護」面板
             try { ribbonPanel = application.CreateRibbonPanel("中興自動化", "元件保護"); }
             catch
