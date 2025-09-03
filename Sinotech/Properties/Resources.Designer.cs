@@ -113,6 +113,16 @@ namespace Sinotech.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
+        internal static System.Drawing.Bitmap 干涉報告 {
+            get {
+                object obj = ResourceManager.GetObject("干涉報告", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
         internal static System.Drawing.Bitmap 手動標籤 {
             get {
                 object obj = ResourceManager.GetObject("手動標籤", resourceCulture);
@@ -193,9 +203,29 @@ namespace Sinotech.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
+        internal static System.Drawing.Bitmap 自動翻柱 {
+            get {
+                object obj = ResourceManager.GetObject("自動翻柱", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
         internal static System.Drawing.Bitmap 自動開口 {
             get {
                 object obj = ResourceManager.GetObject("自動開口", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
+        internal static System.Drawing.Bitmap 規範詳圖 {
+            get {
+                object obj = ResourceManager.GetObject("規範詳圖", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
