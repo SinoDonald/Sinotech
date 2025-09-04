@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<RevitAddIns>
+   <AddIn Type="Application">
+      <Assembly>Sinotech_2020.dll</Assembly>
+      <ClientId>efa64105-ff51-4445-8ec8-1730a627d7eb</ClientId>
+      <FullClassName>Sinotech_2020.App</FullClassName>
+      <Name>Sinotech</Name>
+      <VendorId>ADSK</VendorId>
+      <VendorDescription>Autodesk, www.autodesk.com</VendorDescription>	  
+   </AddIn>
+</RevitAddIns>
