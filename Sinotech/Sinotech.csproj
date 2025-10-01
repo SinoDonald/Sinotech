@@ -276,6 +276,14 @@
       <DependentUpon>ParkOrRoomForm.cs</DependentUpon>
     </Compile>
     <Compile Include="PdfReader.cs" />
+    <Compile Include="PipeCodeColor.cs" />
+    <Compile Include="PipeEdit.cs" />
+    <Compile Include="PipeEditForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PipeEditForm.Designer.cs">
+      <DependentUpon>PipeEditForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="PipeOpeningForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -346,6 +354,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ParkOrRoomForm.resx">
       <DependentUpon>ParkOrRoomForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PipeEditForm.resx">
+      <DependentUpon>PipeEditForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PipeOpeningForm.resx">
       <DependentUpon>PipeOpeningForm.cs</DependentUpon>
