@@ -345,43 +345,49 @@ namespace Sinotech_2025
                                     {
                                         try
                                         {
-                                            //PDF列印設置
-                                            ICollection<PrintSetting> printSettings = new FilteredElementCollector(doc).OfClass(typeof(PrintSetting)).Cast<PrintSetting>().ToList();
-                                            ElementId chosePsid = (from x in printSettings where x.Name == optionCB.Text select x.Id).First<ElementId>();
-                                            PrintSetting chosedPrintSetting = doc.GetElement(chosePsid) as PrintSetting;
+                                            // 建立 PDF 匯出選項
+                                            PDFExportOptions options = new PDFExportOptions();
+                                            string fileName = viewInfo.picNumber; // 檔名為圖框-電腦圖號
+                                            options.FileName = fileName; // 直接指定檔名
+                                            options.Combine = true; // 合併檔案
+                                            options.HideCropBoundaries = false;
+                                            // 準備要輸出的 View
+                                            ICollection<ElementId> views = new List<ElementId>() { viewInfo.view.Id };
+                                            string outputFolder = path; // 只要指定資料夾
+                                            bool result = doc.Export(outputFolder, views.ToList(), options); // 匯出 PDF
 
-                                            PrintManager printManager = doc.PrintManager;
+                                            ////PDF列印設置
+                                            //ICollection<PrintSetting> printSettings = new FilteredElementCollector(doc).OfClass(typeof(PrintSetting)).Cast<PrintSetting>().ToList();
+                                            //ElementId chosePsid = (from x in printSettings where x.Name == optionCB.Text select x.Id).First<ElementId>();
+                                            //PrintSetting chosedPrintSetting = doc.GetElement(chosePsid) as PrintSetting;
 
-                                            printManager.PrintRange = PrintRange.Current;
-                                            printManager.Apply();
-                                            //列印設定
-                                            try
-                                            {
-                                                printManager.SelectNewPrintDriver("PDFCreator");
-                                            }
-                                            catch(Exception)
-                                            {
-                                                printManager.SelectNewPrintDriver("Adobe PDF");
-                                            }                                            
-                                            printManager.Apply();
-                                            printManager.CombinedFile = true;
-                                            printManager.Apply();
-                                            printManager.PrintToFile = true;
-                                            printManager.Apply();
-                                            printManager.PrintSetup.CurrentPrintSetting = chosedPrintSetting;
-                                            printManager.Apply();
-                                            //輸出位置
-                                            printManager.PrintToFileName = Path.Combine(path, viewInfo.picNumber + ".pdf");
-                                            printManager.Apply();
-                                            printManager.SubmitPrint(viewInfo.view as View);
-                                            GC.Collect();
-                                            GC.WaitForPendingFinalizers();
+                                            //PrintManager printManager = doc.PrintManager;
+                                            //printManager.PrintRange = PrintRange.Current;
+                                            ////列印設定
+                                            //try
+                                            //{
+                                            //    //printManager.SelectNewPrintDriver("PDFCreator");
+                                            //}
+                                            //catch(Exception ex)
+                                            //{
+                                            //    string error = ex.Message + "\n" + ex.ToString();
+                                            //    printManager.SelectNewPrintDriver("Microsoft Print to PDF");
+                                            //}
+                                            //printManager.CombinedFile = true;
+                                            //printManager.PrintToFile = true;
+                                            //printManager.PrintSetup.CurrentPrintSetting = chosedPrintSetting;                                            
+                                            //printManager.PrintToFileName = Path.Combine(path, viewInfo.picNumber + ".pdf"); //輸出位置
+                                            //printManager.Apply();
+                                            //printManager.SubmitPrint(viewInfo.view as View);
+                                            //GC.Collect();
+                                            //GC.WaitForPendingFinalizers();
 
-                                            //ExportPDF exportPDF = new ExportPDF();
-                                            //exportPDF.ExportToPDF(formUIApp);
+                                            ////ExportPDF exportPDF = new ExportPDF();
+                                            ////exportPDF.ExportToPDF(formUIApp);
                                         }
-                                        catch (Exception)
+                                        catch (Exception ex)
                                         {
+                                            string error = ex.Message + "\n" + ex.ToString();
                                             //TaskDialog.Show("ERROR", "Couldn't access PDF driver registry settings");
                                         }
                                     }
