@@ -37,6 +37,7 @@ namespace Sinotech_2020
             this.label1 = new System.Windows.Forms.Label();
             this.formatCB = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // treeView1
@@ -114,11 +115,21 @@ namespace Sinotech_2020
             this.label2.TabIndex = 5;
             this.label2.Text = "請選擇匯出格式";
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(139, 13);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(183, 17);
+            this.label3.TabIndex = 7;
+            this.label3.Text = "依「圖框-電腦圖號」名稱匯出";
+            // 
             // ChooseView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(334, 566);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.formatCB);
             this.Controls.Add(this.label1);
@@ -146,5 +157,6 @@ namespace Sinotech_2020
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox formatCB;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
     }
 }

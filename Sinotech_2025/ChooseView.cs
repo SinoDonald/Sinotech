@@ -345,18 +345,18 @@ namespace Sinotech_2025
                                     {
                                         try
                                         {
-                                            // 建立 PDF 匯出選項
+                                            // 建立PDF匯出選項
                                             PDFExportOptions options = new PDFExportOptions();
-                                            string fileName = viewInfo.picNumber; // 檔名為圖框-電腦圖號
+                                            string fileName = viewInfo.picNumber; // 檔名為「圖框-電腦圖號」
                                             options.FileName = fileName; // 直接指定檔名
+                                            options.ColorDepth = ColorDepthType.BlackLine; // 色彩深度
+                                            options.ExportQuality = PDFExportQualityType.DPI300; // 匯出品質
                                             options.Combine = true; // 合併檔案
                                             options.HideCropBoundaries = false;
-                                            // 準備要輸出的 View
-                                            ICollection<ElementId> views = new List<ElementId>() { viewInfo.view.Id };
-                                            string outputFolder = path; // 只要指定資料夾
-                                            bool result = doc.Export(outputFolder, views.ToList(), options); // 匯出 PDF
+                                            ICollection<ElementId> views = new List<ElementId>() { viewInfo.view.Id }; // 準備要輸出的View
+                                            bool result = doc.Export(path, views.ToList(), options); // 匯出 PDF
 
-                                            ////PDF列印設置
+                                            //// Revit 2022以前使用的PDF列印設置
                                             //ICollection<PrintSetting> printSettings = new FilteredElementCollector(doc).OfClass(typeof(PrintSetting)).Cast<PrintSetting>().ToList();
                                             //ElementId chosePsid = (from x in printSettings where x.Name == optionCB.Text select x.Id).First<ElementId>();
                                             //PrintSetting chosedPrintSetting = doc.GetElement(chosePsid) as PrintSetting;
@@ -366,16 +366,16 @@ namespace Sinotech_2025
                                             ////列印設定
                                             //try
                                             //{
-                                            //    //printManager.SelectNewPrintDriver("PDFCreator");
+                                            //    printManager.SelectNewPrintDriver("PDFCreator");
                                             //}
-                                            //catch(Exception ex)
+                                            //catch (Exception ex)
                                             //{
                                             //    string error = ex.Message + "\n" + ex.ToString();
                                             //    printManager.SelectNewPrintDriver("Microsoft Print to PDF");
                                             //}
                                             //printManager.CombinedFile = true;
                                             //printManager.PrintToFile = true;
-                                            //printManager.PrintSetup.CurrentPrintSetting = chosedPrintSetting;                                            
+                                            //printManager.PrintSetup.CurrentPrintSetting = chosedPrintSetting;
                                             //printManager.PrintToFileName = Path.Combine(path, viewInfo.picNumber + ".pdf"); //輸出位置
                                             //printManager.Apply();
                                             //printManager.SubmitPrint(viewInfo.view as View);
