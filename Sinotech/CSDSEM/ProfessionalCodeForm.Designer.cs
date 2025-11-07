@@ -1,4 +1,4 @@
-﻿namespace Sinotech
+﻿namespace Sinotech.CSDSEM
 {
     partial class ProfessionalCodeForm
     {

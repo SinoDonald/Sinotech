@@ -1,4 +1,4 @@
-﻿namespace Sinotech_2025
+﻿namespace Sinotech_2025.CSDSEM
 {
     partial class ManualTagForm
     {

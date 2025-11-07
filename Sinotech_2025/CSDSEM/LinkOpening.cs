@@ -8,9 +8,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static Sinotech_2025.ProfessionalCodeForm;
+using static Sinotech_2025.CSDSEM.ProfessionalCodeForm;
 
-namespace Sinotech_2025
+namespace Sinotech_2025.CSDSEM
 {
     [Transaction(TransactionMode.Manual)]
     public class LinkOpening : IExternalCommand
@@ -78,6 +78,9 @@ namespace Sinotech_2025
         //double angle = 0.0; // 旋轉角度
         double originalPrjElev = 0.0; // 基準座標
         int prjCode = 0; // 專案代碼
+        public static double unit_conversion = 304.8; // 專案單位轉換
+        public static double meter_conversion = 0.3048; // 公尺單位轉換
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             UIApplication uiapp = commandData.Application;
@@ -86,7 +89,7 @@ namespace Sinotech_2025
             Document doc = uidoc.Document;
             int prjCount = Path.GetFileName(doc.PathName).Trim().Split('-').Count();
 
-            if(prjCount > 0)
+            if (prjCount > 0)
             {
                 try
                 {
@@ -100,9 +103,9 @@ namespace Sinotech_2025
                     List<BasePoint> prjLocations = allPrjLocations.Where(x => x.get_Parameter(BuiltInParameter.BASEPOINT_ANGLETON_PARAM) != null).ToList();
                     BasePoint prjLocation = prjLocations.Where(x => x.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble() ==
                                             prjLocations.Max(y => y.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble())).FirstOrDefault();
-                    prjNS = UnitUtils.ConvertFromInternalUnits(prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble(), UnitTypeId.Meters); // 南北
-                    prjWE = UnitUtils.ConvertFromInternalUnits(prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_EASTWEST_PARAM).AsDouble(), UnitTypeId.Meters); // 東西
-                    prjElev = UnitUtils.ConvertFromInternalUnits(prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_ELEVATION_PARAM).AsDouble(), UnitTypeId.Meters); // 高程
+                    prjNS = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble() * meter_conversion; // 南北
+                    prjWE = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_EASTWEST_PARAM).AsDouble() * meter_conversion; // 東西
+                    prjElev = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_ELEVATION_PARAM).AsDouble() * meter_conversion; // 高程
                     try
                     {
                         string angleton = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_ANGLETON_PARAM).AsValueString();
@@ -480,7 +483,7 @@ namespace Sinotech_2025
                     }
                 }
             }
-            catch(Exception ex) { string error = wallOrBeam.Id + "\n" + ex.Message + "\n" + ex.ToString(); }
+            catch (Exception ex) { string error = wallOrBeam.Id + "\n" + ex.Message + "\n" + ex.ToString(); }
         }
         // 儲存OpeningInfo資料
         private void SaveElemData(Document revitLinkDoc, Element wallOrBeam, Solid solid, List<Element> interferenceElems, Transform linkTransform, List<OpeningInfo> openingInfoList)
@@ -548,7 +551,7 @@ namespace Sinotech_2025
                 {
                     string error = wallOrBeam.Id + "\n" + levelElemId + "\n" + ex.Message + "\n" + ex.ToString();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     string error = wallOrBeam.Id + "\n" + levelElemId + "\n" + ex.Message + "\n" + ex.ToString();
                 }
@@ -567,13 +570,13 @@ namespace Sinotech_2025
                 }
             }
             string[] docNames = wallOrBeam.Document.Title.Split('-');
-            if(docNames.Length > 1)
+            if (docNames.Length > 1)
             {
                 openingInfo.docName = docNames[prjCode]; // 專案名稱縮寫
             }
             openingInfo.element = wallOrBeam; // 收集樑牆板資料
             openingInfo.solid = solid; // 樑牆Solid
-            if(wallOrBeam is Floor)
+            if (wallOrBeam is Floor)
             {
                 openingInfo.beamWallAngle = 0;
             }
@@ -591,9 +594,9 @@ namespace Sinotech_2025
                 {
                     openingInfo.beamWallAngle = 0; // 樑牆旋轉的角度
                 }
-                catch(Exception)
+                catch (Exception)
                 {
-                    
+
                 }
             }
             // 找到專案與連結模型的相同Level, 找到該Level的高程, 留意Level取名
@@ -610,7 +613,7 @@ namespace Sinotech_2025
             {
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 string error = ex.Message + "\n" + ex.ToString();
             }
@@ -622,7 +625,7 @@ namespace Sinotech_2025
                     CrushElemInfo crushElemInfo = new CrushElemInfo();
                     // 解析專案路徑的檔名
                     string[] docName = interferenceElem.Document.Title.Split('-');
-                    if(docName.Length > 1)
+                    if (docName.Length > 1)
                     {
                         crushElemInfo.docName = docName[prjCode]; // 專案名稱縮寫
                     }
@@ -633,7 +636,7 @@ namespace Sinotech_2025
                     crushElemInfo.pipeOrDuct = interferenceElem; // BoundingBox, 干涉的管與風管
                     crushElemInfo.hostType = openingInfo.type; // 干涉的主體品類
                     // 如果牆的底部約束Level查詢對應不到, Level則以管道樓層為主
-                    if(docLevel == null)
+                    if (docLevel == null)
                     {
                         try
                         {
@@ -659,7 +662,7 @@ namespace Sinotech_2025
                     if (interferenceElem is FamilyInstance)
                     {
                         if (/*interferenceElem.Category.Name.Equals("管配件") || interferenceElem.Category.Name.Equals("管附件") ||*/
-                            interferenceElem.Category.Name.Equals("風管附件") ||interferenceElem.Category.Name.Equals("電纜架配件"))
+                            interferenceElem.Category.Name.Equals("風管附件") || interferenceElem.Category.Name.Equals("電纜架配件"))
                         {
                             LocationPoint lp = interferenceElem.Location as LocationPoint;
                             XYZ centerPoint = lp.Point; // 中心點
@@ -694,12 +697,12 @@ namespace Sinotech_2025
                                                 isInsulation = true; // 是否為保溫管
                                                 //outerDiameter += insulationThickness; // 管外徑 + 絕緣體厚度
                                             }
-                                            outerDiameter = UnitUtils.ConvertFromInternalUnits(outerDiameter, UnitTypeId.Millimeters); // 機械_直徑
+                                            outerDiameter = outerDiameter * unit_conversion; // 機械_直徑
                                             size = outerDiameter;
                                             outerDiameter = SinoOpenSize(isInsulation, outerDiameter); // 尺寸比對後開口
-                                            crushElemInfo.diameter = UnitUtils.ConvertToInternalUnits(outerDiameter, UnitTypeId.Millimeters); // 機械_直徑
+                                            crushElemInfo.diameter = outerDiameter / unit_conversion; // 機械_直徑
                                         }
-                                        catch(Exception ex)
+                                        catch (Exception ex)
                                         {
                                             string info = fsName + "\n" + ex.Message + "\n" + ex.ToString();
                                         }
@@ -710,11 +713,11 @@ namespace Sinotech_2025
                                         crushElemInfo.size = diameterPara.AsDouble(); // 管直徑
                                         //string[] diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
                                         //double diameterSize = Convert.ToDouble(diameter[0]);
-                                        double diameterSize = UnitUtils.ConvertToInternalUnits(diameterPara.AsDouble(), UnitTypeId.Millimeters); // 機械_直徑
+                                        double diameterSize = diameterPara.AsDouble() / unit_conversion; // 機械_直徑
                                         size = diameterSize;
                                         //diameterSize = OpenSize(diameterSize); // 尺寸比對後開口
                                         diameterSize = SinoOpenSize(isInsulation, diameterSize); // 尺寸比對後開口
-                                        crushElemInfo.diameter = UnitUtils.ConvertToInternalUnits(diameterSize, UnitTypeId.Millimeters); // 管直徑
+                                        crushElemInfo.diameter = diameterSize / unit_conversion; // 管直徑
                                     }
                                     // 厚度
                                     if (thicknessPara != null)
@@ -723,7 +726,7 @@ namespace Sinotech_2025
                                     }
                                     else
                                     {
-                                        crushElemInfo.thickness = UnitUtils.ConvertToInternalUnits(100, UnitTypeId.Millimeters); // 風管附件長度
+                                        crushElemInfo.thickness = 100 / unit_conversion; // 風管附件長度
                                     }
                                     // 非保溫管且尺寸小於50, 不執行開口
                                     if (isInsulation == false && size < 50)
@@ -754,13 +757,13 @@ namespace Sinotech_2025
                                 }
                                 //}
                             }
-                            else if(interferenceElem.Category.Name.Equals("風管附件"))
+                            else if (interferenceElem.Category.Name.Equals("風管附件"))
                             {
                                 crushElemInfo.type = "DuctAccessory";
                                 if (fsName.Contains("防火風門") || fsName.Contains("防火風門 - 矩形") || fsName.Contains("電動風門 - 矩形"))
                                 {
                                     try
-                                    {                                        
+                                    {
                                         crushElemInfo.ductHeight = interferenceElem.LookupParameter("風管高度").AsDouble(); // 高度
                                         crushElemInfo.ductWight = interferenceElem.LookupParameter("風管寬度").AsDouble(); // 寬度
                                         // 厚度
@@ -796,9 +799,9 @@ namespace Sinotech_2025
                                         diameterPara = interferenceElem.LookupParameter("最大尺寸");
                                         string diameter = diameterPara.AsValueString().Replace(" mm", "");
                                         double diameterSize = Convert.ToDouble(diameter); // 長
-                                        crushElemInfo.thickness = UnitUtils.ConvertToInternalUnits(diameterSize, UnitTypeId.Millimeters);
+                                        crushElemInfo.thickness = diameterSize / unit_conversion;
                                         diameterSize = Convert.ToDouble(diameter); // 寬
-                                        crushElemInfo.ductWight = UnitUtils.ConvertToInternalUnits(diameterSize, UnitTypeId.Millimeters);
+                                        crushElemInfo.ductWight = diameterSize / unit_conversion;
                                         // 厚度
                                         if (thicknessPara != null)
                                         {
@@ -806,7 +809,7 @@ namespace Sinotech_2025
                                         }
                                         else
                                         {
-                                            crushElemInfo.ductHeight = UnitUtils.ConvertToInternalUnits(diameterSize, UnitTypeId.Millimeters); // 風管附件寬度 = 高度
+                                            crushElemInfo.ductHeight = diameterSize / unit_conversion; // 風管附件寬度 = 高度
                                         }
                                     }
                                     catch (Exception) { }
@@ -824,14 +827,14 @@ namespace Sinotech_2025
                                     //string[] diameters = diameterPara.AsValueString().Split(' ');
                                     //string diameter = diameters[0];
                                     //double diameterSize = Convert.ToDouble(diameter) + 50;
-                                    //crushElemInfo.ductHeight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
-                                    crushElemInfo.ductHeight = diameterPara.AsDouble() + UnitUtils.ConvertToInternalUnits(50, UnitTypeId.Millimeters);
+                                    //crushElemInfo.ductHeight = diameterSize / unit_conversion;
+                                    crushElemInfo.ductHeight = diameterPara.AsDouble() + 50 / unit_conversion;
                                     // 寬度
                                     diameterPara = interferenceElem.LookupParameter("托盤寬度 1");
                                     //diameters = diameterPara.AsValueString().Split(' ');
                                     //diameter = diameters[0];
                                     //diameterSize = Convert.ToDouble(diameter);
-                                    //crushElemInfo.ductWight = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS);
+                                    //crushElemInfo.ductWight = diameterSize / unit_conversion;
                                     crushElemInfo.ductWight = diameterPara.AsDouble();
                                     // 厚度
                                     if (thicknessPara != null)
@@ -844,7 +847,7 @@ namespace Sinotech_2025
                                         //diameters = diameterPara.AsValueString().Split(' ');
                                         //diameter = diameters[0];
                                         //diameterSize = Convert.ToDouble(diameter);
-                                        //crushElemInfo.thickness = UnitUtils.ConvertToInternalUnits(diameterSize, DisplayUnitType.DUT_MILLIMETERS); // 電纜架配件長度
+                                        //crushElemInfo.thickness = diameterSize / unit_conversion; // 電纜架配件長度
                                         crushElemInfo.thickness = diameterPara.AsDouble(); // 電纜架配件長度
                                     }
                                 }
@@ -888,10 +891,10 @@ namespace Sinotech_2025
                                     isInsulation = true; // 是否為保溫管
                                     //outerDiameter += insulationThickness; // 管外徑 + 絕緣體厚度
                                 }
-                                outerDiameter = UnitUtils.ConvertFromInternalUnits(outerDiameter, UnitTypeId.Millimeters); // 機械_直徑
+                                outerDiameter = outerDiameter * unit_conversion; // 機械_直徑
                                 size = outerDiameter;
                                 outerDiameter = SinoOpenSize(isInsulation, outerDiameter); // 尺寸比對後開口
-                                crushElemInfo.diameter = UnitUtils.ConvertToInternalUnits(outerDiameter, UnitTypeId.Millimeters); // 機械_直徑
+                                crushElemInfo.diameter = outerDiameter / unit_conversion; // 機械_直徑
                             }
                             else
                             {
@@ -902,7 +905,7 @@ namespace Sinotech_2025
                                 size = diameterSize;
                                 //diameterSize = OpenSize(diameterSize); // 尺寸比對後開口
                                 diameterSize = SinoOpenSize(isInsulation, diameterSize); // 尺寸比對後開口
-                                crushElemInfo.diameter = UnitUtils.ConvertToInternalUnits(diameterSize, UnitTypeId.Millimeters); // 管直徑
+                                crushElemInfo.diameter = diameterSize / unit_conversion; // 管直徑
                             }
                         }
                         else if (interferenceElem is Duct)
@@ -912,16 +915,16 @@ namespace Sinotech_2025
                             crushElemInfo.ductHeight = height; // 高度
                             double width = interferenceElem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM).AsDouble();
                             crushElemInfo.ductWight = width; // 寬度
-                            size = UnitUtils.ConvertFromInternalUnits(width, UnitTypeId.Millimeters);
+                            size = width * unit_conversion;
                         }
                         else if (interferenceElem is CableTray)
                         {
                             crushElemInfo.type = "CableTray";
                             Parameter diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_HEIGHT_PARAM);
-                            crushElemInfo.ductHeight = diameterPara.AsDouble() + UnitUtils.ConvertToInternalUnits(50, UnitTypeId.Millimeters); // 高度
+                            crushElemInfo.ductHeight = diameterPara.AsDouble() + 50 / unit_conversion; // 高度
                             diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_WIDTH_PARAM);
-                            size = UnitUtils.ConvertFromInternalUnits(diameterPara.AsDouble(), UnitTypeId.Millimeters);
-                            crushElemInfo.ductWight = diameterPara.AsDouble()/* + UnitUtils.ConvertToInternalUnits(50, DisplayUnitType.DUT_MILLIMETERS)*/; // 寬度
+                            size = diameterPara.AsDouble() * unit_conversion;
+                            crushElemInfo.ductWight = diameterPara.AsDouble()/* + 50 / unit_conversion*/; // 寬度
                         }
                         if (thicknessPara != null)
                         {
@@ -934,7 +937,7 @@ namespace Sinotech_2025
                         // 非保溫管且尺寸小於50, 不執行開口
                         if (isInsulation == false && size < 50)
                         {
-                            
+
                         }
                         else
                         {
@@ -943,7 +946,7 @@ namespace Sinotech_2025
                     }
                 }
             }
-            if(openingInfo.crushElemInfos.Count > 0)
+            if (openingInfo.crushElemInfos.Count > 0)
             {
                 openingInfoList.Add(openingInfo);
             }
@@ -967,7 +970,7 @@ namespace Sinotech_2025
                 {
                     try
                     {
-                        if(intersectionR != null)
+                        if (intersectionR != null)
                         {
                             if (!intersectionR.IsEmpty)
                             {
@@ -1013,7 +1016,7 @@ namespace Sinotech_2025
                                             double cableTrayHeight = Convert.ToDouble(cableTrayPara[0]) / 2;
                                             // 偏移至開口底部與電纜架底部距離50cm
                                             double deviation = openingHeight - (cableTrayHeight + 50); // 中心點到中心點所以
-                                            double move = UnitUtils.ConvertToInternalUnits(deviation, UnitTypeId.Millimeters); // 偏移
+                                            double move = deviation / unit_conversion; // 偏移
                                             double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
                                             crushElemInfo.deviation = z - elevation + move; // 偏移
                                         }
@@ -1194,11 +1197,11 @@ namespace Sinotech_2025
             }
             else
             {
-                if(radius < 15)
+                if (radius < 15)
                 {
                     radius = 40;
                 }
-                else if(radius >= 15 && radius < 32)
+                else if (radius >= 15 && radius < 32)
                 {
                     radius = 50;
                 }
@@ -1265,7 +1268,7 @@ namespace Sinotech_2025
                     double xyzZ = Math.Round(xyz.Z, 8, MidpointRounding.AwayFromZero);
                     foreach (XYZ openingXYZ in openingXYZs)
                     {
-                        if(Math.Round(openingXYZ.X, 8, MidpointRounding.AwayFromZero).Equals(xyzX) &&
+                        if (Math.Round(openingXYZ.X, 8, MidpointRounding.AwayFromZero).Equals(xyzX) &&
                            Math.Round(openingXYZ.Y, 8, MidpointRounding.AwayFromZero).Equals(xyzY) &&
                            Math.Round(openingXYZ.Z, 8, MidpointRounding.AwayFromZero).Equals(xyzZ))
                         {
@@ -1281,7 +1284,7 @@ namespace Sinotech_2025
                         amount++;
                     }
                 }
-                catch(Exception ex) { string str = ex.Message + "\n" + ex.ToString(); }
+                catch (Exception ex) { string str = ex.Message + "\n" + ex.ToString(); }
             }
             return amount;
         }
@@ -1293,7 +1296,7 @@ namespace Sinotech_2025
             {
                 foreach (CrushElemInfo crushElemInfo in openingInfo.crushElemInfos)
                 {
-                    foreach(Element pipeOpen in crushElemInfo.pipeOpens)
+                    foreach (Element pipeOpen in crushElemInfo.pipeOpens)
                     {
                         try
                         {
@@ -1404,7 +1407,7 @@ namespace Sinotech_2025
             {
                 openings = new FilteredElementCollector(doc).WherePasses(pipeOrDuctFilter).Excluding(startOpenings).WhereElementIsNotElementType().Cast<FamilyInstance>().ToList();
             }
-            
+
             foreach (FamilyInstance opening in openings)
             {
                 try
@@ -1417,15 +1420,15 @@ namespace Sinotech_2025
                     if (opening.Name.Equals("圓形水管牆開口"))
                     {
                         double height = Convert.ToDouble(opening.LookupParameter("指定圓形套管直徑").AsDouble());
-                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), UnitTypeId.Millimeters);
+                        double sub = (offset - (height / 2)) * unit_conversion;
                         string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("圓形套管底部高程");
                         para.Set(value);
                     }
-                    else if(opening.Name.Equals("矩形風管牆開口"))
+                    else if (opening.Name.Equals("矩形風管牆開口"))
                     {
                         double height = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsDouble());
-                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), UnitTypeId.Millimeters);
+                        double sub = (offset - (height / 2)) * unit_conversion;
                         string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("矩形開口底部高程");
                         para.Set(value);
@@ -1433,7 +1436,7 @@ namespace Sinotech_2025
                     else if (opening.Name.Equals("電纜架牆開口"))
                     {
                         double height = Convert.ToDouble(opening.LookupParameter("矩形開口高度").AsDouble());
-                        double sub = UnitUtils.ConvertFromInternalUnits(offset - (height / 2), UnitTypeId.Millimeters);
+                        double sub = (offset - (height / 2)) * unit_conversion;
                         string value = Math.Round(sub, 2, MidpointRounding.AwayFromZero).ToString();
                         para = opening.LookupParameter("矩形開口底部高程");
                         para.Set(value);
@@ -1442,7 +1445,7 @@ namespace Sinotech_2025
                     {
                         string value = "0";
                         para = opening.LookupParameter("矩形開口底部高程");
-                        if(para == null) { para = opening.LookupParameter("圓形套管底部高程"); }
+                        if (para == null) { para = opening.LookupParameter("圓形套管底部高程"); }
                         para.Set(value);
                         //// 查詢開口與元件的旋轉角度
                         //LocationPoint lp = OpeningRotate(doc, opening);

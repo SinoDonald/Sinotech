@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Sinotech_2020
+namespace Sinotech_2020.CSDSEM
 {
     public partial class ManualTagForm : Form
     {

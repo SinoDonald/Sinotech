@@ -171,90 +171,90 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="元件保護\ProtectLoadedFamilyCommand.cs" />
-    <Compile Include="快速翻模\AutoColumn.cs" />
-    <Compile Include="快速工具\AutoJoin.cs" />
-    <Compile Include="快速工具\AutoJoinForm.cs">
+    <Compile Include="FamilyProtect\ProtectLoadedFamilyCommand.cs" />
+    <Compile Include="CreateModel\AutoColumn.cs" />
+    <Compile Include="SpeedTool\AutoJoin.cs" />
+    <Compile Include="SpeedTool\AutoJoinForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="快速工具\AutoJoinForm.Designer.cs">
+    <Compile Include="SpeedTool\AutoJoinForm.Designer.cs">
       <DependentUpon>AutoJoinForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="快速翻模\AutoPipe.cs" />
-    <Compile Include="快速翻模\AutoPipeForm.cs">
+    <Compile Include="CreateModel\AutoPipe.cs" />
+    <Compile Include="CreateModel\AutoPipeForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="快速翻模\AutoPipeForm.Designer.cs">
+    <Compile Include="CreateModel\AutoPipeForm.Designer.cs">
       <DependentUpon>AutoPipeForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CSDSEM\AutoPipeTag.cs" />
-    <Compile Include="快速工具\AutoUpdate.cs" />
-    <Compile Include="圖紙更新\BatchSign.cs" />
-    <Compile Include="元件保護\ChooseElems.cs">
+    <Compile Include="SpeedTool\AutoUpdate.cs" />
+    <Compile Include="UpdateView\BatchSign.cs" />
+    <Compile Include="FamilyProtect\ChooseElems.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="元件保護\ChooseElems.Designer.cs">
+    <Compile Include="FamilyProtect\ChooseElems.Designer.cs">
       <DependentUpon>ChooseElems.cs</DependentUpon>
     </Compile>
-    <Compile Include="自動出圖\ChooseFSForm.cs">
+    <Compile Include="Plotting\ChooseFSForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="自動出圖\ChooseFSForm.Designer.cs">
+    <Compile Include="Plotting\ChooseFSForm.Designer.cs">
       <DependentUpon>ChooseFSForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="自動出圖\ChooseView.cs">
+    <Compile Include="Plotting\ChooseView.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="自動出圖\ChooseView.Designer.cs">
+    <Compile Include="Plotting\ChooseView.Designer.cs">
       <DependentUpon>ChooseView.cs</DependentUpon>
     </Compile>
-    <Compile Include="快速翻模\ColNamesForm.cs">
+    <Compile Include="CreateModel\ColNamesForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="快速翻模\colNamesForm.Designer.cs">
+    <Compile Include="CreateModel\colNamesForm.Designer.cs">
       <DependentUpon>ColNamesForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="自動出圖\Command.cs" />
-    <Compile Include="自動出圖\CopyDrawings.cs" />
-    <Compile Include="規範校核\CopyFiles.cs" />
-    <Compile Include="自動出圖\CopyViewForm.cs">
+    <Compile Include="Plotting\Command.cs" />
+    <Compile Include="Plotting\CopyDrawings.cs" />
+    <Compile Include="Verification\CopyFiles.cs" />
+    <Compile Include="Plotting\CopyViewForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="自動出圖\CopyViewForm.Designer.cs">
+    <Compile Include="Plotting\CopyViewForm.Designer.cs">
       <DependentUpon>CopyViewForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="圖紙更新\CreateDrawings.cs">
+    <Compile Include="UpdateView\CreateDrawings.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="圖紙更新\CreateDrawings.Designer.cs">
+    <Compile Include="UpdateView\CreateDrawings.Designer.cs">
       <DependentUpon>CreateDrawings.cs</DependentUpon>
     </Compile>
-    <Compile Include="規範校核\CrushReport.cs" />
-    <Compile Include="規範校核\CrushReportForm.cs">
+    <Compile Include="Verification\CrushReport.cs" />
+    <Compile Include="Verification\CrushReportForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="規範校核\CrushReportForm.Designer.cs">
+    <Compile Include="Verification\CrushReportForm.Designer.cs">
       <DependentUpon>CrushReportForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="自動出圖\DefaultValues.cs" />
-    <Compile Include="圖紙更新\DetectionScale.cs" />
-    <Compile Include="圖紙更新\DrawingSign.cs" />
-    <Compile Include="圖紙更新\EditViewSheetNumber.cs" />
-    <Compile Include="圖紙更新\EditViewSheetNumberForm.cs">
+    <Compile Include="Plotting\DefaultValues.cs" />
+    <Compile Include="UpdateView\DetectionScale.cs" />
+    <Compile Include="UpdateView\DrawingSign.cs" />
+    <Compile Include="UpdateView\EditViewSheetNumber.cs" />
+    <Compile Include="UpdateView\EditViewSheetNumberForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="圖紙更新\EditViewSheetNumberForm.Designer.cs">
+    <Compile Include="UpdateView\EditViewSheetNumberForm.Designer.cs">
       <DependentUpon>EditViewSheetNumberForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="圖紙更新\EPPlus.cs" />
-    <Compile Include="圖紙更新\ExcelReader.cs" />
-    <Compile Include="自動出圖\ExportDWG.cs" />
-    <Compile Include="自動出圖\ExportPDF.cs" />
-    <Compile Include="元件保護\FamilyConversionToDirectShape.cs" />
-    <Compile Include="元件保護\FamilyProtect.cs" />
+    <Compile Include="UpdateView\EPPlus.cs" />
+    <Compile Include="UpdateView\ExcelReader.cs" />
+    <Compile Include="Plotting\ExportDWG.cs" />
+    <Compile Include="Plotting\ExportPDF.cs" />
+    <Compile Include="FamilyProtect\FamilyConversionToDirectShape.cs" />
+    <Compile Include="FamilyProtect\FamilyProtect.cs" />
     <Compile Include="CSDSEM\FindLevel.cs" />
     <Compile Include="CSDSEM\LinkOpening.cs" />
-    <Compile Include="元件保護\LockOne.cs" />
+    <Compile Include="FamilyProtect\LockOne.cs" />
     <Compile Include="CSDSEM\ManualPipeTag.cs" />
     <Compile Include="CSDSEM\ManualTagForm.cs">
       <SubType>Form</SubType>
@@ -262,29 +262,29 @@
     <Compile Include="CSDSEM\ManualTagForm.Designer.cs">
       <DependentUpon>ManualTagForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="自動出圖\Methods.cs" />
-    <Compile Include="自動出圖\MoveView.cs" />
-    <Compile Include="自動出圖\MoveViewForm.cs">
+    <Compile Include="Plotting\Methods.cs" />
+    <Compile Include="Plotting\MoveView.cs" />
+    <Compile Include="Plotting\MoveViewForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="自動出圖\MoveViewForm.Designer.cs">
+    <Compile Include="Plotting\MoveViewForm.Designer.cs">
       <DependentUpon>MoveViewForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CSDSEM\OutPutPCCES.cs" />
-    <Compile Include="快速工具\ParkOrRoom.cs" />
-    <Compile Include="快速工具\ParkOrRoomForm.cs">
+    <Compile Include="SpeedTool\ParkOrRoom.cs" />
+    <Compile Include="SpeedTool\ParkOrRoomForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="快速工具\ParkOrRoomForm.Designer.cs">
+    <Compile Include="SpeedTool\ParkOrRoomForm.Designer.cs">
       <DependentUpon>ParkOrRoomForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="圖紙更新\PdfReader.cs" />
-    <Compile Include="快速工具\PipeCodeColor.cs" />
-    <Compile Include="快速工具\PipeEdit.cs" />
-    <Compile Include="快速工具\PipeEditForm.cs">
+    <Compile Include="UpdateView\PdfReader.cs" />
+    <Compile Include="SpeedTool\PipeCodeColor.cs" />
+    <Compile Include="SpeedTool\PipeEdit.cs" />
+    <Compile Include="SpeedTool\PipeEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="快速工具\PipeEditForm.Designer.cs">
+    <Compile Include="SpeedTool\PipeEditForm.Designer.cs">
       <DependentUpon>PipeEditForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CSDSEM\ProfessionalCodeForm.cs">
@@ -294,11 +294,11 @@
       <DependentUpon>ProfessionalCodeForm.cs</DependentUpon>
     </Compile>
     <Compile Include="RevitDocument.cs" />
-    <Compile Include="圖紙更新\Sinotech_API.cs" />
+    <Compile Include="UpdateView\Sinotech_API.cs" />
     <Compile Include="App.cs" />
     <Compile Include="CSDSEM\UpdateExcel.cs" />
-    <Compile Include="圖紙更新\UpdateExcelCell.cs" />
-    <Compile Include="規範校核\ExcelSPPath.cs" />
+    <Compile Include="UpdateView\UpdateExcelCell.cs" />
+    <Compile Include="Verification\ExcelSPPath.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -311,47 +311,47 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="快速工具\AutoJoinForm.resx">
+    <EmbeddedResource Include="SpeedTool\AutoJoinForm.resx">
       <DependentUpon>AutoJoinForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="快速翻模\AutoPipeForm.resx">
+    <EmbeddedResource Include="CreateModel\AutoPipeForm.resx">
       <DependentUpon>AutoPipeForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="元件保護\ChooseElems.resx">
+    <EmbeddedResource Include="FamilyProtect\ChooseElems.resx">
       <DependentUpon>ChooseElems.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="自動出圖\ChooseFSForm.resx">
+    <EmbeddedResource Include="Plotting\ChooseFSForm.resx">
       <DependentUpon>ChooseFSForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="自動出圖\ChooseView.resx">
+    <EmbeddedResource Include="Plotting\ChooseView.resx">
       <DependentUpon>ChooseView.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="快速翻模\colNamesForm.resx">
+    <EmbeddedResource Include="CreateModel\colNamesForm.resx">
       <DependentUpon>ColNamesForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="自動出圖\CopyViewForm.resx">
+    <EmbeddedResource Include="Plotting\CopyViewForm.resx">
       <DependentUpon>CopyViewForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="圖紙更新\CreateDrawings.resx">
+    <EmbeddedResource Include="UpdateView\CreateDrawings.resx">
       <DependentUpon>CreateDrawings.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="規範校核\CrushReportForm.resx">
+    <EmbeddedResource Include="Verification\CrushReportForm.resx">
       <DependentUpon>CrushReportForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="圖紙更新\EditViewSheetNumberForm.resx">
+    <EmbeddedResource Include="UpdateView\EditViewSheetNumberForm.resx">
       <DependentUpon>EditViewSheetNumberForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CSDSEM\ManualTagForm.resx">
       <DependentUpon>ManualTagForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="自動出圖\MoveViewForm.resx">
+    <EmbeddedResource Include="Plotting\MoveViewForm.resx">
       <DependentUpon>MoveViewForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="快速工具\ParkOrRoomForm.resx">
+    <EmbeddedResource Include="SpeedTool\ParkOrRoomForm.resx">
       <DependentUpon>ParkOrRoomForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="快速工具\PipeEditForm.resx">
+    <EmbeddedResource Include="SpeedTool\PipeEditForm.resx">
       <DependentUpon>PipeEditForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CSDSEM\ProfessionalCodeForm.resx">

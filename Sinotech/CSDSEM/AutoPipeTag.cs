@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Sinotech
+namespace Sinotech.CSDSEM
 {
     [Transaction(TransactionMode.Manual)]
     public class AutoPipeTag : IExternalCommand

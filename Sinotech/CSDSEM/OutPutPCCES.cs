@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Sinotech.UpdateView;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +9,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
-namespace Sinotech
+namespace Sinotech.CSDSEM
 {
     [Transaction(TransactionMode.Manual)]
     public class OutPutPCCES : IExternalCommand
@@ -68,6 +69,8 @@ namespace Sinotech
         // Excel All Sheet比對資料
         public List<OpeningContrast> openingContrastList = new List<OpeningContrast>();
         public static List<ExcelCellData> ecDataList = new List<ExcelCellData>(); // 將Excel中Sheet的Cell資料都撈出來
+        public static double unit_conversion = 304.8; // 專案單位轉換
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             UIApplication uiapp = commandData.Application;
@@ -423,8 +426,8 @@ namespace Sinotech
                         catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         double value = opening.LookupParameter("矩形開口面積").AsDouble();
-                        //double openingArea = UnitUtils.ConvertFromInternalUnits(value, DisplayUnitType.DUT_SQUARE_METERS);
-                        double openingArea = UnitUtils.ConvertFromInternalUnits(value, UnitTypeId.Millimeters);
+                        //double openingArea = value * unit_conversion;
+                        double openingArea = value * unit_conversion;
                         modelInfo.area = openingArea;
                         // 開口對象(牆、樑、板)
                         if (opening.Name.Contains("牆")) { modelInfo.host = "牆"; }

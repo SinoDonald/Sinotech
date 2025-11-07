@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using Sinotech_2025.UpdateView;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +10,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 
-namespace Sinotech_2025
+namespace Sinotech_2025.CSDSEM
 {
     [Transaction(TransactionMode.Manual)]
     public class OutPutPCCES : IExternalCommand
@@ -69,6 +70,8 @@ namespace Sinotech_2025
         // Excel All Sheet比對資料
         public List<OpeningContrast> openingContrastList = new List<OpeningContrast>();
         public static List<ExcelCellData> ecDataList = new List<ExcelCellData>(); // 將Excel中Sheet的Cell資料都撈出來
+        public static double unit_conversion = 304.8; // 專案單位轉換
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             UIApplication uiapp = commandData.Application;
@@ -81,7 +84,7 @@ namespace Sinotech_2025
             OpenFileDialog ofd = new OpenFileDialog();
             string filePath = string.Empty; // Excel路徑
             if (string.IsNullOrEmpty(ofd.InitialDirectory))
-            {                
+            {
                 ofd.Filter = "Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*";
                 ofd.Title = "請選擇Excel檔";
                 if (ofd.ShowDialog() == DialogResult.OK)
@@ -396,12 +399,12 @@ namespace Sinotech_2025
                         catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         modelInfo.diameter = Convert.ToDouble(opening.LookupParameter("指定圓形套管直徑").AsValueString());
-                        if(modelInfo.diameter == 0) { modelInfo.diameter = Convert.ToDouble(opening.LookupParameter("預設圓形套管直徑").AsValueString()); }
+                        if (modelInfo.diameter == 0) { modelInfo.diameter = Convert.ToDouble(opening.LookupParameter("預設圓形套管直徑").AsValueString()); }
                         // 開口對象(牆、樑、板)
                         if (opening.Name.Contains("牆")) { modelInfo.host = "牆"; }
-                        else if (opening.Name.Contains("樓板") || opening.Name.Contains("樓版")) { modelInfo.host = "樓板"; }                        
+                        else if (opening.Name.Contains("樓板") || opening.Name.Contains("樓版")) { modelInfo.host = "樓板"; }
                         string description = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host) && x.diameter.Equals(modelInfo.diameter)).Select(x => x.name).LastOrDefault(); // 項目及說明
-                        modelInfo.description = description;                        
+                        modelInfo.description = description;
                         string prjNumber = openingContrastList.Where(x => x.name.Equals(description)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                         modelInfo.prjNumber = prjNumber;
                     }
@@ -424,12 +427,12 @@ namespace Sinotech_2025
                         catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         double value = opening.LookupParameter("矩形開口面積").AsDouble();
-                        //double openingArea = UnitUtils.ConvertFromInternalUnits(value, DisplayUnitType.DUT_SQUARE_METERS);
-                        double openingArea = UnitUtils.ConvertFromInternalUnits(value, UnitTypeId.Millimeters);
+                        //double openingArea = value * unit_conversion;
+                        double openingArea = value * unit_conversion;
                         modelInfo.area = openingArea;
                         // 開口對象(牆、樑、板)
                         if (opening.Name.Contains("牆")) { modelInfo.host = "牆"; }
-                        else if (opening.Name.Contains("樓板") || opening.Name.Contains("樓版")) 
+                        else if (opening.Name.Contains("樓板") || opening.Name.Contains("樓版"))
                         {
                             modelInfo.host = "樓板";
                             string floorLength = Regex.Replace(opening.LookupParameter("矩形開口高度").AsValueString(), "[^0-9.]", ""); //僅保留數字
@@ -444,7 +447,7 @@ namespace Sinotech_2025
                         {
                             if (item.min < modelInfo.area && modelInfo.area <= item.max)
                             {
-                                modelInfo.description = item.name;                                
+                                modelInfo.description = item.name;
                                 string prjNumber = openingContrastList.Where(x => x.name.Equals(item.name)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                                 modelInfo.prjNumber = prjNumber;
                             }
@@ -503,11 +506,11 @@ namespace Sinotech_2025
                         modelInfo.volume = Convert.ToDouble(volume); // 體積
                         // 項目及說明
                         OpeningContrast item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct)).Where(x => x.min < modelInfo.volume && modelInfo.volume <= x.max).FirstOrDefault();
-                        if(item != null)
+                        if (item != null)
                         {
                             if (item.min < modelInfo.volume && modelInfo.volume <= item.max)
                             {
-                                modelInfo.description = item.name;                                
+                                modelInfo.description = item.name;
                                 string prjNumber = openingContrastList.Where(x => x.name.Equals(item.name)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                                 modelInfo.prjNumber = prjNumber;
                             }
@@ -525,7 +528,7 @@ namespace Sinotech_2025
                         }
                     }
                     //else if (opening.Name.Contains("導線管") || opening.Name.Contains("硬質非金屬導管"))
-                    else if(opening.Category.Name.Equals("電管"))
+                    else if (opening.Category.Name.Equals("電管"))
                     {
                         modelInfo.type = "導線管";
                         modelInfo.pipeOrDuct = "導線管";
@@ -538,21 +541,21 @@ namespace Sinotech_2025
                         }
                         catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                        
+
                         modelInfo.length = Convert.ToDouble(opening.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH).AsValueString()); // 長度
                         // 取Excel資料庫中的最近數值
                         double diameter = Convert.ToDouble(Regex.Replace(opening.get_Parameter(BuiltInParameter.RBS_CONDUIT_DIAMETER_PARAM).AsValueString(), "[^0-9.]", "")); // 直徑 (標稱尺寸)
                         List<double> values = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct)).Select(x => x.diameter).Distinct().ToList();
                         diameter = values.OrderBy(x => Math.Abs(x - diameter)).FirstOrDefault();
-                        modelInfo.diameter = diameter;                        
+                        modelInfo.diameter = diameter;
                         string description = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.diameter.Equals(modelInfo.diameter)).Select(x => x.name).LastOrDefault(); // 項目及說明
-                        modelInfo.description = description;                        
+                        modelInfo.description = description;
                         string prjNumber = openingContrastList.Where(x => x.name.Equals(description)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                         modelInfo.prjNumber = prjNumber;
                     }
                     // 樓層
                     //if (opening.Name.Contains("導線管") || opening.Name.Contains("硬質非金屬導管"))
-                    if(opening.Category.Name.Equals("電管"))
+                    if (opening.Category.Name.Equals("電管"))
                     {
                         Level level = levelList.Where(x => x.Name.Contains("軌道層")).FirstOrDefault();
                         try
@@ -560,7 +563,7 @@ namespace Sinotech_2025
                             ElementId levelId = opening.get_Parameter(BuiltInParameter.RBS_START_LEVEL_PARAM).AsElementId(); // 參考樓層
                             level = doc.GetElement(levelId) as Level;
                         }
-                        catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         modelInfo.level = level;
                     }
                     else { modelInfo.level = doc.GetElement(opening.LevelId) as Level; } // 樓層
@@ -602,7 +605,7 @@ namespace Sinotech_2025
             {
                 foreach (string disLinkPrj in disLinkPrjs)
                 {
-                    List<string> descriptions = modelDB.Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) && 
+                    List<string> descriptions = modelDB.Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
                                                 x.pipeOrDuct.Equals("開口") && x.host.Equals("樓板")).Select(x => x.description).Distinct().ToList();
                     foreach (string description in descriptions)
                     {
@@ -620,7 +623,7 @@ namespace Sinotech_2025
                         }
                         ModelInfo modelInfo = new ModelInfo();
                         modelInfo.levelName = disLevelName;
-                        modelInfo.linkPrj = disLinkPrj; 
+                        modelInfo.linkPrj = disLinkPrj;
                         modelInfo.pipeOrDuct = "止水墩";
                         modelInfo.pipeOrDuctInt = 5;
                         modelInfo.host = "樓板";

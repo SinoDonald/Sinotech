@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Sinotech_2025
+namespace Sinotech_2025.CSDSEM
 {
     public class LevelElevation
     {
@@ -14,6 +14,8 @@ namespace Sinotech_2025
     }
     class FindLevel
     {
+        public static double meter_conversion = 0.3048; // 公尺單位轉換
+
         // 找到當前視圖的Level相關資訊
         public Tuple<List<LevelElevation>, LevelElevation, double> FindDocViewLevel(Document doc)
         {
@@ -28,7 +30,7 @@ namespace Sinotech_2025
                 levelElevation.height = level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
                 //levelElevation.elevation = Convert.ToDouble(level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsValueString());
                 double elevation = level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-                levelElevation.elevation = UnitUtils.ConvertFromInternalUnits(elevation, UnitTypeId.Meters);
+                levelElevation.elevation = elevation * meter_conversion;
                 levelElevList.Add(levelElevation);
             }
             levelElevList = levelElevList.OrderBy(x => x.elevation).ToList();
@@ -39,7 +41,7 @@ namespace Sinotech_2025
             LevelElevation viewLevel = new LevelElevation();
             try { viewLevel = levelElevList.Where(x => x.level.Id.Equals(doc.ActiveView.GenLevel.Id)).FirstOrDefault(); }
             catch (NullReferenceException) { viewLevel = levelElevList[0]; }
-            catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+            catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
             int leCount = levelElevList.IndexOf(viewLevel);
             // 查詢當前樓層與上一樓層的高度, 製作火源高度
             if (levelElevList.Count >= 2)

@@ -7,7 +7,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 
-namespace Sinotech
+namespace Sinotech.CSDSEM
 {
     public partial class ProfessionalCodeForm : System.Windows.Forms.Form
     {

@@ -1,4 +1,4 @@
-﻿namespace Sinotech_2020
+﻿namespace Sinotech_2020.CSDSEM
 {
     partial class ProfessionalCodeForm
     {

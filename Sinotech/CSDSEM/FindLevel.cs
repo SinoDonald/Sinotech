@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Sinotech
+namespace Sinotech.CSDSEM
 {
     public class LevelElevation
     {
@@ -14,6 +14,8 @@ namespace Sinotech
     }
     class FindLevel
     {
+        public static double meter_conversion = 0.3048; // 公尺單位轉換
+
         // 找到當前視圖的Level相關資訊
         public Tuple<List<LevelElevation>, LevelElevation, double> FindDocViewLevel(Document doc)
         {
@@ -28,7 +30,7 @@ namespace Sinotech
                 levelElevation.height = level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
                 //levelElevation.elevation = Convert.ToDouble(level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsValueString());
                 double elevation = level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-                levelElevation.elevation = UnitUtils.ConvertFromInternalUnits(elevation, UnitTypeId.Meters);
+                levelElevation.elevation = elevation * meter_conversion;
                 levelElevList.Add(levelElevation);
             }
             levelElevList = levelElevList.OrderBy(x => x.elevation).ToList();

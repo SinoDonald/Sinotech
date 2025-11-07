@@ -46,16 +46,64 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="CreateModel\AutoPipeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="CreateModel\ColNamesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="CSDSEM\ManualTagForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="CSDSEM\ProfessionalCodeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="FamilyProtect\ChooseElems.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Plotting\ChooseFSForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Plotting\ChooseView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Plotting\CopyViewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Plotting\MoveViewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="SpeedTool\AutoJoinForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="SpeedTool\ParkOrRoomForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="SpeedTool\PipeEditForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="UpdateView\CreateDrawings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="UpdateView\EditViewSheetNumberForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Verification\CrushReportForm.cs">
+      <SubType>Form</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="UpdateView\CreateDrawings.resx">
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
 </Project>

@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Sinotech
+namespace Sinotech.CSDSEM
 {
     [Transaction(TransactionMode.Manual)]
     public class ManualPipeTag : IExternalCommand
