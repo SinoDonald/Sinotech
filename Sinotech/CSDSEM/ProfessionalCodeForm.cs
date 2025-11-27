@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Sinotech;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -14,8 +13,14 @@ namespace Sinotech.CSDSEM
         public string filePath = string.Empty; // 專業代碼路徑
         public int prjCount = 0; // 專案名稱解析"-"
         public int prjCode = 1; // 專案代碼
+        public List<PrjNameAndCode> prjNameAndCodes = new List<PrjNameAndCode>();
         public List<ProfessionalCode> professionalCodeList = new List<ProfessionalCode>();
         public List<ProfessionalCode> combinePCodes = new List<ProfessionalCode>(); // 整合重複的專業代碼
+        public class PrjNameAndCode
+        {
+            public string projectName { get; set; }
+            public string professionalCode { get; set; }
+        }
         public class ProfessionalCode
         {
             public List<string> comments = new List<string>();
@@ -29,6 +34,7 @@ namespace Sinotech.CSDSEM
             App sinotech_Button = new App();
             this.filePath = Path.Combine(Directory.GetParent(sinotech_Button.addinAssmeblyPath).FullName, "專業代碼.txt");
             this.prjCount = prjCount;
+            prjNameAndCodes = new List<PrjNameAndCode>();
             LoadProfessionalCode(); // 載入專業代碼
             CreateNodes(rvtLinkInsList); // 新增節點
             CenterToParent();
@@ -147,9 +153,16 @@ namespace Sinotech.CSDSEM
                     {
                         try
                         {
-                            string comment = projectName.Split('-')[prjCode];
+                            string projectNameWithoutExtension = Path.GetFileNameWithoutExtension(projectName); // 移除副檔名
+                            string comment = projectNameWithoutExtension.Split('-')[prjCode];
                             professionalCode.comments.Add(comment);
                             removeProjectNames.Add(projectName);
+
+                            // 連結專案與選擇替換Index後的名稱
+                            PrjNameAndCode prjNameAndCode = new PrjNameAndCode();
+                            prjNameAndCode.projectName = projectName;
+                            prjNameAndCode.professionalCode = comment;
+                            prjNameAndCodes.Add(prjNameAndCode);
                         }
                         catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                     }

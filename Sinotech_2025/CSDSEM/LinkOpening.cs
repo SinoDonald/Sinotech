@@ -97,7 +97,7 @@ namespace Sinotech_2025.CSDSEM
                     FindLevel findLevel = new FindLevel();
                     Tuple<List<LevelElevation>, LevelElevation, double> multiValue = findLevel.FindDocViewLevel(doc);
                     this.levelElevList = multiValue.Item1; // 全部樓層
-                    this.originalPrjElev = levelElevList.OrderBy(x => Math.Sqrt(x.level.ProjectElevation - 0)).FirstOrDefault().height;
+                    //this.originalPrjElev = levelElevList.OrderBy(x => Math.Sqrt(x.level.ProjectElevation - 0)).FirstOrDefault().height; // 預設專案最低高程
                     // 專案基準點, 暫定距離原點最大偏移的為BasePoint
                     List<BasePoint> allPrjLocations = new FilteredElementCollector(doc).OfClass(typeof(BasePoint)).WhereElementIsNotElementType().Cast<BasePoint>().ToList();
                     List<BasePoint> prjLocations = allPrjLocations.Where(x => x.get_Parameter(BuiltInParameter.BASEPOINT_ANGLETON_PARAM) != null).ToList();
@@ -151,26 +151,28 @@ namespace Sinotech_2025.CSDSEM
                     {
                         rvtLinkInsList.Add(revitLinkInss.Where(x => x.Name.Split(':')[0].Equals(rvtLinkName)).FirstOrDefault());
                     }
-                    // 移除相同名稱的專案
-                    foreach (RevitLinkInstance rvtLinkIns in rvtLinkInsList)
-                    {
-                        IList<Element> pipeOrBeamList = new FilteredElementCollector(rvtLinkIns.GetLinkDocument()).WherePasses(pipeOrDuctFilter).WhereElementIsNotElementType().ToElements();
-                        if (pipeOrBeamList.Count() > 0)
-                        {
-                            try
-                            {
-                                //pipeOrBeamList = pipeOrBeamList.Where(x => x.Id.IntegerValue.Equals(2419706) || x.Id.IntegerValue.Equals(2419430)).ToList(); // Test
-                                pipeDuctLinkDocs.Add(rvtLinkIns);
-                            }
-                            catch (Autodesk.Revit.Exceptions.ArgumentNullException) { }
-                        }
-                    }
 
                     // 輸入專業代碼
                     ProfessionalCodeForm professionalCodeForm = new ProfessionalCodeForm(rvtLinkInsList, prjCount);
                     professionalCodeForm.ShowDialog();
                     if (professionalCodeForm.trueOrFalse == true)
                     {
+                        List<RevitLinkInstance> chooseRevitLinks = rvtLinkInsList.Where(x => professionalCodeForm.prjNameAndCodes.Where(y => y.projectName.Equals(x.Name.Trim().Split(':')[0])).Count() > 0).ToList();
+                        // 移除相同名稱的專案
+                        foreach (RevitLinkInstance rvtLinkIns in chooseRevitLinks)
+                        {
+                            IList<Element> pipeOrBeamList = new FilteredElementCollector(rvtLinkIns.GetLinkDocument()).WherePasses(pipeOrDuctFilter).WhereElementIsNotElementType().ToElements();
+                            if (pipeOrBeamList.Count() > 0)
+                            {
+                                try
+                                {
+                                    //pipeOrBeamList = pipeOrBeamList.Where(x => x.Id.IntegerValue.Equals(2419706) || x.Id.IntegerValue.Equals(2419430)).ToList(); // Test
+                                    pipeDuctLinkDocs.Add(rvtLinkIns);
+                                }
+                                catch (Autodesk.Revit.Exceptions.ArgumentNullException) { }
+                            }
+                        }
+
                         List<ProfessionalCode> combinePCodes = professionalCodeForm.combinePCodes; // 整合重複的專業代碼
                         prjCode = professionalCodeForm.prjCode; // 專案代碼
 
@@ -181,10 +183,11 @@ namespace Sinotech_2025.CSDSEM
                         elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_StructuralFraming)); // 樑
                         elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_Floors)); // 樓板
                         LogicalOrFilter wallBeamFilter = new LogicalOrFilter(elementFilters);
+
                         foreach (RevitLinkInstance rvtLinkIns in rvtLinkInsList)
                         {
                             IList<Element> wallOrBeamElems = new FilteredElementCollector(rvtLinkIns.GetLinkDocument()).WherePasses(wallBeamFilter).WhereElementIsNotElementType().ToElements();
-                            //wallOrBeamElems = wallOrBeamElems.Where(x => x.Id.IntegerValue.Equals(2047568)).ToList(); // Test
+                            //wallOrBeamElems = wallOrBeamElems.Where(x => x.Id.Value.Equals(687726)).ToList(); // Test
                             if (wallOrBeamElems.Count() > 0)
                             {
                                 try
@@ -214,7 +217,7 @@ namespace Sinotech_2025.CSDSEM
                                                 {
                                                     if (solid.SurfaceArea != 0)
                                                     {
-                                                        FindInputSolidBBElems(rvtLinkIns.GetLinkDocument(), elem, solid, pipeDuctLinkDocs, openingInfoList); // 透過BoundingBox找到與牆樑Solid干涉的管
+                                                        FindInputSolidBBElems(rvtLinkIns.GetLinkDocument(), elem, solid, pipeDuctLinkDocs, openingInfoList, professionalCodeForm.prjNameAndCodes); // 透過BoundingBox找到與牆樑Solid干涉的管
                                                     }
                                                 }
                                                 catch (NullReferenceException)
@@ -398,7 +401,7 @@ namespace Sinotech_2025.CSDSEM
             return solid;
         }
         // 透過BoundingBox找到與牆樑Solid干涉的管
-        private void FindInputSolidBBElems(Document revitLinkDoc, Element wallOrBeam, Solid solid, List<RevitLinkInstance> pipeDuctLinkDocs, List<OpeningInfo> openingInfoList)
+        private void FindInputSolidBBElems(Document revitLinkDoc, Element wallOrBeam, Solid solid, List<RevitLinkInstance> pipeDuctLinkDocs, List<OpeningInfo> openingInfoList, List<PrjNameAndCode> prjNameAndCodes)
         {
             // 轉換成專案座標
             try
@@ -479,14 +482,14 @@ namespace Sinotech_2025.CSDSEM
                 {
                     foreach (ElementTransform elemTransform in elementTransformList)
                     {
-                        SaveElemData(revitLinkDoc, wallOrBeam, solid, elemTransform.elements, elemTransform.transform, openingInfoList);
+                        SaveElemData(revitLinkDoc, wallOrBeam, solid, elemTransform.elements, elemTransform.transform, openingInfoList, prjNameAndCodes);
                     }
                 }
             }
             catch (Exception ex) { string error = wallOrBeam.Id + "\n" + ex.Message + "\n" + ex.ToString(); }
         }
         // 儲存OpeningInfo資料
-        private void SaveElemData(Document revitLinkDoc, Element wallOrBeam, Solid solid, List<Element> interferenceElems, Transform linkTransform, List<OpeningInfo> openingInfoList)
+        private void SaveElemData(Document revitLinkDoc, Element wallOrBeam, Solid solid, List<Element> interferenceElems, Transform linkTransform, List<OpeningInfo> openingInfoList, List<PrjNameAndCode> prjNameAndCodes)
         {
             OpeningInfo openingInfo = new OpeningInfo();
             ElementId levelElemId = null;
@@ -569,11 +572,29 @@ namespace Sinotech_2025.CSDSEM
                     string error = wallOrBeam.Id + "\n" + levelElemId + "\n" + ex.Message + "\n" + ex.ToString();
                 }
             }
-            string[] docNames = wallOrBeam.Document.Title.Split('-');
-            if (docNames.Length > 1)
+
+            string docTitle = wallOrBeam.Document.Title;
+            try
             {
-                openingInfo.docName = docNames[prjCode]; // 專案名稱縮寫
+                PrjNameAndCode prjNameAndCode = prjNameAndCodes.Where(x => x.projectName.Contains(docTitle)).FirstOrDefault();
+                if (prjNameAndCode != null)
+                {
+                    openingInfo.docName = prjNameAndCode.professionalCode; // 專案代碼
+                }
+                else
+                {
+                    string[] docNames = wallOrBeam.Document.Title.Split('-');
+                    if (docNames.Length > 1)
+                    {
+                        openingInfo.docName = docNames[prjCode]; // 專案名稱縮寫
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                string error = ex.Message + "\n" + ex.ToString();
+            }
+
             openingInfo.element = wallOrBeam; // 收集樑牆板資料
             openingInfo.solid = solid; // 樑牆Solid
             if (wallOrBeam is Floor)
@@ -623,16 +644,33 @@ namespace Sinotech_2025.CSDSEM
                 if (interferenceElem is Pipe || interferenceElem is Duct || interferenceElem is CableTray || interferenceElem is FamilyInstance)
                 {
                     CrushElemInfo crushElemInfo = new CrushElemInfo();
-                    // 解析專案路徑的檔名
-                    string[] docName = interferenceElem.Document.Title.Split('-');
-                    if (docName.Length > 1)
+                    docTitle = interferenceElem.Document.Title;
+                    try
                     {
-                        crushElemInfo.docName = docName[prjCode]; // 專案名稱縮寫
+                        PrjNameAndCode prjNameAndCode = prjNameAndCodes.Where(x => x.projectName.Contains(docTitle)).FirstOrDefault();
+                        if (prjNameAndCode != null)
+                        {
+                            crushElemInfo.docName = prjNameAndCode.professionalCode; // 專案代碼
+                        }
+                        else
+                        {
+                            // 解析專案路徑的檔名
+                            string[] docName = interferenceElem.Document.Title.Split('-');
+                            if (docName.Length > 1)
+                            {
+                                crushElemInfo.docName = docName[prjCode]; // 專案名稱縮寫
+                            }
+                            else
+                            {
+                                crushElemInfo.docName = interferenceElem.Document.Title; // 專案名稱
+                            }
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        crushElemInfo.docName = interferenceElem.Document.Title; // 專案名稱
+                        string error = ex.Message + "\n" + ex.ToString();
                     }
+
                     crushElemInfo.pipeOrDuct = interferenceElem; // BoundingBox, 干涉的管與風管
                     crushElemInfo.hostType = openingInfo.type; // 干涉的主體品類
                     // 如果牆的底部約束Level查詢對應不到, Level則以管道樓層為主

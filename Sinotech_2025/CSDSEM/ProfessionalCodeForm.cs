@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
+using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 
 namespace Sinotech_2025.CSDSEM
 {
@@ -13,12 +15,18 @@ namespace Sinotech_2025.CSDSEM
         public string filePath = string.Empty; // 專業代碼路徑
         public int prjCount = 0; // 專案名稱解析"-"
         public int prjCode = 1; // 專案代碼
+        public List<PrjNameAndCode> prjNameAndCodes = new List<PrjNameAndCode>();
         public List<ProfessionalCode> professionalCodeList = new List<ProfessionalCode>();
         public List<ProfessionalCode> combinePCodes = new List<ProfessionalCode>(); // 整合重複的專業代碼
+        public class PrjNameAndCode
+        {
+            public string projectName { get; set; }
+            public string professionalCode { get; set; }
+        }
         public class ProfessionalCode
         {
             public List<string> comments = new List<string>();
-            public string professionalCode { get; set;}
+            public string professionalCode { get; set; }
         }
         public bool trueOrFalse = false;
         public ProfessionalCodeForm(List<RevitLinkInstance> rvtLinkInsList, int prjCount)
@@ -28,6 +36,7 @@ namespace Sinotech_2025.CSDSEM
             App sinotech_Button = new App();
             this.filePath = Path.Combine(Directory.GetParent(sinotech_Button.addinAssmeblyPath).FullName, "專業代碼.txt");
             this.prjCount = prjCount;
+            prjNameAndCodes = new List<PrjNameAndCode>();
             LoadProfessionalCode(); // 載入專業代碼
             CreateNodes(rvtLinkInsList); // 新增節點
             CenterToParent();
@@ -69,7 +78,7 @@ namespace Sinotech_2025.CSDSEM
                 }
                 using (StreamReader sr = new StreamReader(filePath))
                 {
-                    string line = sr.ReadLine(); 
+                    string line = sr.ReadLine();
                     while (line != null)
                     {
                         if (line != "")
@@ -85,7 +94,7 @@ namespace Sinotech_2025.CSDSEM
             catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
 
             comboBox2.Items.Clear(); // 清空
-            for(int i = 0; i < prjCount; i++)
+            for (int i = 0; i < prjCount; i++)
             {
                 comboBox2.Items.Add(i);
             }
@@ -105,12 +114,12 @@ namespace Sinotech_2025.CSDSEM
             {
                 // 寫入文字檔
                 List<string> professionalCodes = LoadProfessionalCode(); // 載入專業代碼
-                if(textBox1.Text != "") { professionalCodes.Add(textBox1.Text); }
+                if (textBox1.Text != "") { professionalCodes.Add(textBox1.Text); }
                 foreach (string professionalCode in professionalCodes.Distinct().OrderBy(x => x).ToList())
                 {
                     content += professionalCode + "\n";
                 }
-                if(content.Length > 0)
+                if (content.Length > 0)
                 {
                     content = content.Substring(0, content.Length - 1);
                 }
@@ -127,7 +136,7 @@ namespace Sinotech_2025.CSDSEM
             if (checkedListBox1.CheckedItems.Count > 0)
             {
                 ProfessionalCode professionalCode = new ProfessionalCode();
-                if(comboBox1.Text.Equals("") && textBox1.Text.Equals(""))
+                if (comboBox1.Text.Equals("") && textBox1.Text.Equals(""))
                 {
                     TaskDialog.Show("Revit", "請輸入要替換的專業代碼");
                 }
@@ -146,13 +155,20 @@ namespace Sinotech_2025.CSDSEM
                     {
                         try
                         {
-                            string comment = projectName.Split('-')[prjCode];
+                            string projectNameWithoutExtension = Path.GetFileNameWithoutExtension(projectName); // 移除副檔名
+                            string comment = projectNameWithoutExtension.Split('-')[prjCode];
                             professionalCode.comments.Add(comment);
                             removeProjectNames.Add(projectName);
+
+                            // 連結專案與選擇替換Index後的名稱
+                            PrjNameAndCode prjNameAndCode = new PrjNameAndCode();
+                            prjNameAndCode.projectName = projectName;
+                            prjNameAndCode.professionalCode = comment;
+                            prjNameAndCodes.Add(prjNameAndCode);
                         }
-                        catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                     }
-                    foreach(string removeProjectName in removeProjectNames)
+                    foreach (string removeProjectName in removeProjectNames)
                     {
                         checkedListBox1.Items.Remove(removeProjectName);
                     }
