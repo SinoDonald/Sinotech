@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<RevitAddIns>
+   <AddIn Type="Application">
+      <Assembly>..\Sinotech\Sinotech.dll</Assembly>
+      <ClientId>af48b5e8-58bc-4045-b7e8-4d1ba6bf1df4</ClientId>
+      <FullClassName>Sinotech.App</FullClassName>
+      <Name>Sinotech</Name>
+      <VendorId>Sinotech</VendorId>
+      <VendorDescription>donaldlu@mail.sinotech.com.tw</VendorDescription>	  
+      <VisibilityMode>AlwaysVisible</VisibilityMode>
+   </AddIn>
+</RevitAddIns>
