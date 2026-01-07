@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
@@ -18,6 +19,8 @@ namespace Sinotech
         public string addinAssmeblyPath = Assembly.GetExecutingAssembly().Location; // 封包版路徑位址
         public Result OnStartup(UIControlledApplication application)
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // 支援中文編碼, 解決 Revit 2025 (.NET 8) 不支援 IBM437 編碼的問題
+
             // 創建一個新的選單
             RibbonPanel ribbonPanel = null;
             try { application.CreateRibbonTab("中興自動化"); } catch { }
