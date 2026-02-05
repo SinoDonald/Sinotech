@@ -44,6 +44,8 @@
             this.label6 = new System.Windows.Forms.Label();
             this.comboBox2 = new System.Windows.Forms.ComboBox();
             this.prjCodeBtn = new System.Windows.Forms.Button();
+            this.elevOffsetTB = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -65,7 +67,7 @@
             this.checkedListBox1.FormattingEnabled = true;
             this.checkedListBox1.Location = new System.Drawing.Point(16, 81);
             this.checkedListBox1.Name = "checkedListBox1";
-            this.checkedListBox1.Size = new System.Drawing.Size(201, 144);
+            this.checkedListBox1.Size = new System.Drawing.Size(201, 164);
             this.checkedListBox1.TabIndex = 20;
             // 
             // label2
@@ -85,15 +87,15 @@
             this.comboBox1.Location = new System.Drawing.Point(237, 98);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(199, 25);
-            this.comboBox1.TabIndex = 21;
+            this.comboBox1.TabIndex = 23;
             // 
             // sureBtn
             // 
             this.sureBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.sureBtn.Location = new System.Drawing.Point(361, 197);
+            this.sureBtn.Location = new System.Drawing.Point(361, 207);
             this.sureBtn.Name = "sureBtn";
             this.sureBtn.Size = new System.Drawing.Size(75, 34);
-            this.sureBtn.TabIndex = 22;
+            this.sureBtn.TabIndex = 26;
             this.sureBtn.Text = "確定";
             this.sureBtn.UseVisualStyleBackColor = true;
             this.sureBtn.Click += new System.EventHandler(this.sureBtn_Click);
@@ -101,10 +103,10 @@
             // finishBtn
             // 
             this.finishBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.finishBtn.Location = new System.Drawing.Point(271, 240);
+            this.finishBtn.Location = new System.Drawing.Point(271, 255);
             this.finishBtn.Name = "finishBtn";
             this.finishBtn.Size = new System.Drawing.Size(75, 34);
-            this.finishBtn.TabIndex = 22;
+            this.finishBtn.TabIndex = 28;
             this.finishBtn.Text = "完成";
             this.finishBtn.UseVisualStyleBackColor = true;
             this.finishBtn.Click += new System.EventHandler(this.finishBtn_Click);
@@ -112,10 +114,10 @@
             // cancelBtn
             // 
             this.cancelBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.cancelBtn.Location = new System.Drawing.Point(361, 240);
+            this.cancelBtn.Location = new System.Drawing.Point(361, 255);
             this.cancelBtn.Name = "cancelBtn";
             this.cancelBtn.Size = new System.Drawing.Size(75, 34);
-            this.cancelBtn.TabIndex = 22;
+            this.cancelBtn.TabIndex = 29;
             this.cancelBtn.Text = "取消";
             this.cancelBtn.UseVisualStyleBackColor = true;
             this.cancelBtn.Click += new System.EventHandler(this.cancelBtn_Click);
@@ -126,7 +128,7 @@
             this.textBox1.Location = new System.Drawing.Point(237, 156);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(199, 25);
-            this.textBox1.TabIndex = 23;
+            this.textBox1.TabIndex = 24;
             // 
             // label3
             // 
@@ -141,10 +143,10 @@
             // deleteBtn
             // 
             this.deleteBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.deleteBtn.Location = new System.Drawing.Point(16, 240);
+            this.deleteBtn.Location = new System.Drawing.Point(16, 255);
             this.deleteBtn.Name = "deleteBtn";
             this.deleteBtn.Size = new System.Drawing.Size(96, 34);
-            this.deleteBtn.TabIndex = 22;
+            this.deleteBtn.TabIndex = 27;
             this.deleteBtn.Text = "清除專業代碼";
             this.deleteBtn.UseVisualStyleBackColor = true;
             this.deleteBtn.Click += new System.EventHandler(this.deleteBtn_Click);
@@ -200,11 +202,35 @@
             this.prjCodeBtn.UseVisualStyleBackColor = true;
             this.prjCodeBtn.Click += new System.EventHandler(this.prjCodeBtn_Click);
             // 
+            // elevOffsetTB
+            // 
+            this.elevOffsetTB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.elevOffsetTB.Location = new System.Drawing.Point(237, 213);
+            this.elevOffsetTB.Name = "elevOffsetTB";
+            this.elevOffsetTB.Size = new System.Drawing.Size(109, 25);
+            this.elevOffsetTB.TabIndex = 25;
+            this.elevOffsetTB.Text = "0";
+            this.elevOffsetTB.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.elevOffsetTB.TextChanged += new System.EventHandler(this.elevOffsetTB_TextChanged);
+            this.elevOffsetTB.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.elevOffsetTB_KeyPress);
+            // 
+            // label7
+            // 
+            this.label7.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(234, 192);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(86, 17);
+            this.label7.TabIndex = 26;
+            this.label7.Text = "高程偏移值：";
+            // 
             // ProfessionalCodeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(454, 286);
+            this.ClientSize = new System.Drawing.Size(454, 301);
+            this.Controls.Add(this.elevOffsetTB);
+            this.Controls.Add(this.label7);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.cancelBtn);
@@ -223,7 +249,7 @@
             this.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4);
-            this.MinimumSize = new System.Drawing.Size(470, 325);
+            this.MinimumSize = new System.Drawing.Size(470, 340);
             this.Name = "ProfessionalCodeForm";
             this.Text = "修改專業代碼";
             this.ResumeLayout(false);
@@ -248,5 +274,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox comboBox2;
         private System.Windows.Forms.Button prjCodeBtn;
+        private System.Windows.Forms.TextBox elevOffsetTB;
+        private System.Windows.Forms.Label label7;
     }
 }

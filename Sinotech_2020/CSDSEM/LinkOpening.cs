@@ -77,6 +77,7 @@ namespace Sinotech_2020.CSDSEM
         double prjElev = 0.0; // 專案基準點高程
         //double angle = 0.0; // 旋轉角度
         double originalPrjElev = 0.0; // 基準座標
+        double elevationOffset = 0.0; // 高程偏移
         int prjCode = 0; // 專案代碼
         public static double unit_conversion = 304.8; // 專案單位轉換
         public static double meter_conversion = 0.3048; // 公尺單位轉換
@@ -157,6 +158,7 @@ namespace Sinotech_2020.CSDSEM
                     professionalCodeForm.ShowDialog();
                     if (professionalCodeForm.trueOrFalse == true)
                     {
+                        elevationOffset = professionalCodeForm.elevationOffset / unit_conversion; // 高程偏移
                         List<RevitLinkInstance> chooseRevitLinks = rvtLinkInsList.Where(x => professionalCodeForm.prjNameAndCodes.Where(y => y.projectName.Equals(x.Name.Trim().Split(':')[0])).Count() > 0).ToList();
                         // 移除相同名稱的專案
                         foreach (RevitLinkInstance rvtLinkIns in chooseRevitLinks)
@@ -187,7 +189,7 @@ namespace Sinotech_2020.CSDSEM
                         foreach (RevitLinkInstance rvtLinkIns in rvtLinkInsList)
                         {
                             IList<Element> wallOrBeamElems = new FilteredElementCollector(rvtLinkIns.GetLinkDocument()).WherePasses(wallBeamFilter).WhereElementIsNotElementType().ToElements();
-                            //wallOrBeamElems = wallOrBeamElems.Where(x => x.Id.Value.Equals(687726)).ToList(); // Test
+                            //wallOrBeamElems = wallOrBeamElems.Where(x => x.Id.Value.Equals(1239833)).ToList(); // Test
                             if (wallOrBeamElems.Count() > 0)
                             {
                                 try
@@ -1015,7 +1017,7 @@ namespace Sinotech_2020.CSDSEM
                                 int mod = i % 2;
                                 crushElemInfo.insfaces.Add(face); // 接觸到的兩個面
                                 //intersectionResult = intersectionR.get_Item(0).XYZPoint;
-                                intersectionResult = new XYZ((intersectionR.get_Item(0).XYZPoint.X), (intersectionR.get_Item(0).XYZPoint.Y), (intersectionR.get_Item(0).XYZPoint.Z) + originalPrjElev);
+                                intersectionResult = new XYZ((intersectionR.get_Item(0).XYZPoint.X), (intersectionR.get_Item(0).XYZPoint.Y), (intersectionR.get_Item(0).XYZPoint.Z) + elevationOffset);
                                 crushElemInfo.insXYZs.Add(intersectionResult); // 接觸到的兩個面的交集點
                                 if (mod == 1) // 碰到奇數面的座標為起點
                                 {
@@ -1093,14 +1095,14 @@ namespace Sinotech_2020.CSDSEM
                     if (lp != null)
                     {
                         //insXYZ = lp.Point;
-                        insXYZ = new XYZ((lp.Point.X + transform.Origin.X), (lp.Point.Y + transform.Origin.Y), (lp.Point.Z + transform.Origin.Z));
+                        insXYZ = new XYZ((lp.Point.X + transform.Origin.X), (lp.Point.Y + transform.Origin.Y), (lp.Point.Z + transform.Origin.Z) + elevationOffset);
                     }
                     else
                     {
                         LocationCurve lc = elem.Location as LocationCurve;
                         XYZ lp1 = lc.Curve.Tessellate()[0];
                         XYZ lp2 = lc.Curve.Tessellate()[1];
-                        insXYZ = new XYZ((lp1.X + lp2.X) / 2 + transform.Origin.X, (lp1.Y + lp2.Y) / 2 + transform.Origin.Y, (lp1.Z + lp2.Z) / 2 + transform.Origin.Z);
+                        insXYZ = new XYZ((lp1.X + lp2.X) / 2 + transform.Origin.X, (lp1.Y + lp2.Y) / 2 + transform.Origin.Y, (lp1.Z + lp2.Z) / 2 + transform.Origin.Z + elevationOffset);
                     }
                     // 找到與放置樓程高程的偏移
                     double z = insXYZ.Z;

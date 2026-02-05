@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
+using TextBox = System.Windows.Forms.TextBox;
 
 namespace Sinotech_2020.CSDSEM
 {
@@ -13,6 +15,7 @@ namespace Sinotech_2020.CSDSEM
         public string filePath = string.Empty; // 專業代碼路徑
         public int prjCount = 0; // 專案名稱解析"-"
         public int prjCode = 1; // 專案代碼
+        public double elevationOffset = 0.0; // 高程偏移
         public List<PrjNameAndCode> prjNameAndCodes = new List<PrjNameAndCode>();
         public List<ProfessionalCode> professionalCodeList = new List<ProfessionalCode>();
         public List<ProfessionalCode> combinePCodes = new List<ProfessionalCode>(); // 整合重複的專業代碼
@@ -110,6 +113,7 @@ namespace Sinotech_2020.CSDSEM
             string content = string.Empty;
             try
             {
+                elevationOffset = Convert.ToDouble(elevOffsetTB.Text); // 高程偏移
                 // 寫入文字檔
                 List<string> professionalCodes = LoadProfessionalCode(); // 載入專業代碼
                 if (textBox1.Text != "") { professionalCodes.Add(textBox1.Text); }
@@ -211,6 +215,70 @@ namespace Sinotech_2020.CSDSEM
         {
             trueOrFalse = false;
             Close();
+        }
+        // 限制TextBox 只能輸入數字，以及限制不能使用快速鍵
+        private void elevOffsetTB_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+
+            // 1. 允許數字與 Backspace 等控制鍵
+            if (char.IsDigit(e.KeyChar) || char.IsControl(e.KeyChar))
+            {
+                return;
+            }
+
+            // 2. 處理正負號 (+ 或 -)
+            if (e.KeyChar == '-' || e.KeyChar == '+')
+            {
+                // 只能出現在索引 0，且目前文字內不能已經有正負號
+                if (txt.SelectionStart == 0 && !txt.Text.Contains("-") && !txt.Text.Contains("+"))
+                {
+                    return;
+                }
+            }
+
+            // 3. 處理小數點 (.)
+            if (e.KeyChar == '.')
+            {
+                // 已經有小數點了就不能再輸入
+                if (txt.Text.Contains("."))
+                {
+                    e.Handled = true;
+                    return;
+                }
+
+                // 小數點不能在正負號之後立即出現 (例如輸入了 "-" 之後不能直接點 ".")
+                // 或是確保小數點前面至少要有一個數字 (視你的業務需求而定)
+                if (txt.SelectionStart > 0)
+                {
+                    // 檢查游標前一個字元是否為數字
+                    char prevChar = txt.Text[txt.SelectionStart - 1];
+                    if (char.IsDigit(prevChar))
+                    {
+                        return;
+                    }
+                }
+            }
+
+            // 4. 其他字元通通攔截
+            e.Handled = true;
+        }
+        // 限制TextBox 只能輸入數字，並處理貼上內容
+        private void elevOffsetTB_TextChanged(object sender, EventArgs e)
+        {
+            TextBox txt = sender as TextBox;
+            // 嘗試轉換為 double，如果失敗且不是空字串或只有正負號，就還原或提示
+            if (!string.IsNullOrEmpty(txt.Text) &&
+                txt.Text != "-" && txt.Text != "+" &&
+                !double.TryParse(txt.Text, out _))
+            {
+                // 簡單暴力：如果格式不正確就清除最後一個字元
+                if (txt.Text.Length > 0)
+                {
+                    txt.Text = txt.Text.Remove(txt.Text.Length - 1);
+                    txt.SelectionStart = txt.Text.Length; // 保持游標在最後
+                }
+            }
         }
     }
 }
