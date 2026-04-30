@@ -96,23 +96,40 @@ namespace Sinotech.CSDSEM
             }
         }
         /// <summary>
-        /// 獨立出來的核心邏輯：處理母子節點的勾選連動
+        /// 獨立出來的核心邏輯：處理母子節點的勾選連動 (支援無限層級遞迴)
         /// </summary>
         private void SyncNodeCheckState(TreeNode node)
         {
             // 暫時解除事件，避免無限迴圈
             treeView1.AfterCheck -= TreeView1_AfterCheck;
 
-            // 1. 如果有子節點 (代表點到的是母節點)，子節點跟著連動
-            if (node.Nodes.Count > 0)
+            // 1. 向下連動：子節點跟著母節點狀態改變 (遞迴)
+            CheckAllChildren(node, node.Checked);
+
+            // 2. 向上連動：檢查母節點是否需要因為子節點而改變狀態 (遞迴)
+            UpdateParentCheckState(node);
+
+            // 恢復事件綁定
+            treeView1.AfterCheck += TreeView1_AfterCheck;
+        }
+
+        // 【新增】輔助方法：遞迴向下全選/取消全選
+        private void CheckAllChildren(TreeNode node, bool isChecked)
+        {
+            foreach (TreeNode child in node.Nodes)
             {
-                foreach (TreeNode child in node.Nodes)
+                child.Checked = isChecked;
+                // 如果還有子節點，繼續往下鑽
+                if (child.Nodes.Count > 0)
                 {
-                    child.Checked = node.Checked;
+                    CheckAllChildren(child, isChecked);
                 }
             }
+        }
 
-            // 2. 如果有母節點 (代表點到的是子節點)，檢查是否要改變母節點狀態
+        // 【新增】輔助方法：遞迴向上檢查並更新母節點狀態
+        private void UpdateParentCheckState(TreeNode node)
+        {
             if (node.Parent != null)
             {
                 bool allChecked = true;
@@ -125,24 +142,18 @@ namespace Sinotech.CSDSEM
                     }
                 }
                 node.Parent.Checked = allChecked;
-            }
 
-            // 恢復事件綁定
-            treeView1.AfterCheck += TreeView1_AfterCheck;
+                // 繼續往上一層檢查 (例如從第三層勾選，要一路更新到第一層)
+                UpdateParentCheckState(node.Parent);
+            }
         }
+
         private void BtnOk_Click(object sender, EventArgs e)
         {
-            // 收集所有被打勾的【子節點】裡的 View 物件
-            foreach (TreeNode parentNode in treeView1.Nodes)
-            {
-                foreach (TreeNode childNode in parentNode.Nodes)
-                {
-                    if (childNode.Checked && childNode.Tag is View view)
-                    {
-                        SelectedViews.Add(view);
-                    }
-                }
-            }
+            SelectedViews.Clear(); // 確保清空舊資料
+
+            // 使用遞迴方法去收集所有被打勾的視圖
+            CollectSelectedViews(treeView1.Nodes);
 
             if (SelectedViews.Count == 0)
             {
@@ -152,6 +163,25 @@ namespace Sinotech.CSDSEM
 
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        // 【新增】輔助方法：遞迴收集所有打勾且包含 View 的節點
+        private void CollectSelectedViews(TreeNodeCollection nodes)
+        {
+            foreach (TreeNode node in nodes)
+            {
+                // 如果有打勾，且 Tag 裡面裝的是 View 物件，就加入清單
+                if (node.Checked && node.Tag is View view)
+                {
+                    SelectedViews.Add(view);
+                }
+
+                // 如果還有子節點，繼續往下層找
+                if (node.Nodes.Count > 0)
+                {
+                    CollectSelectedViews(node.Nodes);
+                }
+            }
         }
 
         private void BtnCancel_Click(object sender, EventArgs e)

@@ -18,9 +18,9 @@ namespace Sinotech.CSDSEM
             // 加入 CheckedListBox
             foreach (var proj in projects)
             {
-                // 建議預設把主模型打勾，體貼使用者
+                // 如果要預設把主模型打勾，checkedListBox1.Items.Add(proj, isChecked);
                 bool isChecked = proj.IsMainModel;
-                checkedListBox1.Items.Add(proj, isChecked);
+                checkedListBox1.Items.Add(proj, false);
             }
 
             CenterToParent();

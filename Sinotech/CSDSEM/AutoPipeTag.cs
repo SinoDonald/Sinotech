@@ -127,6 +127,24 @@ namespace Sinotech.CSDSEM
                                 // 開始針對每個勾選的視圖進行處理
                                 foreach (View targetView in targetViews)
                                 {
+                                    // =========================================================
+                                    // 【新增：計算這張視圖的合理 Z 軸高程範圍】
+                                    // =========================================================
+                                    double viewElevation = 0.0;
+                                    if (targetView.GenLevel != null)
+                                    {
+                                        viewElevation = targetView.GenLevel.Elevation;
+                                    }
+                                    else if (targetView.Origin != null)
+                                    {
+                                        viewElevation = targetView.Origin.Z;
+                                    }
+
+                                    // 定義管線允許出現的 Z 軸上下限 (以英呎為單位，Revit 內部單位)
+                                    // 假設允許：樓板底下 4 英呎 (約 -1.2m) 到 樓板上方 12 英呎 (約 +3.6m)
+                                    double validZ_Min = viewElevation - 4.0;
+                                    double validZ_Max = viewElevation + 12.0;
+
                                     // 1. 防重複機制：收集這個視圖中「已經存在的標籤」
                                     HashSet<string> alreadyTaggedSignatures = new HashSet<string>();
                                     FilteredElementCollector existingTags = new FilteredElementCollector(doc, targetView.Id)
@@ -166,7 +184,7 @@ namespace Sinotech.CSDSEM
                                         }
                                     }
 
-                                    // B. 收集連結模型中的管線 (使用空間過濾器粗篩，再精細檢查)
+                                    // B. 收集連結模型中的管線 (使用空間過濾器)
                                     BoundingBoxXYZ viewBBox = targetView.CropBox;
                                     foreach (ProjectItem linkedProj in form.SelectedProjects.Where(p => !p.IsMainModel))
                                     {
@@ -174,22 +192,20 @@ namespace Sinotech.CSDSEM
                                         Transform invTransform = linkedProj.LinkInstance.GetTotalTransform().Inverse;
                                         Outline linkOutline = GetTransformedOutline(viewBBox, invTransform);
 
-                                        // 建立空間過濾器 (粗篩)
+                                        // 建立空間過濾器 (精準抓取視圖範圍內的管線)
                                         BoundingBoxIntersectsFilter bboxFilter = new BoundingBoxIntersectsFilter(linkOutline);
 
                                         FilteredElementCollector linkedMepCollector = new FilteredElementCollector(linkedProj.Doc)
                                             .WherePasses(multiFilter)
-                                            .WherePasses(bboxFilter) // <--- 這行是加速千萬倍的關鍵
+                                            .WherePasses(bboxFilter) // 空間過濾已經過濾掉視圖外的管線
                                             .WhereElementIsNotElementType();
 
                                         foreach (Element elem in linkedMepCollector)
                                         {
-                                            // 精細檢查：確保該元件在該視圖中可見 (現在只檢查幾十個，而不是幾萬個)
-                                            BoundingBoxXYZ bboxInView = elem.get_BoundingBox(targetView);
-                                            if (bboxInView != null)
-                                            {
-                                                validMepInThisView.Add(new TargetMepElement { MepElement = elem, SourceProject = linkedProj });
-                                            }
+                                            // 【修正致命錯誤】
+                                            // Revit API 中，連結元件呼叫 elem.get_BoundingBox(主模型視圖) 會永遠回傳 null。
+                                            // 既然 bboxFilter 已經確認它在視圖的三維空間範圍內，我們就直接將它加入清單！
+                                            validMepInThisView.Add(new TargetMepElement { MepElement = elem, SourceProject = linkedProj });
                                         }
                                     }
 
@@ -233,20 +249,38 @@ namespace Sinotech.CSDSEM
 
                                         if (midPoint == null) continue;
 
-                                        IndependentTag newTag = IndependentTag.Create(
-                                            doc,
-                                            targetView.Id,
-                                            pipeRef,
-                                            true, // 不加引線 (addLeader = false) -> 注意: true 代表加引線
-                                            TagMode.TM_ADDBY_CATEGORY,
-                                            TagOrientation.Horizontal,
-                                            midPoint
-                                        );
-
-                                        if (newTag != null)
+                                        // =========================================================
+                                        // 【最關鍵的防線：Z 軸樓層嚴格過濾】
+                                        // 如果管線的中心點 Z 軸，不在這張平面圖的合理高度內，直接跳過！
+                                        // 這樣就絕對不會發生「月台層」去標到「穿堂層」的管線了！
+                                        // =========================================================
+                                        if (midPoint.Z < validZ_Min || midPoint.Z > validZ_Max)
                                         {
-                                            newTag.ChangeTypeId(targetSymbol.Id);
-                                            newTagCounts++;
+                                            continue;
+                                        }
+
+                                        // 【保留 try-catch 作為最後防線】
+                                        try
+                                        {
+                                            IndependentTag newTag = IndependentTag.Create(
+                                                doc,
+                                                targetView.Id,
+                                                pipeRef,
+                                                true,
+                                                TagMode.TM_ADDBY_CATEGORY,
+                                                TagOrientation.Horizontal,
+                                                midPoint
+                                            );
+
+                                            if (newTag != null)
+                                            {
+                                                newTag.ChangeTypeId(targetSymbol.Id);
+                                                newTagCounts++;
+                                            }
+                                        }
+                                        catch (Autodesk.Revit.Exceptions.ArgumentException)
+                                        {
+                                            // 如果管線高度對了，但剛好被其他元件擋住或隱藏，就在這裡被過濾
                                         }
                                     }
                                 }
@@ -255,7 +289,10 @@ namespace Sinotech.CSDSEM
                             }
                             DateTime timeEnd = DateTime.Now;
                             TimeSpan totalTime = timeEnd - timeStart;
-                            TaskDialog.Show("Revit", $"已產生 {newTagCounts} 個管線標籤！\n\n耗時：{totalTime.Minutes} 分 {totalTime.Seconds} 秒。");
+                            if (newTagCounts > 0)
+                            {
+                                TaskDialog.Show("Revit", $"已產生 {newTagCounts} 個管線標籤！\n\n耗時：{totalTime.Minutes} 分 {totalTime.Seconds} 秒。");
+                            }
                         }
                     }
 
@@ -296,39 +333,45 @@ namespace Sinotech.CSDSEM
         }
 
         /// <summary>
-        /// 【新增】計算轉換座標後的包圍盒 (Outline)，用於連結模型空間粗篩
+        /// 計算轉換座標後的包圍盒 (Outline)，用於連結模型空間粗篩
         /// </summary>
-        private Outline GetTransformedOutline(BoundingBoxXYZ bbox, Transform transform)
+        private Outline GetTransformedOutline(BoundingBoxXYZ viewBBox, Transform hostToLinkTransform)
         {
+            Transform viewToHostTransform = viewBBox.Transform;
+
             XYZ[] corners = new XYZ[8];
-            corners[0] = new XYZ(bbox.Min.X, bbox.Min.Y, bbox.Min.Z);
-            corners[1] = new XYZ(bbox.Max.X, bbox.Min.Y, bbox.Min.Z);
-            corners[2] = new XYZ(bbox.Min.X, bbox.Max.Y, bbox.Min.Z);
-            corners[3] = new XYZ(bbox.Max.X, bbox.Max.Y, bbox.Min.Z);
-            corners[4] = new XYZ(bbox.Min.X, bbox.Min.Y, bbox.Max.Z);
-            corners[5] = new XYZ(bbox.Max.X, bbox.Min.Y, bbox.Max.Z);
-            corners[6] = new XYZ(bbox.Min.X, bbox.Max.Y, bbox.Max.Z);
-            corners[7] = new XYZ(bbox.Max.X, bbox.Max.Y, bbox.Max.Z);
+            corners[0] = new XYZ(viewBBox.Min.X, viewBBox.Min.Y, viewBBox.Min.Z);
+            corners[1] = new XYZ(viewBBox.Max.X, viewBBox.Min.Y, viewBBox.Min.Z);
+            corners[2] = new XYZ(viewBBox.Min.X, viewBBox.Max.Y, viewBBox.Min.Z);
+            corners[3] = new XYZ(viewBBox.Max.X, viewBBox.Max.Y, viewBBox.Min.Z);
+            corners[4] = new XYZ(viewBBox.Min.X, viewBBox.Min.Y, viewBBox.Max.Z);
+            corners[5] = new XYZ(viewBBox.Max.X, viewBBox.Min.Y, viewBBox.Max.Z);
+            corners[6] = new XYZ(viewBBox.Min.X, viewBBox.Max.Y, viewBBox.Max.Z);
+            corners[7] = new XYZ(viewBBox.Max.X, viewBBox.Max.Y, viewBBox.Max.Z);
 
             double minX = double.MaxValue, minY = double.MaxValue, minZ = double.MaxValue;
             double maxX = double.MinValue, maxY = double.MinValue, maxZ = double.MinValue;
 
             foreach (XYZ corner in corners)
             {
-                XYZ pt = transform.OfPoint(corner);
-                if (pt.X < minX) minX = pt.X;
-                if (pt.Y < minY) minY = pt.Y;
-                if (pt.Z < minZ) minZ = pt.Z;
-                if (pt.X > maxX) maxX = pt.X;
-                if (pt.Y > maxY) maxY = pt.Y;
-                if (pt.Z > maxZ) maxZ = pt.Z;
+                XYZ worldPt = viewToHostTransform.OfPoint(corner);
+                XYZ linkPt = hostToLinkTransform.OfPoint(worldPt);
+
+                if (linkPt.X < minX) minX = linkPt.X;
+                if (linkPt.Y < minY) minY = linkPt.Y;
+                if (linkPt.Z < minZ) minZ = linkPt.Z;
+                if (linkPt.X > maxX) maxX = linkPt.X;
+                if (linkPt.Y > maxY) maxY = linkPt.Y;
+                if (linkPt.Z > maxZ) maxZ = linkPt.Z;
             }
 
-            // 【防呆設計】給予 1.0 英呎的容差值，避免 2D 平面圖的 Z 軸厚度為 0 導致 API 報錯
-            double buffer = 1.0;
+            // 【關鍵優化】：平面圖的 CropBox 在 Z 軸的厚度通常極小
+            double bufferXY = 5.0;   // X/Y 容差 5 英呎
+            double bufferZ = 15.0;   // Z 容差縮小為 15 英呎 (涵蓋一般單層樓高即可)
+
             return new Outline(
-                new XYZ(minX - buffer, minY - buffer, minZ - buffer),
-                new XYZ(maxX + buffer, maxY + buffer, maxZ + buffer)
+                new XYZ(minX - bufferXY, minY - bufferXY, minZ - bufferZ),
+                new XYZ(maxX + bufferXY, maxY + bufferXY, maxZ + bufferZ)
             );
         }
     }
