@@ -15,35 +15,53 @@ namespace Sinotech.CSDSEM
         // 用來存放使用者最後勾選的視圖
         public List<View> SelectedViews { get; private set; }
 
-        // 建構子：接收已經分好群的視圖字典
-        public ViewSelectionForm(Dictionary<string, List<View>> groupedViews)
+        // 建構子：接收三層架構的視圖字典
+        public ViewSelectionForm(Dictionary<string, Dictionary<string, List<View>>> groupedViews)
         {
             InitializeComponent();
             SelectedViews = new List<View>();
             PopulateTreeView(groupedViews);
         }
 
-        // 將傳入的資料長成樹狀結構
-        private void PopulateTreeView(Dictionary<string, List<View>> groupedViews)
+        // 將傳入的資料長成三層樹狀結構
+        private void PopulateTreeView(Dictionary<string, Dictionary<string, List<View>>> groupedViews)
         {
             treeView1.Nodes.Clear();
 
-            foreach (var group in groupedViews)
+            // 1. 遍歷第一層 (例如："???", "Key Plan", "出圖")
+            foreach (var topGroup in groupedViews)
             {
-                // 建立母節點 (例如："樓板平面圖", "結構平面")
-                TreeNode parentNode = new TreeNode(group.Key);
-                parentNode.Tag = "Group"; // 做個記號表示它是母節點
+                TreeNode topNode = new TreeNode(topGroup.Key);
+                topNode.Tag = "TopGroup"; // 標記為第一層
 
-                // 建立子節點 (實際的視圖)
-                foreach (View view in group.Value)
+                // 2. 遍歷第二層 (例如："樓板平面圖", "結構平面")
+                foreach (var subGroup in topGroup.Value)
                 {
-                    TreeNode childNode = new TreeNode(view.Name);
-                    childNode.Tag = view; // 【關鍵】把 Revit 的 View 物件藏在 Tag 裡面，後續才能拿出來用
-                    parentNode.Nodes.Add(childNode);
+                    TreeNode subNode = new TreeNode(subGroup.Key);
+                    subNode.Tag = "SubGroup"; // 標記為第二層
+
+                    // 3. 遍歷第三層 (實際的視圖)
+                    foreach (View view in subGroup.Value)
+                    {
+                        TreeNode childNode = new TreeNode(view.Name);
+                        childNode.Tag = view; // 把 Revit View 物件藏在 Tag 裡
+                        subNode.Nodes.Add(childNode);
+                    }
+
+                    // 如果這個第二層分類底下有視圖，才把它加到第一層底下
+                    if (subNode.Nodes.Count > 0)
+                    {
+                        topNode.Nodes.Add(subNode);
+                    }
                 }
 
-                treeView1.Nodes.Add(parentNode);
+                // 如果這個第一層分類底下有內容，才把它加到 TreeView
+                if (topNode.Nodes.Count > 0)
+                {
+                    treeView1.Nodes.Add(topNode);
+                }
             }
+
             treeView1.ExpandAll(); // 預設展開所有節點
         }
         /// <summary>

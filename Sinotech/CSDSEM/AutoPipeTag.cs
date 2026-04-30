@@ -21,253 +21,241 @@ namespace Sinotech.CSDSEM
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
 
-            // 建立一個清單來裝所有可選的專案
             List<ProjectItem> availableProjects = new List<ProjectItem>();
-
-            // 1. 先把【主模型】加進去
             availableProjects.Add(new ProjectItem(doc));
 
-            // 2. 找出並把【連結模型】加進去
             FilteredElementCollector linkCollector = new FilteredElementCollector(doc)
                 .OfClass(typeof(RevitLinkInstance));
 
             foreach (RevitLinkInstance linkInst in linkCollector.Cast<RevitLinkInstance>())
             {
                 Document linkedDoc = linkInst.GetLinkDocument();
-                if (linkedDoc != null) // 確保連結檔已被載入
+                if (linkedDoc != null)
                 {
                     availableProjects.Add(new ProjectItem(linkedDoc, linkInst));
                 }
             }
 
-            // 3. 呼叫 UI 介面
             using (LinkSelectionForm form = new LinkSelectionForm(availableProjects))
             {
                 if (form.ShowDialog() == DialogResult.OK)
                 {
-                    // 把 List<Pipe> 換成我們新寫好的 TargetMepElement 清單
-                    List<TargetMepElement> allMepElements = new List<TargetMepElement>();
-
-                    int pipeCount = 0;
-                    int ductCount = 0;
-                    int cableTrayCount = 0;
-
-                    // 建立「多類別過濾器」，效能比用迴圈慢慢判斷好很多
-                    List<Type> mepTypes = new List<Type>
-                    {
-                        typeof(Pipe),
-                        typeof(Duct),
-                        typeof(CableTray)
-                    };
+                    // 【效能優化】刪除了原本在這裡全域撈取 allMepElements 的動作
+                    // 定義我們想要抓取的管道類型 (供後續使用)
+                    List<Type> mepTypes = new List<Type> { typeof(Pipe), typeof(Duct), typeof(CableTray) };
                     ElementMulticlassFilter multiFilter = new ElementMulticlassFilter(mepTypes);
 
-                    // 4. 根據使用者【勾選】的項目去撈管線
-                    foreach (ProjectItem selectedItem in form.SelectedProjects)
+                    // ==========================================
+                    // 步驟 A：收集主模型中的 2D 視圖，並依據專案瀏覽器架構分類與高程排序
+                    // ==========================================
+                    FilteredElementCollector viewCollector = new FilteredElementCollector(doc)
+                        .OfClass(typeof(ViewPlan))
+                        .WhereElementIsNotElementType();
+
+                    var browserTree = new Dictionary<string, Dictionary<string, List<View>>>();
+
+                    foreach (ViewPlan view in viewCollector.Cast<ViewPlan>())
                     {
-                        FilteredElementCollector collector = new FilteredElementCollector(selectedItem.Doc)
-                            .WherePasses(multiFilter)
-                            .WhereElementIsNotElementType(); // 排除類型(Type)，只抓實體(Instance)
+                        if (view.IsTemplate) continue;
 
-                        foreach (Element elem in collector)
+                        Parameter folderParam = view.LookupParameter("視圖分類");
+                        string topFolder = (folderParam != null && folderParam.HasValue) ? folderParam.AsString() : "???";
+
+                        string subFolder = "未分類平面圖";
+                        ElementId typeId = view.GetTypeId();
+                        if (typeId != ElementId.InvalidElementId)
                         {
-                            // 將元素與它所屬的專案綁定起來，存入清單
-                            allMepElements.Add(new TargetMepElement
-                            {
-                                MepElement = elem,
-                                SourceProject = selectedItem
-                            });
+                            Element viewType = doc.GetElement(typeId);
+                            if (viewType != null) subFolder = viewType.Name;
+                        }
 
-                            // 這裡示範如何【判斷是哪一種管道】並做分類統計
-                            // C# 7.0 以後的 Pattern Matching 寫法 (非常適合用在這裡)
-                            switch (elem)
-                            {
-                                case Pipe p:
-                                    pipeCount++;
-                                    break;
-                                case Duct d:
-                                    ductCount++;
-                                    break;
-                                case CableTray ct:
-                                    cableTrayCount++;
-                                    break;
-                            }
+                        if (!browserTree.ContainsKey(topFolder))
+                            browserTree[topFolder] = new Dictionary<string, List<View>>();
+
+                        if (!browserTree[topFolder].ContainsKey(subFolder))
+                            browserTree[topFolder][subFolder] = new List<View>();
+
+                        browserTree[topFolder][subFolder].Add(view);
+                    }
+
+                    var sortedGroupedViews = new Dictionary<string, Dictionary<string, List<View>>>();
+
+                    foreach (var topLevel in browserTree)
+                    {
+                        sortedGroupedViews[topLevel.Key] = new Dictionary<string, List<View>>();
+                        foreach (var subLevel in topLevel.Value)
+                        {
+                            var sortedViews = subLevel.Value
+                                .OrderBy(v => v.GenLevel != null ? v.GenLevel.Elevation : 0.0)
+                                .ThenBy(v => v.Name)
+                                .ToList();
+
+                            sortedGroupedViews[topLevel.Key][subLevel.Key] = sortedViews;
                         }
                     }
 
-                    // 假設你已經成功拿到了 allMepElements
-                    if (allMepElements.Count > 0)
+                    // ==========================================
+                    // 步驟 B & C：呼叫第二個視窗讓使用者選擇視圖，並執行標註
+                    // ==========================================
+                    using (ViewSelectionForm viewForm = new ViewSelectionForm(sortedGroupedViews))
                     {
-                        // ==========================================
-                        // 步驟 A：收集主模型中的 2D 視圖並分群
-                        // ==========================================
-
-                        // 只撈取 ViewPlan (包含樓板平面、結構平面、天花板平面)
-                        FilteredElementCollector viewCollector = new FilteredElementCollector(doc)
-                            .OfClass(typeof(ViewPlan))
-                            .WhereElementIsNotElementType();
-
-                        Dictionary<string, List<View>> groupedViews = new Dictionary<string, List<View>>();
-
-                        foreach (ViewPlan view in viewCollector.Cast<ViewPlan>())
+                        if (viewForm.ShowDialog() == DialogResult.OK)
                         {
-                            // 【防呆】排除視圖樣板 (View Template)，因為樣板不能放置標籤
-                            if (view.IsTemplate) continue;
+                            DateTime timeStart = DateTime.Now;
+                            int newTagCounts = 0;
+                            List<View> targetViews = viewForm.SelectedViews;
 
-                            // 取得視圖家族名稱 (例如："樓板平面圖", "結構平面")
-                            string groupName = "未分類平面圖";
-                            ElementId typeId = view.GetTypeId();
-                            if (typeId != ElementId.InvalidElementId)
+                            using (Transaction t = new Transaction(doc, "批次建立管線標籤"))
                             {
-                                Element viewType = doc.GetElement(typeId);
-                                if (viewType != null)
+                                t.Start();
+
+                                FamilySymbol pipeTagSym = GetTagSymbol(doc, BuiltInCategory.OST_PipeTags, "管底_尺寸+系統");
+                                FamilySymbol ductTagSym = GetTagSymbol(doc, BuiltInCategory.OST_DuctTags, "管道標籤_寬高_高程");
+                                FamilySymbol trayTagSym = GetTagSymbol(doc, BuiltInCategory.OST_CableTrayTags, "MRT_電纜托盤編號標籤");
+
+                                if (pipeTagSym != null && !pipeTagSym.IsActive) pipeTagSym.Activate();
+                                if (ductTagSym != null && !ductTagSym.IsActive) ductTagSym.Activate();
+                                if (trayTagSym != null && !trayTagSym.IsActive) trayTagSym.Activate();
+
+                                if (pipeTagSym == null && ductTagSym == null && trayTagSym == null)
                                 {
-                                    groupName = viewType.Name;
+                                    TaskDialog.Show("警告", "找不到指定的標籤族群，請確認是否已載入專案！");
+                                    t.RollBack();
+                                    return Result.Failed;
                                 }
-                            }
 
-                            // 將視圖加入對應的群組字典中
-                            if (!groupedViews.ContainsKey(groupName))
-                            {
-                                groupedViews[groupName] = new List<View>();
-                            }
-                            groupedViews[groupName].Add(view);
-                        }
-
-                        // ==========================================
-                        // 步驟 B：呼叫第二個視窗讓使用者選擇視圖
-                        // ==========================================
-                        using (ViewSelectionForm viewForm = new ViewSelectionForm(groupedViews))
-                        {
-                            if (viewForm.ShowDialog() == DialogResult.OK)
-                            {
-                                DateTime timeStart = DateTime.Now; // 計時開始 取得目前時間
-                                int newTagCounts = 0;
-
-                                // 拿到使用者勾選的視圖清單
-                                List<View> targetViews = viewForm.SelectedViews;
-
-                                // ==========================================
-                                // 步驟 C：開啟 Transaction 開始建立 IndependentTag
-                                // ==========================================
-                                using (Transaction t = new Transaction(doc, "批次建立管線標籤"))
+                                // 開始針對每個勾選的視圖進行處理
+                                foreach (View targetView in targetViews)
                                 {
-                                    t.Start();
+                                    // 1. 防重複機制：收集這個視圖中「已經存在的標籤」
+                                    HashSet<string> alreadyTaggedSignatures = new HashSet<string>();
+                                    FilteredElementCollector existingTags = new FilteredElementCollector(doc, targetView.Id)
+                                        .OfClass(typeof(IndependentTag));
 
-                                    // 1. 預先取得指定的標籤 FamilySymbol
-                                    FamilySymbol pipeTagSym = GetTagSymbol(doc, BuiltInCategory.OST_PipeTags, "管底_尺寸+系統");
-                                    FamilySymbol ductTagSym = GetTagSymbol(doc, BuiltInCategory.OST_DuctTags, "管道標籤_寬高_高程");
-                                    FamilySymbol trayTagSym = GetTagSymbol(doc, BuiltInCategory.OST_CableTrayTags, "MRT_電纜托盤編號標籤");
-
-                                    // 確認標籤有載入，並將其 Activate (Revit API 規定使用前需確保 Active)
-                                    if (pipeTagSym != null && !pipeTagSym.IsActive) pipeTagSym.Activate();
-                                    if (ductTagSym != null && !ductTagSym.IsActive) ductTagSym.Activate();
-                                    if (trayTagSym != null && !trayTagSym.IsActive) trayTagSym.Activate();
-
-                                    // 如果全部都沒載入，提示使用者
-                                    if (pipeTagSym == null && ductTagSym == null && trayTagSym == null)
+                                    foreach (IndependentTag tag in existingTags.Cast<IndependentTag>())
                                     {
-                                        TaskDialog.Show("警告", "找不到指定的標籤族群，請確認是否已載入專案！");
-                                        t.RollBack();
-                                        //return; // 或者 return Result.Failed; 取決於你的架構
+                                        try
+                                        {
+                                            foreach (Reference tagRef in tag.GetTaggedReferences())
+                                            {
+                                                if (tagRef.LinkedElementId != ElementId.InvalidElementId)
+                                                    alreadyTaggedSignatures.Add($"Linked_{tagRef.ElementId}_{tagRef.LinkedElementId}");
+                                                else
+                                                    alreadyTaggedSignatures.Add($"Local_{tagRef.ElementId}");
+                                            }
+                                        }
+                                        catch { /* 忽略孤立標籤 */ }
                                     }
 
-                                    // 2. 開始針對每個勾選的視圖進行處理
-                                    foreach (View targetView in targetViews)
+                                    // =========================================================
+                                    // 【核心優化：視圖專屬的極速管線收集器】
+                                    // =========================================================
+                                    List<TargetMepElement> validMepInThisView = new List<TargetMepElement>();
+
+                                    // A. 收集主模型中【確實可見】的管線 (C++ 層級過濾，極快)
+                                    ProjectItem mainProj = form.SelectedProjects.FirstOrDefault(p => p.IsMainModel);
+                                    if (mainProj != null)
                                     {
-                                        // 【關鍵優化】取得主模型在「該視圖」中『確實可見』的元件 ID 集合
-                                        HashSet<ElementId> visibleMainIds = new FilteredElementCollector(doc, targetView.Id)
-                                            .WhereElementIsNotElementType()
-                                            .ToElementIds()
-                                            .ToHashSet();
+                                        FilteredElementCollector mainCollector = new FilteredElementCollector(doc, targetView.Id)
+                                            .WherePasses(multiFilter)
+                                            .WhereElementIsNotElementType();
 
-                                        // 預先過濾出「這張視圖真正需要處理」的管線：
-                                        // 條件 1：它是連結模型的管線 (稍後再用 BoundingBox 判斷)
-                                        // 條件 2：它是主模型的管線，且確實存在於 visibleMainIds 中
-                                        List<TargetMepElement> validMepInThisView = allMepElements
-                                            .Where(mep => !mep.SourceProject.IsMainModel || visibleMainIds.Contains(mep.MepElement.Id))
-                                            .ToList();
-
-                                        // 如果這張視圖裡面「一根可見的目標管線都沒有」，就直接跳過，省下大把時間！
-                                        if (validMepInThisView.Count == 0) continue;
-                                        // =========================================================
-
-                                        // 注意這裡！把原本的 allMepElements 改成 validMepInThisView
-                                        foreach (TargetMepElement mepItem in validMepInThisView)
+                                        foreach (Element elem in mainCollector)
                                         {
-                                            Element elem = mepItem.MepElement;
-                                            FamilySymbol targetSymbol = null;
+                                            validMepInThisView.Add(new TargetMepElement { MepElement = elem, SourceProject = mainProj });
+                                        }
+                                    }
 
-                                            // 3. 判斷管線類型並對應標籤 (如果該類型的標籤沒載入就跳過)
-                                            if (elem is Pipe && pipeTagSym != null) targetSymbol = pipeTagSym;
-                                            else if (elem is Duct && ductTagSym != null) targetSymbol = ductTagSym;
-                                            else if (elem is CableTray && trayTagSym != null) targetSymbol = trayTagSym;
+                                    // B. 收集連結模型中的管線 (使用空間過濾器粗篩，再精細檢查)
+                                    BoundingBoxXYZ viewBBox = targetView.CropBox;
+                                    foreach (ProjectItem linkedProj in form.SelectedProjects.Where(p => !p.IsMainModel))
+                                    {
+                                        // 將視圖的 BoundingBox 轉換為連結模型的座標系，並取得外框 (Outline)
+                                        Transform invTransform = linkedProj.LinkInstance.GetTotalTransform().Inverse;
+                                        Outline linkOutline = GetTransformedOutline(viewBBox, invTransform);
 
-                                            if (targetSymbol == null) continue;
+                                        // 建立空間過濾器 (粗篩)
+                                        BoundingBoxIntersectsFilter bboxFilter = new BoundingBoxIntersectsFilter(linkOutline);
 
-                                            // 4. 視圖可見性判斷 (防呆機制)
-                                            if (mepItem.SourceProject.IsMainModel)
+                                        FilteredElementCollector linkedMepCollector = new FilteredElementCollector(linkedProj.Doc)
+                                            .WherePasses(multiFilter)
+                                            .WherePasses(bboxFilter) // <--- 這行是加速千萬倍的關鍵
+                                            .WhereElementIsNotElementType();
+
+                                        foreach (Element elem in linkedMepCollector)
+                                        {
+                                            // 精細檢查：確保該元件在該視圖中可見 (現在只檢查幾十個，而不是幾萬個)
+                                            BoundingBoxXYZ bboxInView = elem.get_BoundingBox(targetView);
+                                            if (bboxInView != null)
                                             {
-                                                // 主模型：如果不在可見清單內，直接跳過
-                                                if (!visibleMainIds.Contains(elem.Id)) continue;
-                                            }
-                                            else
-                                            {
-                                                // 連結模型：API 無法直接從視圖過濾連結元件，這裡用專屬該視圖的 BoundingBox 來當作輕量級檢查
-                                                BoundingBoxXYZ bboxInView = elem.get_BoundingBox(targetView);
-                                                if (bboxInView == null) continue; // 回傳 null 通常代表在視圖外或被關閉顯示
-                                            }
-
-                                            // 5. 計算放置點 (管線中點) 與 Reference
-                                            Reference pipeRef = null;
-                                            XYZ midPoint = null;
-
-                                            if (mepItem.SourceProject.IsMainModel)
-                                            {
-                                                pipeRef = new Reference(elem);
-                                                midPoint = GetCurveMidPoint(elem);
-                                            }
-                                            else
-                                            {
-                                                // 連結模型專屬處理
-                                                pipeRef = new Reference(elem).CreateLinkReference(mepItem.SourceProject.LinkInstance);
-
-                                                // 【超重要】連結模型的座標必須透過 Transform 轉換回主模型的實際位置
-                                                Transform linkTransform = mepItem.SourceProject.LinkInstance.GetTotalTransform();
-                                                XYZ localMidPoint = GetCurveMidPoint(elem);
-                                                if (localMidPoint != null)
-                                                {
-                                                    midPoint = linkTransform.OfPoint(localMidPoint);
-                                                }
-                                            }
-
-                                            if (midPoint == null) continue; // 安全機制：萬一抓不到中心點就跳過
-
-                                            // 6. 建立標籤
-                                            IndependentTag newTag = IndependentTag.Create(
-                                                doc,
-                                                targetView.Id,
-                                                pipeRef,
-                                                true, // 不加引線 (addLeader = false)
-                                                TagMode.TM_ADDBY_CATEGORY,
-                                                TagOrientation.Horizontal,
-                                                midPoint
-                                            );
-
-                                            // 7. 將剛建立的標籤替換成你指定的族群類型
-                                            if (newTag != null)
-                                            {
-                                                newTag.ChangeTypeId(targetSymbol.Id);
-                                                newTagCounts++;
+                                                validMepInThisView.Add(new TargetMepElement { MepElement = elem, SourceProject = linkedProj });
                                             }
                                         }
                                     }
 
-                                    t.Commit();
+                                    if (validMepInThisView.Count == 0) continue;
+
+                                    // =========================================================
+                                    // 執行標註
+                                    // =========================================================
+                                    foreach (TargetMepElement mepItem in validMepInThisView)
+                                    {
+                                        string currentSig = mepItem.SourceProject.IsMainModel
+                                            ? $"Local_{mepItem.MepElement.Id}"
+                                            : $"Linked_{mepItem.SourceProject.LinkInstance.Id}_{mepItem.MepElement.Id}";
+
+                                        if (alreadyTaggedSignatures.Contains(currentSig)) continue;
+
+                                        Element elem = mepItem.MepElement;
+                                        FamilySymbol targetSymbol = null;
+
+                                        if (elem is Pipe && pipeTagSym != null) targetSymbol = pipeTagSym;
+                                        else if (elem is Duct && ductTagSym != null) targetSymbol = ductTagSym;
+                                        else if (elem is CableTray && trayTagSym != null) targetSymbol = trayTagSym;
+
+                                        if (targetSymbol == null) continue;
+
+                                        Reference pipeRef = null;
+                                        XYZ midPoint = null;
+
+                                        if (mepItem.SourceProject.IsMainModel)
+                                        {
+                                            pipeRef = new Reference(elem);
+                                            midPoint = GetCurveMidPoint(elem);
+                                        }
+                                        else
+                                        {
+                                            pipeRef = new Reference(elem).CreateLinkReference(mepItem.SourceProject.LinkInstance);
+                                            Transform linkTransform = mepItem.SourceProject.LinkInstance.GetTotalTransform();
+                                            XYZ localMidPoint = GetCurveMidPoint(elem);
+                                            if (localMidPoint != null) midPoint = linkTransform.OfPoint(localMidPoint);
+                                        }
+
+                                        if (midPoint == null) continue;
+
+                                        IndependentTag newTag = IndependentTag.Create(
+                                            doc,
+                                            targetView.Id,
+                                            pipeRef,
+                                            true, // 不加引線 (addLeader = false) -> 注意: true 代表加引線
+                                            TagMode.TM_ADDBY_CATEGORY,
+                                            TagOrientation.Horizontal,
+                                            midPoint
+                                        );
+
+                                        if (newTag != null)
+                                        {
+                                            newTag.ChangeTypeId(targetSymbol.Id);
+                                            newTagCounts++;
+                                        }
+                                    }
                                 }
-                                DateTime timeEnd = DateTime.Now; // 計時結束 取得目前時間
-                                TimeSpan totalTime = timeEnd - timeStart;
-                                TaskDialog.Show("Revit", $"已產生 {newTagCounts} 個管線標籤！。\n\n" + "耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒。");
+
+                                t.Commit();
                             }
+                            DateTime timeEnd = DateTime.Now;
+                            TimeSpan totalTime = timeEnd - timeStart;
+                            TaskDialog.Show("Revit", $"已產生 {newTagCounts} 個管線標籤！\n\n耗時：{totalTime.Minutes} 分 {totalTime.Seconds} 秒。");
                         }
                     }
 
@@ -276,18 +264,18 @@ namespace Sinotech.CSDSEM
             }
 
             return Result.Cancelled;
-        }/// <summary>
-         /// 取得指定的標籤族群類型 (FamilySymbol)
-         /// </summary>
+        }
+
+        /// <summary>
+        /// 取得指定的標籤族群類型 (FamilySymbol)
+        /// </summary>
         private FamilySymbol GetTagSymbol(Document doc, BuiltInCategory tagCategory, string familyName)
         {
-            // 利用過濾器找出對應類別的所有標籤符號
             return new FilteredElementCollector(doc)
                 .OfClass(typeof(FamilySymbol))
                 .OfCategory(tagCategory)
                 .Cast<FamilySymbol>()
                 .FirstOrDefault(x => x.FamilyName == familyName || x.Name == familyName);
-            // 這裡同時比對 FamilyName 和 Name，避免使用者將族群名稱與類型名稱搞混
         }
 
         /// <summary>
@@ -295,38 +283,63 @@ namespace Sinotech.CSDSEM
         /// </summary>
         private XYZ GetCurveMidPoint(Element elem)
         {
-            // 大多數 MEP 直管都有 LocationCurve
             if (elem.Location is LocationCurve locCurve && locCurve.Curve != null)
             {
-                // 傳入 0.5 並且設為 true 代表取得曲線的正中間點 (Normalized)
                 return locCurve.Curve.Evaluate(0.5, true);
             }
-
-            // 如果因為某些原因抓不到曲線，退而求其次用 BoundingBox 取幾何中心
             BoundingBoxXYZ bbox = elem.get_BoundingBox(null);
             if (bbox != null)
             {
                 return (bbox.Min + bbox.Max) / 2.0;
             }
-
             return null;
+        }
+
+        /// <summary>
+        /// 【新增】計算轉換座標後的包圍盒 (Outline)，用於連結模型空間粗篩
+        /// </summary>
+        private Outline GetTransformedOutline(BoundingBoxXYZ bbox, Transform transform)
+        {
+            XYZ[] corners = new XYZ[8];
+            corners[0] = new XYZ(bbox.Min.X, bbox.Min.Y, bbox.Min.Z);
+            corners[1] = new XYZ(bbox.Max.X, bbox.Min.Y, bbox.Min.Z);
+            corners[2] = new XYZ(bbox.Min.X, bbox.Max.Y, bbox.Min.Z);
+            corners[3] = new XYZ(bbox.Max.X, bbox.Max.Y, bbox.Min.Z);
+            corners[4] = new XYZ(bbox.Min.X, bbox.Min.Y, bbox.Max.Z);
+            corners[5] = new XYZ(bbox.Max.X, bbox.Min.Y, bbox.Max.Z);
+            corners[6] = new XYZ(bbox.Min.X, bbox.Max.Y, bbox.Max.Z);
+            corners[7] = new XYZ(bbox.Max.X, bbox.Max.Y, bbox.Max.Z);
+
+            double minX = double.MaxValue, minY = double.MaxValue, minZ = double.MaxValue;
+            double maxX = double.MinValue, maxY = double.MinValue, maxZ = double.MinValue;
+
+            foreach (XYZ corner in corners)
+            {
+                XYZ pt = transform.OfPoint(corner);
+                if (pt.X < minX) minX = pt.X;
+                if (pt.Y < minY) minY = pt.Y;
+                if (pt.Z < minZ) minZ = pt.Z;
+                if (pt.X > maxX) maxX = pt.X;
+                if (pt.Y > maxY) maxY = pt.Y;
+                if (pt.Z > maxZ) maxZ = pt.Z;
+            }
+
+            // 【防呆設計】給予 1.0 英呎的容差值，避免 2D 平面圖的 Z 軸厚度為 0 導致 API 報錯
+            double buffer = 1.0;
+            return new Outline(
+                new XYZ(minX - buffer, minY - buffer, minZ - buffer),
+                new XYZ(maxX + buffer, maxY + buffer, maxZ + buffer)
+            );
         }
     }
 
-    /// <summary>
-    /// 裝載專案資料的類別，可支援主模型與連結模型
-    /// </summary>
     public class ProjectItem
     {
         public Document Doc { get; set; }
-
-        // 如果是主模型，這個值會是 null
         public RevitLinkInstance LinkInstance { get; set; }
-
         public string DisplayName { get; set; }
         public bool IsMainModel { get; set; }
 
-        // 給「主模型」用的建構子
         public ProjectItem(Document doc)
         {
             Doc = doc;
@@ -335,7 +348,6 @@ namespace Sinotech.CSDSEM
             DisplayName = $"[主模型] {doc.Title}";
         }
 
-        // 給「連結模型」用的建構子
         public ProjectItem(Document doc, RevitLinkInstance linkInstance)
         {
             Doc = doc;
@@ -346,18 +358,15 @@ namespace Sinotech.CSDSEM
 
         public override string ToString()
         {
-            return DisplayName; // 決定在 CheckedListBox 中顯示的文字
+            return DisplayName;
         }
     }
-    /// <summary>
-    /// 用來包裝撈到的 MEP 元素，以及它所屬的專案來源
-    /// </summary>
+
     public class TargetMepElement
     {
         public Element MepElement { get; set; }
         public ProjectItem SourceProject { get; set; }
 
-        // 輔助屬性：直接回傳它是哪種管
         public string CategoryName
         {
             get
