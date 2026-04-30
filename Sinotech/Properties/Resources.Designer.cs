@@ -133,6 +133,16 @@ namespace Sinotech.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
+        internal static System.Drawing.Bitmap 手動編號 {
+            get {
+                object obj = ResourceManager.GetObject("手動編號", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
         internal static System.Drawing.Bitmap 更新Excel {
             get {
                 object obj = ResourceManager.GetObject("更新Excel", resourceCulture);
@@ -196,6 +206,16 @@ namespace Sinotech.Properties {
         internal static System.Drawing.Bitmap 自動簽圖 {
             get {
                 object obj = ResourceManager.GetObject("自動簽圖", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
+        internal static System.Drawing.Bitmap 自動編號 {
+            get {
+                object obj = ResourceManager.GetObject("自動編號", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

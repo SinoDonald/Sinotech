@@ -84,10 +84,12 @@ namespace Sinotech
             }
             PushButton autoPipeOpenBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeOpen", "自動開口", addinAssmeblyPath, "Sinotech.CSDSEM.LinkOpening")) as PushButton;
             autoPipeOpenBtn.LargeImage = convertFromBitmap(Properties.Resources.自動開口);
+            PushButton autoNumberBtn = ribbonPanel.AddItem(new PushButtonData("AutoNumber", "自動編號", addinAssmeblyPath, "Sinotech.CSDSEM.AutoNumber")) as PushButton;
+            autoNumberBtn.LargeImage = convertFromBitmap(Properties.Resources.自動編號);
+            PushButton manualPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("ManualPipeTag", "手動編號", addinAssmeblyPath, "Sinotech.CSDSEM.ManualPipeTag")) as PushButton;
+            manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動編號);
             PushButton autoPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeTag", "自動標籤", addinAssmeblyPath, "Sinotech.CSDSEM.AutoPipeTag")) as PushButton;
             autoPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.自動標籤);
-            PushButton manualPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("ManualPipeTag", "手動標籤", addinAssmeblyPath, "Sinotech.CSDSEM.ManualPipeTag")) as PushButton;
-            manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動標籤);
             PushButton PCCESBtn = ribbonPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", addinAssmeblyPath, "Sinotech.CSDSEM.OutPutPCCES")) as PushButton;
             PCCESBtn.LargeImage = convertFromBitmap(Properties.Resources.PCCES);
 
