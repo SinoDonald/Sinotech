@@ -200,6 +200,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CSDSEM\AutoNumber.cs" />
+    <Compile Include="CSDSEM\AutoNumberForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CSDSEM\AutoNumberForm.Designer.cs">
+      <DependentUpon>AutoNumberForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CSDSEM\ChooseMultiViewPlansForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CSDSEM\ChooseMultiViewPlansForm.Designer.cs">
+      <DependentUpon>ChooseMultiViewPlansForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="CSDSEM\LinkSelectionForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -352,6 +364,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CSDSEM\AutoNumberForm.resx">
+      <DependentUpon>AutoNumberForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CSDSEM\ChooseMultiViewPlansForm.resx">
+      <DependentUpon>ChooseMultiViewPlansForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CSDSEM\LinkSelectionForm.resx">
       <DependentUpon>LinkSelectionForm.cs</DependentUpon>
     </EmbeddedResource>
