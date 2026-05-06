@@ -1,12 +1,12 @@
 ﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI; // 【新增】為了呼叫 TaskDialog 提醒視窗
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 
-namespace AutoSign.AutoNumber
+namespace Sinotech.CSDSEM
 {
     public partial class AutoNumberForm : System.Windows.Forms.Form
     {

@@ -211,9 +211,27 @@
       <DependentUpon>ColNamesForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CSDSEM\AutoNumber.cs" />
+    <Compile Include="CSDSEM\AutoNumberForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CSDSEM\AutoNumberForm.Designer.cs">
+      <DependentUpon>AutoNumberForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="CSDSEM\AutoPipeTag.cs" />
+    <Compile Include="CSDSEM\ChooseMultiViewPlansForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CSDSEM\ChooseMultiViewPlansForm.Designer.cs">
+      <DependentUpon>ChooseMultiViewPlansForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="CSDSEM\FindLevel.cs" />
     <Compile Include="CSDSEM\LinkOpening.cs" />
+    <Compile Include="CSDSEM\LinkSelectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CSDSEM\LinkSelectionForm.Designer.cs">
+      <DependentUpon>LinkSelectionForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="CSDSEM\ManualPipeTag.cs" />
     <Compile Include="CSDSEM\ManualTagForm.cs">
       <SubType>Form</SubType>
@@ -342,6 +360,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CreateModel\colNamesForm.resx">
       <DependentUpon>ColNamesForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CSDSEM\AutoNumberForm.resx">
+      <DependentUpon>AutoNumberForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CSDSEM\ChooseMultiViewPlansForm.resx">
+      <DependentUpon>ChooseMultiViewPlansForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CSDSEM\LinkSelectionForm.resx">
+      <DependentUpon>LinkSelectionForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CSDSEM\ManualTagForm.resx">
       <DependentUpon>ManualTagForm.cs</DependentUpon>

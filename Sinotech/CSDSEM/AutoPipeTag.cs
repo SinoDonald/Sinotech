@@ -4,12 +4,11 @@ using Autodesk.Revit.DB.Electrical;
 using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.UI;
-using AutoSign.AutoNumber;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using View = Autodesk.Revit.DB.View;
+using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 
 namespace Sinotech.CSDSEM
 {
@@ -88,11 +87,11 @@ namespace Sinotech.CSDSEM
                                             double validZ_Min = exactZMin - 0.5;
                                             double validZ_Max = exactZMax + 0.5;
 
-                                            // 防重複機制：元件ID紀錄 (避免重複標註同一根管)
-                                            HashSet<string> alreadyTaggedSignatures = new HashSet<string>();
-
-                                            // 【新增】內容防重複機制：記錄視圖中已存在的「管線內容特徵值」
-                                            HashSet<string> taggedContentSignatures = new HashSet<string>();
+                                            // =========================================================
+                                            // 【系統級防重複機制】：記錄視圖中已標註過的「系統 ID」
+                                            // =========================================================
+                                            HashSet<string> alreadyTaggedSignatures = new HashSet<string>(); // 紀錄實體 ID
+                                            HashSet<string> taggedSystemSignatures = new HashSet<string>();  // 紀錄系統 ID
 
                                             FilteredElementCollector existingTags = new FilteredElementCollector(doc, checkViewPlan.Id)
                                                 .OfClass(typeof(IndependentTag));
@@ -101,24 +100,30 @@ namespace Sinotech.CSDSEM
                                             {
                                                 try
                                                 {
-                                                    // 判斷是否為「管底_尺寸+系統」標籤
-                                                    bool isPipeTag = false;
+                                                    bool isTargetTag = false;
                                                     FamilySymbol sym = doc.GetElement(tag.GetTypeId()) as FamilySymbol;
-                                                    if (sym != null && (sym.FamilyName.Contains("管底_尺寸") || sym.Name.Contains("管底_尺寸")))
+                                                    if (sym != null && (
+                                                        sym.FamilyName.Contains("管底_尺寸") || sym.Name.Contains("管底_尺寸") ||
+                                                        sym.FamilyName.Contains("管道標籤_寬高") || sym.Name.Contains("管道標籤_寬高") ||
+                                                        sym.FamilyName.Contains("電纜托盤") || sym.Name.Contains("電纜托盤")
+                                                    ))
                                                     {
-                                                        isPipeTag = true;
+                                                        isTargetTag = true;
                                                     }
 
+                                                    //Reference tagRef = tag.GetTaggedReference(); // 2020
                                                     foreach (Reference tagRef in tag.GetTaggedReferences())
                                                     {
                                                         Element taggedElem = null;
-                                                        if (tagRef.LinkedElementId != ElementId.InvalidElementId)
+                                                        bool isLinked = tagRef.LinkedElementId != ElementId.InvalidElementId;
+                                                        ElementId linkInstId = isLinked ? tagRef.ElementId : ElementId.InvalidElementId;
+
+                                                        if (isLinked)
                                                         {
                                                             alreadyTaggedSignatures.Add($"Linked_{tagRef.ElementId}_{tagRef.LinkedElementId}");
 
-                                                            // 取得連結模型中的實體元件，用於萃取特徵值
                                                             RevitLinkInstance linkInst = doc.GetElement(tagRef.ElementId) as RevitLinkInstance;
-                                                            if (linkInst != null && isPipeTag)
+                                                            if (linkInst != null && isTargetTag)
                                                             {
                                                                 taggedElem = linkInst.GetLinkDocument()?.GetElement(tagRef.LinkedElementId);
                                                             }
@@ -126,14 +131,14 @@ namespace Sinotech.CSDSEM
                                                         else
                                                         {
                                                             alreadyTaggedSignatures.Add($"Local_{tagRef.ElementId}");
-                                                            if (isPipeTag) taggedElem = doc.GetElement(tagRef.ElementId);
+                                                            if (isTargetTag) taggedElem = doc.GetElement(tagRef.ElementId);
                                                         }
 
-                                                        // 【新增】如果畫面上已經有這個管線的標籤，記錄它的「內容特徵值」
-                                                        if (taggedElem != null && taggedElem is Pipe)
+                                                        // 將畫面上已經標好的管線，萃取出它的「系統 ID」並記錄
+                                                        if (taggedElem != null)
                                                         {
-                                                            string contentSig = GetPipeContentSignature(taggedElem);
-                                                            if (contentSig != null) taggedContentSignatures.Add(contentSig);
+                                                            string sysSig = GetSystemSignature(taggedElem, isLinked, linkInstId);
+                                                            if (sysSig != null) taggedSystemSignatures.Add(sysSig);
                                                         }
                                                     }
                                                 }
@@ -230,17 +235,16 @@ namespace Sinotech.CSDSEM
                                                 XYZ tagPlacementPoint = new XYZ(trueMid.X, trueMid.Y, tagZ);
 
                                                 // =========================================================
-                                                // 【關鍵新增：同視圖內相同內容標籤過濾】
+                                                // 【系統級判斷】：同一個系統在同一個視圖只會打一個標籤
                                                 // =========================================================
-                                                string contentSig = null;
-                                                if (elem is Pipe && targetSymbol.Id == pipeTagSym?.Id)
+                                                bool isLinked = !mepItem.SourceProject.IsMainModel;
+                                                ElementId linkInstId = isLinked ? mepItem.SourceProject.LinkInstance.Id : ElementId.InvalidElementId;
+
+                                                string sysSig = GetSystemSignature(elem, isLinked, linkInstId);
+                                                if (sysSig != null && taggedSystemSignatures.Contains(sysSig))
                                                 {
-                                                    contentSig = GetPipeContentSignature(elem);
-                                                    if (contentSig != null && taggedContentSignatures.Contains(contentSig))
-                                                    {
-                                                        // 若這個視圖已經有相同 [管徑+系統+高程] 的管線被標註過，則跳過此管！
-                                                        continue;
-                                                    }
+                                                    // 若這個視圖已經有這個「系統 ID」的標籤，則跳過這根管線！
+                                                    continue;
                                                 }
 
                                                 try
@@ -260,11 +264,11 @@ namespace Sinotech.CSDSEM
                                                         newTag.ChangeTypeId(targetSymbol.Id);
                                                         newTagCounts++;
 
-                                                        // 【新增】標籤建立成功後，將該管線的特徵值存入 HashSet
-                                                        // 這樣視圖中下一根平行且內容一模一樣的水管，就會在上方被過濾掉
-                                                        if (contentSig != null)
+                                                        // 標籤建立成功後，把這套系統的 ID 註冊進去
+                                                        // 這樣同系統的下一根管子就會在上方被過濾掉
+                                                        if (sysSig != null)
                                                         {
-                                                            taggedContentSignatures.Add(contentSig);
+                                                            taggedSystemSignatures.Add(sysSig);
                                                         }
                                                     }
                                                 }
@@ -296,40 +300,36 @@ namespace Sinotech.CSDSEM
 
             return Result.Cancelled;
         }
-
         /// <summary>
-        /// 【新增輔助方法】取得管線的「內容特徵值」，用於精準去重複
+        /// 【全新系統級去重複方法】取得管線的「系統專屬編號 (MEPSystem ID)」
         /// </summary>
-        private string GetPipeContentSignature(Element elem)
+        private string GetSystemSignature(Element elem, bool isLinked, ElementId linkInstanceId)
         {
-            if (!(elem is Pipe)) return null;
+            if (elem == null) return null;
 
-            // 1. 取得管徑 (Size)
-            string size = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.AsValueString() ?? "";
+            // 區分是主模型還是連結模型，避免不同連結檔剛好有相同的系統 ID
+            string prefix = isLinked ? $"Linked_{linkInstanceId.Value}_" : "Local_";
 
-            // 2. 取得系統縮寫 (System Abbreviation)
-            // 【修正】Revit API 正確的系統縮寫參數為 RBS_SYSTEM_ABBREVIATION_PARAM
-            string system = elem.get_Parameter(BuiltInParameter.RBS_SYSTEM_ABBREVIATION_PARAM)?.AsString() ?? "";
-            if (string.IsNullOrEmpty(system)) // 如果沒填縮寫，退而求其次抓系統名稱
+            // 1. 處理水管與風管 (透過底層繼承的 MEPCurve 取得 MEPSystem)
+            if (elem is MEPCurve mepCurve && mepCurve.MEPSystem != null)
             {
-                ElementId sysId = elem.get_Parameter(BuiltInParameter.RBS_PIPING_SYSTEM_TYPE_PARAM)?.AsElementId();
-                if (sysId != null && sysId != ElementId.InvalidElementId)
-                {
-                    Element sysElem = elem.Document.GetElement(sysId);
-                    if (sysElem != null) system = sysElem.Name;
-                }
+                // 只要是同一個系統，這個 ID 絕對一模一樣
+                return prefix + "System_" + mepCurve.MEPSystem.Id.Value.ToString();
             }
 
-            // 3. 取得管底高程 (Bottom Elevation)
-            // 【修正】Revit API 正確的管底高程參數為 RBS_PIPE_BOTTOM_ELEVATION
-            double bottomElev = 0;
-            Parameter bopParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_BOTTOM_ELEVATION);
-            if (bopParam != null) bottomElev = bopParam.AsDouble();
+            // 2. 處理電纜架 (因 Revit 底層設計，電纜架沒有 MEPSystem，以使用者自訂編號視為系統)
+            if (elem is CableTray)
+            {
+                string cableNum = elem.LookupParameter("電纜編號")?.AsString() ??
+                                  elem.get_Parameter(BuiltInParameter.ALL_MODEL_MARK)?.AsString() ??
+                                  elem.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ??
+                                  elem.Id.Value.ToString(); // 孤立無編號則視為獨立系統
+                return prefix + "TraySystem_" + cableNum;
+            }
 
-            // 結合成唯一簽名。高程取小數點後三位(精確到約 0.3mm)，可避免 Revit 浮點數些微誤差導致的誤判。
-            return $"PipeContent_{size}_{system}_{Math.Round(bottomElev, 3)}";
+            // 3. 防呆：畫了管線但還沒有分配系統的孤立物件
+            return prefix + "Isolated_" + elem.Id.Value.ToString();
         }
-
         public static List<ViewPlan> GetAutoNumberViewPlans(Document doc, string viewFamilyTypeName)
         {
             string familyName = viewFamilyTypeName.Split(' ')[0];
@@ -372,9 +372,10 @@ namespace Sinotech.CSDSEM
             if (levelId == ElementId.InvalidElementId)
                 return plane == PlanViewPlane.TopClipPlane ? defaultHigh : defaultLow;
 
-            if (levelId.IntegerValue < 0)
+            if (levelId.Value < 0)
             {
-                int specialId = levelId.IntegerValue;
+                //int specialId = levelId.IntegerValue; // 2020
+                long specialId = levelId.Value; // 2024
                 if (specialId == -5) return plane == PlanViewPlane.TopClipPlane ? defaultHigh : defaultLow; // Unlimited
                 if (specialId == -2) return (view.GenLevel != null ? view.GenLevel.Elevation : 0) + offset; // Current Level
                 if (specialId == -4) return defaultHigh; // Level Above

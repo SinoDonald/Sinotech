@@ -1,5 +1,4 @@
-﻿
-namespace AutoSign.AutoNumber
+﻿namespace Sinotech.CSDSEM
 {
     partial class ChooseMultiViewPlansForm
     {

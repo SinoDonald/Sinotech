@@ -55,6 +55,15 @@
     <Compile Update="CreateModel\ColNamesForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="CSDSEM\AutoNumberForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="CSDSEM\ChooseMultiViewPlansForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="CSDSEM\LinkSelectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="CSDSEM\ManualTagForm.cs">
       <SubType>Form</SubType>
     </Compile>

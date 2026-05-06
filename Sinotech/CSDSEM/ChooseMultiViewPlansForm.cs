@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace AutoSign.AutoNumber
+namespace Sinotech.CSDSEM
 {
     public partial class ChooseMultiViewPlansForm : System.Windows.Forms.Form
     {
