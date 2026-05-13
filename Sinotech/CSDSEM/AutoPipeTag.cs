@@ -134,7 +134,6 @@ namespace Sinotech.CSDSEM
                                                             if (isTargetTag) taggedElem = doc.GetElement(tagRef.ElementId);
                                                         }
 
-                                                        // 將畫面上已經標好的管線，萃取出它的「系統 ID」並記錄
                                                         if (taggedElem != null)
                                                         {
                                                             string sysSig = GetSystemSignature(taggedElem, isLinked, linkInstId);
@@ -214,6 +213,39 @@ namespace Sinotech.CSDSEM
 
                                                 if (pt0 == null || pt1 == null) continue;
 
+                                                // =========================================================
+                                                // 【新增過濾條件：不進行標籤的物件】
+                                                // =========================================================
+
+                                                // 條件一：立管不標籤 (起終點的 X, Y 座標幾乎相同，給予 0.01 呎約 3mm 容差)
+                                                if (Math.Abs(pt1.X - pt0.X) < 0.01 && Math.Abs(pt1.Y - pt0.Y) < 0.01)
+                                                {
+                                                    continue;
+                                                }
+
+                                                // 條件二：長度低於 1M 不標籤 (將英呎轉換為公尺)
+                                                double lengthMeter = pt0.DistanceTo(pt1) * 0.3048;
+                                                if (lengthMeter < 1.0)
+                                                {
+                                                    continue;
+                                                }
+
+                                                // 條件三：50mm(不含)以下的管徑不標籤 (僅針對水管 Pipe)
+                                                if (elem is Pipe)
+                                                {
+                                                    Parameter diaParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
+                                                    if (diaParam != null && diaParam.HasValue)
+                                                    {
+                                                        double diaMm = diaParam.AsDouble() * 304.8;
+                                                        // 50mm(不含)以下代表小於50mm。加入浮點數容差(49.9)以防止將精確的 50mm 誤濾掉
+                                                        if (diaMm < 49.9)
+                                                        {
+                                                            continue;
+                                                        }
+                                                    }
+                                                }
+                                                // =========================================================
+
                                                 double minZ = Math.Min(pt0.Z, pt1.Z);
                                                 double maxZ = Math.Max(pt0.Z, pt1.Z);
 
@@ -234,16 +266,12 @@ namespace Sinotech.CSDSEM
 
                                                 XYZ tagPlacementPoint = new XYZ(trueMid.X, trueMid.Y, tagZ);
 
-                                                // =========================================================
-                                                // 【系統級判斷】：同一個系統在同一個視圖只會打一個標籤
-                                                // =========================================================
                                                 bool isLinked = !mepItem.SourceProject.IsMainModel;
                                                 ElementId linkInstId = isLinked ? mepItem.SourceProject.LinkInstance.Id : ElementId.InvalidElementId;
 
                                                 string sysSig = GetSystemSignature(elem, isLinked, linkInstId);
                                                 if (sysSig != null && taggedSystemSignatures.Contains(sysSig))
                                                 {
-                                                    // 若這個視圖已經有這個「系統 ID」的標籤，則跳過這根管線！
                                                     continue;
                                                 }
 
@@ -264,8 +292,6 @@ namespace Sinotech.CSDSEM
                                                         newTag.ChangeTypeId(targetSymbol.Id);
                                                         newTagCounts++;
 
-                                                        // 標籤建立成功後，把這套系統的 ID 註冊進去
-                                                        // 這樣同系統的下一根管子就會在上方被過濾掉
                                                         if (sysSig != null)
                                                         {
                                                             taggedSystemSignatures.Add(sysSig);
@@ -300,36 +326,30 @@ namespace Sinotech.CSDSEM
 
             return Result.Cancelled;
         }
-        /// <summary>
-        /// 【全新系統級去重複方法】取得管線的「系統專屬編號 (MEPSystem ID)」
-        /// </summary>
+
         private string GetSystemSignature(Element elem, bool isLinked, ElementId linkInstanceId)
         {
             if (elem == null) return null;
 
-            // 區分是主模型還是連結模型，避免不同連結檔剛好有相同的系統 ID
             string prefix = isLinked ? $"Linked_{linkInstanceId.Value}_" : "Local_";
 
-            // 1. 處理水管與風管 (透過底層繼承的 MEPCurve 取得 MEPSystem)
             if (elem is MEPCurve mepCurve && mepCurve.MEPSystem != null)
             {
-                // 只要是同一個系統，這個 ID 絕對一模一樣
                 return prefix + "System_" + mepCurve.MEPSystem.Id.Value.ToString();
             }
 
-            // 2. 處理電纜架 (因 Revit 底層設計，電纜架沒有 MEPSystem，以使用者自訂編號視為系統)
             if (elem is CableTray)
             {
                 string cableNum = elem.LookupParameter("電纜編號")?.AsString() ??
                                   elem.get_Parameter(BuiltInParameter.ALL_MODEL_MARK)?.AsString() ??
                                   elem.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ??
-                                  elem.Id.Value.ToString(); // 孤立無編號則視為獨立系統
+                                  elem.Id.Value.ToString();
                 return prefix + "TraySystem_" + cableNum;
             }
 
-            // 3. 防呆：畫了管線但還沒有分配系統的孤立物件
             return prefix + "Isolated_" + elem.Id.Value.ToString();
         }
+
         public static List<ViewPlan> GetAutoNumberViewPlans(Document doc, string viewFamilyTypeName)
         {
             string familyName = viewFamilyTypeName.Split(' ')[0];
@@ -375,11 +395,11 @@ namespace Sinotech.CSDSEM
             if (levelId.Value < 0)
             {
                 //int specialId = levelId.IntegerValue; // 2020
-                long specialId = levelId.Value; // 2024
-                if (specialId == -5) return plane == PlanViewPlane.TopClipPlane ? defaultHigh : defaultLow; // Unlimited
-                if (specialId == -2) return (view.GenLevel != null ? view.GenLevel.Elevation : 0) + offset; // Current Level
-                if (specialId == -4) return defaultHigh; // Level Above
-                if (specialId == -3) return defaultLow;  // Level Below
+                long specialId = levelId.Value;
+                if (specialId == -5) return plane == PlanViewPlane.TopClipPlane ? defaultHigh : defaultLow;
+                if (specialId == -2) return (view.GenLevel != null ? view.GenLevel.Elevation : 0) + offset;
+                if (specialId == -4) return defaultHigh;
+                if (specialId == -3) return defaultLow;
             }
 
             Element elem = view.Document.GetElement(levelId);
@@ -448,7 +468,6 @@ namespace Sinotech.CSDSEM
         }
     }
 
-    // ... ProjectItem 與 TargetMepElement 類別維持原樣不變
     public class ProjectItem
     {
         public Document Doc { get; set; }
