@@ -81,7 +81,7 @@ namespace Sinotech_2020.CSDSEM
         private void CreateListView(List<ViewPlan> viewPlans)
         {
             viewplansLV.Items.Clear();
-            foreach (ViewPlan viewPlan in viewPlans)
+            foreach (ViewPlan viewPlan in viewPlans.OrderBy(x => x.Origin.Z).ThenBy(x => x.Name).ToList())
             { viewplansLV.Items.Add(viewPlan.Name); }
             // 預設全選
             for (int i = 0; i < viewplansLV.Items.Count; i++)
