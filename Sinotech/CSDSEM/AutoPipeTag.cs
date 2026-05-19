@@ -118,10 +118,17 @@ namespace Sinotech.CSDSEM
                                             double validZ_Max = exactZMax + 0.5;
 
                                             // =========================================================
-                                            // 【系統級防重複機制】：記錄視圖中已標註過的「系統 ID」
+                                            // 【系統級防重複機制】
+                                            // alreadyTaggedSignatures：記錄「已被任意標籤標注過的管道實體 ID」
+                                            //   → 防止對同一根管道重複建立標籤（無論標籤族類型）
+                                            // taggedSystemSignatures：記錄「已被本程式目標標籤族標注過的系統 ID」
+                                            //   → 防止同一系統在同一視圖中被標注兩次
+                                            //   → 【關鍵】只有「目標標籤族」才能寫入此 set；
+                                            //     非目標族的標籤不得污染此 set，否則會導致某系統
+                                            //     因為「被其他族標過」而被誤跳過（Bug 2 根因）
                                             // =========================================================
                                             HashSet<string> alreadyTaggedSignatures = new HashSet<string>(); // 紀錄實體 ID
-                                            HashSet<string> taggedSystemSignatures = new HashSet<string>();  // 紀錄系統 ID
+                                            HashSet<string> taggedSystemSignatures = new HashSet<string>();  // 紀錄系統 ID（僅目標標籤族）
 
                                             FilteredElementCollector existingTags = new FilteredElementCollector(doc, checkViewPlan.Id)
                                                 .OfClass(typeof(IndependentTag));
@@ -141,33 +148,38 @@ namespace Sinotech.CSDSEM
                                                         isTargetTag = true;
                                                     }
 
-                                                    //Reference tagRef = tag.GetTaggedReference(); // 2020
                                                     foreach (Reference tagRef in tag.GetTaggedReferences())
                                                     {
-                                                        Element taggedElem = null;
                                                         bool isLinked = tagRef.LinkedElementId != ElementId.InvalidElementId;
                                                         ElementId linkInstId = isLinked ? tagRef.ElementId : ElementId.InvalidElementId;
 
                                                         if (isLinked)
                                                         {
-                                                            alreadyTaggedSignatures.Add($"Linked_{tagRef.ElementId}_{tagRef.LinkedElementId}");
-
-                                                            RevitLinkInstance linkInst = doc.GetElement(tagRef.ElementId) as RevitLinkInstance;
-                                                            if (linkInst != null && isTargetTag)
+                                                            // 【設計決策】連結模型的既有標籤：
+                                                            // 僅目標標籤族才寫入 alreadyTaggedSignatures，防止本次執行對同一管道重複建立。
+                                                            // 非目標族不寫入，因為連結模型的標籤之後會全部關閉，
+                                                            // 不應讓其他族的標籤封鎖本次執行對連結管道的標注。
+                                                            if (isTargetTag)
                                                             {
-                                                                taggedElem = linkInst.GetLinkDocument()?.GetElement(tagRef.LinkedElementId);
+                                                                alreadyTaggedSignatures.Add($"Linked_{tagRef.ElementId}_{tagRef.LinkedElementId}");
                                                             }
+                                                            // taggedSystemSignatures：連結模型既有標籤一律不寫入（同上理由）
                                                         }
                                                         else
                                                         {
+                                                            // 主模型：任何標籤族都寫入 alreadyTaggedSignatures，防止重複建立
                                                             alreadyTaggedSignatures.Add($"Local_{tagRef.ElementId}");
-                                                            if (isTargetTag) taggedElem = doc.GetElement(tagRef.ElementId);
-                                                        }
 
-                                                        if (taggedElem != null)
-                                                        {
-                                                            string sysSig = GetSystemSignature(taggedElem, isLinked, linkInstId);
-                                                            if (sysSig != null) taggedSystemSignatures.Add(sysSig);
+                                                            // 只有主模型 + 目標標籤族：才記錄系統 ID
+                                                            if (isTargetTag)
+                                                            {
+                                                                Element taggedElem = doc.GetElement(tagRef.ElementId);
+                                                                if (taggedElem != null && IsEligibleForTag(taggedElem))
+                                                                {
+                                                                    string sysSig = GetSystemSignature(taggedElem, false, ElementId.InvalidElementId);
+                                                                    if (sysSig != null) taggedSystemSignatures.Add(sysSig);
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -377,6 +389,10 @@ namespace Sinotech.CSDSEM
                                                 ElementId linkInstId = isLinked ? mepItem.SourceProject.LinkInstance.Id : ElementId.InvalidElementId;
 
                                                 string sysSig = GetSystemSignature(elem, isLinked, linkInstId);
+
+                                                // 【系統級防重複】主模型與連結模型在同一視圖內都只標一次。
+                                                // 差異在於：連結模型的「既有標籤」不寫入 taggedSystemSignatures（掃描階段），
+                                                // 但本次執行中新建的連結標籤仍會寫入，確保同一視圖內不重複。
                                                 if (sysSig != null && taggedSystemSignatures.Contains(sysSig))
                                                 {
                                                     continue;
@@ -399,6 +415,10 @@ namespace Sinotech.CSDSEM
                                                         newTag.ChangeTypeId(targetSymbol.Id);
                                                         newTagCounts++;
 
+                                                        // 本次執行中新建的標籤（主模型與連結模型）都寫入 taggedSystemSignatures，
+                                                        // 確保同一視圖內同一系統不重複標注。
+                                                        // 注意：掃描「既有標籤」階段，連結模型的標籤不寫入此 set，
+                                                        // 因為這些標籤之後會被關閉，不應影響本次執行的判斷。
                                                         if (sysSig != null)
                                                         {
                                                             taggedSystemSignatures.Add(sysSig);
@@ -435,10 +455,55 @@ namespace Sinotech.CSDSEM
         }
 
         /// <summary>
+        /// 判斷管道元件是否符合「值得建立標籤」的條件，供掃描現有標籤與放置標籤兩處共用。
+        /// 條件與放置標籤時的過濾條件完全一致：
+        ///   1. 非立管（XY 位移需超過 0.01 呎）
+        ///   2. 長度 >= 1M
+        ///   3. 水管管徑 >= 50mm
+        /// linkTransform 為 null 表示主模型元件，不需座標轉換。
+        /// </summary>
+        private bool IsEligibleForTag(Element elem, Transform linkTransform = null)
+        {
+            if (elem == null) return false;
+            if (!(elem.Location is LocationCurve locCurve) || locCurve.Curve == null) return false;
+
+            XYZ pt0 = locCurve.Curve.GetEndPoint(0);
+            XYZ pt1 = locCurve.Curve.GetEndPoint(1);
+
+            if (linkTransform != null)
+            {
+                pt0 = linkTransform.OfPoint(pt0);
+                pt1 = linkTransform.OfPoint(pt1);
+            }
+
+            // 條件一：立管不標籤
+            if (Math.Abs(pt1.X - pt0.X) < 0.01 && Math.Abs(pt1.Y - pt0.Y) < 0.01)
+                return false;
+
+            // 條件二：長度低於 1M 不標籤
+            double lengthMeter = pt0.DistanceTo(pt1) * 0.3048;
+            if (lengthMeter < 1.0)
+                return false;
+
+            // 條件三：水管管徑 50mm(不含)以下不標籤
+            if (elem is Pipe)
+            {
+                Parameter diaParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
+                if (diaParam != null && diaParam.HasValue)
+                {
+                    double diaMm = diaParam.AsDouble() * 304.8;
+                    if (diaMm < 49.9) return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// 取得元件的「防重複簽章」。
-        /// 對於 MEPCurve（水管/風管）：以元件本身的 ElementId 為簽章，確保每根管道獨立判斷，
-        /// 不以 MEPSystem.Id 為簽章，避免同一系統下不同管段被錯誤跳過。
-        /// 對於 CableTray：以電纜編號（或 Mark）為簽章，同編號的電纜托盤視為同一系統僅標一次。
+        /// 防重複基準：同一來源（主/連結）+ 同一系統 + 同一標籤內容，才視為重複，只建立一次。
+        /// 標籤內容由元件的尺寸、系統縮寫、高程參數組成，與標籤族實際顯示內容一致。
+        /// 同一系統但尺寸或高程不同（標籤內容不同）→ 簽章不同 → 各自建立標籤。
         /// </summary>
         private string GetSystemSignature(Element elem, bool isLinked, ElementId linkInstanceId)
         {
@@ -446,29 +511,70 @@ namespace Sinotech.CSDSEM
 
             string prefix = isLinked ? $"Linked_{linkInstanceId.Value}_" : "Local_";
 
-            // =========================================================
-            // 【Bug 2 修正】
-            // 原本對 MEPCurve 用 MEPSystem.Id，導致同一系統的所有管段只標一根。
-            // 修正為以元件本身 Id 為簽章，確保每根管道獨立判斷是否已標注。
-            // 系統級防重複（如風管同系統只標一次）應由上層業務邏輯控制，
-            // 而非在此強制合併所有同系統管段。
-            // =========================================================
-            if (elem is MEPCurve)
+            if (elem is MEPCurve mepCurve)
             {
-                return prefix + "Elem_" + elem.Id.Value.ToString();
+                string systemId = mepCurve.MEPSystem != null
+                    ? mepCurve.MEPSystem.Id.Value.ToString()
+                    : "NoSys_" + elem.Id.Value.ToString();
+
+                // 取得標籤內容相關參數，組成與標籤顯示一致的簽章
+                string tagContent = GetTagContentSignature(elem);
+
+                return $"{prefix}System_{systemId}__{tagContent}";
             }
 
             if (elem is CableTray)
             {
-                // 電纜托盤：以電纜編號去重（同編號視為同一系統，只標一次）
                 string cableNum = elem.LookupParameter("電纜編號")?.AsString() ??
                                   elem.get_Parameter(BuiltInParameter.ALL_MODEL_MARK)?.AsString() ??
                                   elem.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ??
                                   elem.Id.Value.ToString();
-                return prefix + "TraySystem_" + cableNum;
+                return $"{prefix}TraySystem_{cableNum}";
             }
 
-            return prefix + "Isolated_" + elem.Id.Value.ToString();
+            return $"{prefix}Isolated_{elem.Id.Value}";
+        }
+
+        /// <summary>
+        /// 從元件參數組出與標籤族顯示內容一致的字串，作為防重複簽章的一部分。
+        /// Pipe  → 管徑(mm) + 系統縮寫 + 管底高程(mm)
+        /// Duct  → 寬(mm) x 高(mm) + 系統縮寫 + 中心高程(mm)
+        /// </summary>
+        private string GetTagContentSignature(Element elem)
+        {
+            try
+            {
+                string sysAbbr = string.Empty;
+                if (elem is MEPCurve mepCurve && mepCurve.MEPSystem != null)
+                {
+                    sysAbbr = mepCurve.MEPSystem.get_Parameter(BuiltInParameter.RBS_SYSTEM_ABBREVIATION_PARAM)?.AsString() ?? string.Empty;
+                }
+
+                if (elem is Pipe)
+                {
+                    // 管徑 (mm)
+                    double diaMm = Math.Round((elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.AsDouble() ?? 0) * 304.8);
+                    // 管底高程 (mm)：中心高程 - 半徑
+                    double centerElev = (elem.get_Parameter(BuiltInParameter.RBS_PIPE_BOTTOM_ELEVATION)?.AsDouble() ?? 0) * 304.8;
+                    double elevMm = Math.Round(centerElev);
+                    return $"P_{diaMm}_{sysAbbr}_{elevMm}";
+                }
+
+                if (elem is Duct)
+                {
+                    // 風管：寬 x 高 (mm)
+                    double widthMm = Math.Round((elem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM)?.AsDouble() ?? 0) * 304.8);
+                    double heightMm = Math.Round((elem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM)?.AsDouble() ?? 0) * 304.8);
+                    // 中心高程 (mm)
+                    double centerElev = (elem.get_Parameter(BuiltInParameter.RBS_DUCT_BOTTOM_ELEVATION)?.AsDouble() ?? 0) * 304.8;
+                    double elevMm = Math.Round(centerElev);
+                    return $"D_{widthMm}x{heightMm}_{sysAbbr}_{elevMm}";
+                }
+            }
+            catch { }
+
+            // fallback：用元件 Id，確保不會誤跳過
+            return $"Elem_{elem.Id.Value}";
         }
 
         public static List<ViewPlan> GetAutoNumberViewPlans(Document doc, string viewFamilyTypeName)
