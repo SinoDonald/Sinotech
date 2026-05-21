@@ -36,9 +36,9 @@
 
   <ItemGroup>
     <!-- ── EPPlus ── -->
-    <PackageReference Include="EPPlus" Version="8.5.3" />
 
     <!-- ── Microsoft ── -->
+    <PackageReference Include="EPPlus" Version="7.5.2" />
     <PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0">
       <!-- .NET 8 內建 HashCode，不需複製 DLL -->
       <ExcludeAssets>runtime</ExcludeAssets>
