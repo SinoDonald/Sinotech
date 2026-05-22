@@ -111,7 +111,7 @@ namespace Sinotech.Plotting
                                 string picNumber = string.Empty;
                                 try { picNumber = view.LookupParameter("圖框-電腦圖號").AsString(); } catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
 
-                                if (picNumber != null)
+                                if (!String.IsNullOrEmpty(picNumber))
                                 {
                                     viewInfo.picNumber = picNumber;
                                 }

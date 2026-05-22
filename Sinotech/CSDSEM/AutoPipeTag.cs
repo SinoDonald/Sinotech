@@ -63,7 +63,6 @@ namespace Sinotech.CSDSEM
                                     // 原因：標籤放置在子視圖時，若母視圖未開啟，標籤將無法移動
                                     // =========================================================
                                     HashSet<ElementId> openedParentViewIds = new HashSet<ElementId>();
-
                                     foreach (ViewPlan checkViewPlan in checkViewPlans)
                                     {
                                         ElementId primaryViewId = checkViewPlan.GetPrimaryViewId();
@@ -84,353 +83,406 @@ namespace Sinotech.CSDSEM
                                             }
                                         }
                                     }
-                                    // =========================================================
-                                    // 【新增結束】
-                                    // =========================================================
 
-                                    using (Transaction t = new Transaction(doc, "自動建立管線標籤"))
+                                    foreach (ElementId primaryViewId in openedParentViewIds)
                                     {
-                                        t.Start();
-
-                                        FamilySymbol pipeTagSym = GetTagSymbol(doc, BuiltInCategory.OST_PipeTags, "管底_尺寸+系統");
-                                        FamilySymbol ductTagSym = GetTagSymbol(doc, BuiltInCategory.OST_DuctTags, "管道標籤_寬高_高程");
-                                        FamilySymbol trayTagSym = GetTagSymbol(doc, BuiltInCategory.OST_CableTrayTags, "MRT_電纜托盤編號標籤");
-
-                                        if (pipeTagSym != null && !pipeTagSym.IsActive) pipeTagSym.Activate();
-                                        if (ductTagSym != null && !ductTagSym.IsActive) ductTagSym.Activate();
-                                        if (trayTagSym != null && !trayTagSym.IsActive) trayTagSym.Activate();
-
-                                        if (pipeTagSym == null && ductTagSym == null && trayTagSym == null)
+                                        ViewPlan parentView = doc.GetElement(primaryViewId) as ViewPlan;
+                                        if (parentView != null)
                                         {
-                                            TaskDialog.Show("警告", "找不到指定的標籤族群，請確認是否已載入專案！");
-                                            t.RollBack();
-                                            return Result.Failed;
-                                        }
-
-                                        foreach (ViewPlan checkViewPlan in checkViewPlans)
-                                        {
-                                            double exactZMax = GetPlaneElevation(checkViewPlan, PlanViewPlane.TopClipPlane, 1000.0, -1000.0);
-                                            double exactZMin = GetPlaneElevation(checkViewPlan, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
-                                            double defaultCutZ = (exactZMax + exactZMin) / 2.0;
-                                            double exactCutZ = GetPlaneElevation(checkViewPlan, PlanViewPlane.CutPlane, defaultCutZ, defaultCutZ);
-
-                                            double validZ_Min = exactZMin - 0.5;
-                                            double validZ_Max = exactZMax + 0.5;
-
-                                            // =========================================================
-                                            // 【系統級防重複機制】
-                                            // alreadyTaggedSignatures：記錄「已被任意標籤標注過的管道實體 ID」
-                                            //   → 防止對同一根管道重複建立標籤（無論標籤族類型）
-                                            // taggedSystemSignatures：記錄「已被本程式目標標籤族標注過的系統 ID」
-                                            //   → 防止同一系統在同一視圖中被標注兩次
-                                            //   → 【關鍵】只有「目標標籤族」才能寫入此 set；
-                                            //     非目標族的標籤不得污染此 set，否則會導致某系統
-                                            //     因為「被其他族標過」而被誤跳過（Bug 2 根因）
-                                            // =========================================================
-                                            HashSet<string> alreadyTaggedSignatures = new HashSet<string>(); // 紀錄實體 ID
-                                            HashSet<string> taggedSystemSignatures = new HashSet<string>();  // 紀錄系統 ID（僅目標標籤族）
-
-                                            FilteredElementCollector existingTags = new FilteredElementCollector(doc, checkViewPlan.Id)
-                                                .OfClass(typeof(IndependentTag));
-
-                                            foreach (IndependentTag tag in existingTags.Cast<IndependentTag>())
+                                            try
                                             {
-                                                try
+                                                // 開啟母視圖（讓 Revit 內部完成視圖初始化）
+                                                uidoc.RequestViewChange(parentView);
+                                                Application.DoEvents(); // 等待Revit視圖切換完成
+                                                using (Transaction t = new Transaction(doc, "自動標籤"))
                                                 {
-                                                    bool isTargetTag = false;
-                                                    FamilySymbol sym = doc.GetElement(tag.GetTypeId()) as FamilySymbol;
-                                                    if (sym != null && (
-                                                        sym.FamilyName.Contains("管底_尺寸") || sym.Name.Contains("管底_尺寸") ||
-                                                        sym.FamilyName.Contains("管道標籤_寬高") || sym.Name.Contains("管道標籤_寬高") ||
-                                                        sym.FamilyName.Contains("電纜托盤") || sym.Name.Contains("電纜托盤")
-                                                    ))
+                                                    t.Start();
+
+                                                    FamilySymbol pipeTagSym = GetTagSymbol(doc, BuiltInCategory.OST_PipeTags, "管底_尺寸+系統");
+                                                    FamilySymbol ductTagSym = GetTagSymbol(doc, BuiltInCategory.OST_DuctTags, "管道標籤_寬高_高程");
+                                                    FamilySymbol trayTagSym = GetTagSymbol(doc, BuiltInCategory.OST_CableTrayTags, "MRT_電纜托盤編號標籤");
+
+                                                    if (pipeTagSym != null && !pipeTagSym.IsActive) pipeTagSym.Activate();
+                                                    if (ductTagSym != null && !ductTagSym.IsActive) ductTagSym.Activate();
+                                                    if (trayTagSym != null && !trayTagSym.IsActive) trayTagSym.Activate();
+
+                                                    if (pipeTagSym == null && ductTagSym == null && trayTagSym == null)
                                                     {
-                                                        isTargetTag = true;
+                                                        TaskDialog.Show("警告", "找不到指定的標籤族群，請確認是否已載入專案！");
+                                                        t.RollBack();
+                                                        return Result.Failed;
                                                     }
+                                                    List<ViewPlan> sameParentViewId = checkViewPlans.Where(x => x.GetPrimaryViewId().Equals(primaryViewId)).ToList();
 
-                                                    foreach (Reference tagRef in tag.GetTaggedReferences())
+                                                    foreach (ViewPlan checkViewPlan in sameParentViewId)
                                                     {
-                                                        bool isLinked = tagRef.LinkedElementId != ElementId.InvalidElementId;
-                                                        ElementId linkInstId = isLinked ? tagRef.ElementId : ElementId.InvalidElementId;
+                                                        double exactZMax = GetPlaneElevation(checkViewPlan, PlanViewPlane.TopClipPlane, 1000.0, -1000.0);
+                                                        double exactZMin = GetPlaneElevation(checkViewPlan, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
+                                                        double defaultCutZ = (exactZMax + exactZMin) / 2.0;
+                                                        double exactCutZ = GetPlaneElevation(checkViewPlan, PlanViewPlane.CutPlane, defaultCutZ, defaultCutZ);
 
-                                                        if (isLinked)
-                                                        {
-                                                            // 【設計決策】連結模型的既有標籤：
-                                                            // 僅目標標籤族才寫入 alreadyTaggedSignatures，防止本次執行對同一管道重複建立。
-                                                            // 非目標族不寫入，因為連結模型的標籤之後會全部關閉，
-                                                            // 不應讓其他族的標籤封鎖本次執行對連結管道的標注。
-                                                            if (isTargetTag)
-                                                            {
-                                                                alreadyTaggedSignatures.Add($"Linked_{tagRef.ElementId}_{tagRef.LinkedElementId}");
-                                                            }
-                                                            // taggedSystemSignatures：連結模型既有標籤一律不寫入（同上理由）
-                                                        }
-                                                        else
-                                                        {
-                                                            // 主模型：任何標籤族都寫入 alreadyTaggedSignatures，防止重複建立
-                                                            alreadyTaggedSignatures.Add($"Local_{tagRef.ElementId}");
+                                                        double validZ_Min = exactZMin - 0.5;
+                                                        double validZ_Max = exactZMax + 0.5;
 
-                                                            // 只有主模型 + 目標標籤族：才記錄系統 ID
-                                                            if (isTargetTag)
+                                                        // =========================================================
+                                                        // 【系統級防重複機制】
+                                                        // alreadyTaggedSignatures：記錄「已被任意標籤標注過的管道實體 ID」
+                                                        //   → 防止對同一根管道重複建立標籤（無論標籤族類型）
+                                                        // taggedSystemSignatures：記錄「已被本程式目標標籤族標注過的系統 ID」
+                                                        //   → 防止同一系統在同一視圖中被標注兩次
+                                                        //   → 【關鍵】只有「目標標籤族」才能寫入此 set；
+                                                        //     非目標族的標籤不得污染此 set，否則會導致某系統
+                                                        //     因為「被其他族標過」而被誤跳過（Bug 2 根因）
+                                                        // =========================================================
+                                                        HashSet<string> alreadyTaggedSignatures = new HashSet<string>(); // 紀錄實體 ID
+                                                        HashSet<string> taggedSystemSignatures = new HashSet<string>();  // 紀錄系統 ID（僅目標標籤族）
+
+                                                        FilteredElementCollector existingTags = new FilteredElementCollector(doc, checkViewPlan.Id)
+                                                            .OfClass(typeof(IndependentTag));
+
+                                                        foreach (IndependentTag tag in existingTags.Cast<IndependentTag>())
+                                                        {
+                                                            try
                                                             {
-                                                                Element taggedElem = doc.GetElement(tagRef.ElementId);
-                                                                if (taggedElem != null && IsEligibleForTag(taggedElem))
+                                                                bool isTargetTag = false;
+                                                                FamilySymbol sym = doc.GetElement(tag.GetTypeId()) as FamilySymbol;
+                                                                if (sym != null && (
+                                                                    sym.FamilyName.Contains("管底_尺寸") || sym.Name.Contains("管底_尺寸") ||
+                                                                    sym.FamilyName.Contains("管道標籤_寬高") || sym.Name.Contains("管道標籤_寬高") ||
+                                                                    sym.FamilyName.Contains("電纜托盤") || sym.Name.Contains("電纜托盤")
+                                                                ))
                                                                 {
-                                                                    string sysSig = GetSystemSignature(taggedElem, false, ElementId.InvalidElementId);
-                                                                    if (sysSig != null) taggedSystemSignatures.Add(sysSig);
+                                                                    isTargetTag = true;
+                                                                }
+
+                                                                //Reference tagRef = tag.GetTaggedReference(); // 2020
+                                                                foreach (Reference tagRef in tag.GetTaggedReferences())
+                                                                {
+                                                                    bool isLinked = tagRef.LinkedElementId != ElementId.InvalidElementId;
+                                                                    ElementId linkInstId = isLinked ? tagRef.ElementId : ElementId.InvalidElementId;
+
+                                                                    if (isLinked)
+                                                                    {
+                                                                        // 【設計決策】連結模型的既有標籤：
+                                                                        // 僅目標標籤族才寫入 alreadyTaggedSignatures，防止本次執行對同一管道重複建立。
+                                                                        // 非目標族不寫入，因為連結模型的標籤之後會全部關閉，
+                                                                        // 不應讓其他族的標籤封鎖本次執行對連結管道的標注。
+                                                                        if (isTargetTag)
+                                                                        {
+                                                                            alreadyTaggedSignatures.Add($"Linked_{tagRef.ElementId}_{tagRef.LinkedElementId}");
+                                                                        }
+                                                                        // taggedSystemSignatures：連結模型既有標籤一律不寫入（同上理由）
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        // 主模型：任何標籤族都寫入 alreadyTaggedSignatures，防止重複建立
+                                                                        alreadyTaggedSignatures.Add($"Local_{tagRef.ElementId}");
+
+                                                                        // 只有主模型 + 目標標籤族：才記錄系統 ID
+                                                                        if (isTargetTag)
+                                                                        {
+                                                                            Element taggedElem = doc.GetElement(tagRef.ElementId);
+                                                                            if (taggedElem != null && IsEligibleForTag(taggedElem))
+                                                                            {
+                                                                                string sysSig = GetSystemSignature(taggedElem, false, ElementId.InvalidElementId);
+                                                                                if (sysSig != null) taggedSystemSignatures.Add(sysSig);
+                                                                            }
+                                                                        }
+                                                                    }
                                                                 }
                                                             }
+                                                            catch { }
                                                         }
-                                                    }
-                                                }
-                                                catch { }
-                                            }
 
-                                            List<TargetMepElement> validMepInThisView = new List<TargetMepElement>();
+                                                        List<TargetMepElement> validMepInThisView = new List<TargetMepElement>();
 
-                                            ProjectItem mainProj = form.SelectedProjects.FirstOrDefault(p => p.IsMainModel);
-                                            if (mainProj != null)
-                                            {
-                                                FilteredElementCollector mainCollector = new FilteredElementCollector(doc, checkViewPlan.Id)
-                                                    .WherePasses(multiFilter)
-                                                    .WhereElementIsNotElementType();
-
-                                                foreach (Element elem in mainCollector)
-                                                {
-                                                    validMepInThisView.Add(new TargetMepElement { MepElement = elem, SourceProject = mainProj });
-                                                }
-                                            }
-
-                                            BoundingBoxXYZ viewBBox = checkViewPlan.CropBox;
-                                            foreach (ProjectItem linkedProj in form.SelectedProjects.Where(p => !p.IsMainModel))
-                                            {
-                                                Transform invTransform = linkedProj.LinkInstance.GetTotalTransform().Inverse;
-                                                Outline linkOutline = GetTransformedOutline(checkViewPlan, viewBBox, invTransform, validZ_Min, validZ_Max);
-
-                                                BoundingBoxIntersectsFilter bboxFilter = new BoundingBoxIntersectsFilter(linkOutline);
-
-                                                FilteredElementCollector linkedMepCollector = new FilteredElementCollector(linkedProj.Doc)
-                                                    .WherePasses(multiFilter)
-                                                    .WherePasses(bboxFilter)
-                                                    .WhereElementIsNotElementType();
-
-                                                foreach (Element elem in linkedMepCollector)
-                                                {
-                                                    try
-                                                    {
-                                                        validMepInThisView.Add(new TargetMepElement { MepElement = elem, SourceProject = linkedProj });
-                                                    }
-                                                    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                                                }
-                                            }
-
-                                            if (validMepInThisView.Count == 0) continue;
-
-                                            foreach (TargetMepElement mepItem in validMepInThisView)
-                                            {
-                                                string currentSig = mepItem.SourceProject.IsMainModel
-                                                    ? $"Local_{mepItem.MepElement.Id}"
-                                                    : $"Linked_{mepItem.SourceProject.LinkInstance.Id}_{mepItem.MepElement.Id}";
-
-                                                if (alreadyTaggedSignatures.Contains(currentSig)) continue;
-
-                                                Element elem = mepItem.MepElement;
-                                                FamilySymbol targetSymbol = null;
-
-                                                if (elem is Pipe && pipeTagSym != null) targetSymbol = pipeTagSym;
-                                                else if (elem is Duct && ductTagSym != null) targetSymbol = ductTagSym;
-                                                else if (elem is CableTray && trayTagSym != null) targetSymbol = trayTagSym;
-
-                                                if (targetSymbol == null) continue;
-
-                                                XYZ pt0 = null, pt1 = null;
-                                                if (elem.Location is LocationCurve locCurve && locCurve.Curve != null)
-                                                {
-                                                    pt0 = locCurve.Curve.GetEndPoint(0);
-                                                    pt1 = locCurve.Curve.GetEndPoint(1);
-
-                                                    if (!mepItem.SourceProject.IsMainModel)
-                                                    {
-                                                        Transform linkTransform = mepItem.SourceProject.LinkInstance.GetTotalTransform();
-                                                        pt0 = linkTransform.OfPoint(pt0);
-                                                        pt1 = linkTransform.OfPoint(pt1);
-                                                    }
-                                                }
-
-                                                if (pt0 == null || pt1 == null) continue;
-
-                                                // =========================================================
-                                                // 【新增過濾條件：不進行標籤的物件】
-                                                // =========================================================
-
-                                                // 條件一：立管不標籤 (起終點的 X, Y 座標幾乎相同，給予 0.01 呎約 3mm 容差)
-                                                if (Math.Abs(pt1.X - pt0.X) < 0.01 && Math.Abs(pt1.Y - pt0.Y) < 0.01)
-                                                {
-                                                    continue;
-                                                }
-
-                                                // 條件二：長度低於 1M 不標籤 (將英呎轉換為公尺)
-                                                double lengthMeter = pt0.DistanceTo(pt1) * 0.3048;
-                                                if (lengthMeter < 1.0)
-                                                {
-                                                    continue;
-                                                }
-
-                                                // 條件三：50mm(不含)以下的管徑不標籤 (僅針對水管 Pipe)
-                                                if (elem is Pipe)
-                                                {
-                                                    Parameter diaParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
-                                                    if (diaParam != null && diaParam.HasValue)
-                                                    {
-                                                        double diaMm = diaParam.AsDouble() * 304.8;
-                                                        // 50mm(不含)以下代表小於50mm。加入浮點數容差(49.9)以防止將精確的 50mm 誤濾掉
-                                                        if (diaMm < 49.9)
+                                                        ProjectItem mainProj = form.SelectedProjects.FirstOrDefault(p => p.IsMainModel);
+                                                        if (mainProj != null)
                                                         {
-                                                            continue;
+                                                            FilteredElementCollector mainCollector = new FilteredElementCollector(doc, checkViewPlan.Id)
+                                                                .WherePasses(multiFilter)
+                                                                .WhereElementIsNotElementType();
+
+                                                            foreach (Element elem in mainCollector)
+                                                            {
+                                                                validMepInThisView.Add(new TargetMepElement { MepElement = elem, SourceProject = mainProj });
+                                                            }
                                                         }
-                                                    }
-                                                }
-                                                // =========================================================
 
-                                                double minZ = Math.Min(pt0.Z, pt1.Z);
-                                                double maxZ = Math.Max(pt0.Z, pt1.Z);
-
-                                                if (maxZ < validZ_Min || minZ > validZ_Max)
-                                                {
-                                                    continue;
-                                                }
-
-                                                Reference pipeRef = mepItem.SourceProject.IsMainModel
-                                                    ? new Reference(elem)
-                                                    : new Reference(elem).CreateLinkReference(mepItem.SourceProject.LinkInstance);
-
-                                                // =========================================================
-                                                // 【Bug 3 修正 + Bug 1 修正】
-                                                // 計算標籤放置點：
-                                                //   - 管道兩端皆在視圖 XY 範圍內 → 取原始中點
-                                                //   - 管道被視圖裁切 → 取「視圖內可見線段」的中點
-                                                //   - 管道完全在視圖外 → 跳過（不建立標籤，不計數）
-                                                // Bug 1 根因：原本 ClipSegmentToViewBounds 對「無 CropBox」
-                                                //   視圖使用極大值，但子視圖本身有 CropBox，
-                                                //   導致標籤點落在 CropBox 外仍被建立並計數。
-                                                // =========================================================
-
-                                                // 取得視圖的 XY 裁切範圍（世界座標）
-                                                BoundingBoxXYZ cropBox = checkViewPlan.CropBox;
-                                                Transform cropTransform = cropBox.Transform;
-
-                                                double viewMinX, viewMinY, viewMaxX, viewMaxY;
-
-                                                if (checkViewPlan.CropBoxActive)
-                                                {
-                                                    // CropBox 的 Min/Max 在視圖局部座標系，需透過 Transform 轉回世界座標
-                                                    viewMinX = double.MaxValue; viewMinY = double.MaxValue;
-                                                    viewMaxX = double.MinValue; viewMaxY = double.MinValue;
-                                                    double[] localXs = new double[] { cropBox.Min.X, cropBox.Max.X };
-                                                    double[] localYs = new double[] { cropBox.Min.Y, cropBox.Max.Y };
-                                                    foreach (double lx in localXs)
-                                                    {
-                                                        foreach (double ly in localYs)
+                                                        BoundingBoxXYZ viewBBox = checkViewPlan.CropBox;
+                                                        foreach (ProjectItem linkedProj in form.SelectedProjects.Where(p => !p.IsMainModel))
                                                         {
-                                                            XYZ worldPt = cropTransform.OfPoint(new XYZ(lx, ly, 0));
-                                                            if (worldPt.X < viewMinX) viewMinX = worldPt.X;
-                                                            if (worldPt.Y < viewMinY) viewMinY = worldPt.Y;
-                                                            if (worldPt.X > viewMaxX) viewMaxX = worldPt.X;
-                                                            if (worldPt.Y > viewMaxY) viewMaxY = worldPt.Y;
+                                                            Transform invTransform = linkedProj.LinkInstance.GetTotalTransform().Inverse;
+                                                            Outline linkOutline = GetTransformedOutline(checkViewPlan, viewBBox, invTransform, validZ_Min, validZ_Max);
+
+                                                            BoundingBoxIntersectsFilter bboxFilter = new BoundingBoxIntersectsFilter(linkOutline);
+
+                                                            FilteredElementCollector linkedMepCollector = new FilteredElementCollector(linkedProj.Doc)
+                                                                .WherePasses(multiFilter)
+                                                                .WherePasses(bboxFilter)
+                                                                .WhereElementIsNotElementType();
+
+                                                            foreach (Element elem in linkedMepCollector)
+                                                            {
+                                                                try
+                                                                {
+                                                                    validMepInThisView.Add(new TargetMepElement { MepElement = elem, SourceProject = linkedProj });
+                                                                }
+                                                                catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                                                            }
                                                         }
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    // 無裁切框：不限制 XY 範圍
-                                                    viewMinX = double.MinValue / 2;
-                                                    viewMinY = double.MinValue / 2;
-                                                    viewMaxX = double.MaxValue / 2;
-                                                    viewMaxY = double.MaxValue / 2;
-                                                }
 
-                                                // 判斷兩端點是否皆在視圖 XY 範圍內（加小容差避免浮點誤差）
-                                                const double xyTol = 1e-6;
-                                                bool pt0InView = pt0.X >= viewMinX - xyTol && pt0.X <= viewMaxX + xyTol &&
-                                                                 pt0.Y >= viewMinY - xyTol && pt0.Y <= viewMaxY + xyTol;
-                                                bool pt1InView = pt1.X >= viewMinX - xyTol && pt1.X <= viewMaxX + xyTol &&
-                                                                 pt1.Y >= viewMinY - xyTol && pt1.Y <= viewMaxY + xyTol;
+                                                        if (validMepInThisView.Count == 0) continue;
 
-                                                XYZ tagMidPoint;
+                                                        // 【條件二】候選字典：key=sysSig，value=當前最長候選
+                                                        // 掃描完所有管道後，每個簽章只對最長的建立標籤
+                                                        Dictionary<string, TagCandidate> tagCandidates = new Dictionary<string, TagCandidate>();
 
-                                                if (pt0InView && pt1InView)
-                                                {
-                                                    // 【情況 A】管道完全在視圖內：取原始兩端點中心
-                                                    tagMidPoint = (pt0 + pt1) / 2.0;
-                                                }
-                                                else
-                                                {
-                                                    // 【情況 B】管道被視圖裁切：用 Liang-Barsky 取視圖內線段，再取其中心
-                                                    XYZ clippedPt0, clippedPt1;
-                                                    bool clipped = ClipSegmentToViewBounds(
-                                                        pt0, pt1,
-                                                        viewMinX, viewMaxX, viewMinY, viewMaxY,
-                                                        out clippedPt0, out clippedPt1);
-
-                                                    // 【Bug 1 修正】完全在視圖外：跳過，不建立標籤、不計數
-                                                    if (!clipped) continue;
-
-                                                    tagMidPoint = (clippedPt0 + clippedPt1) / 2.0;
-                                                }
-
-                                                double tagZ = tagMidPoint.Z;
-                                                if (tagZ > exactZMax) tagZ = exactZMax - 0.01;
-                                                if (tagZ < exactZMin) tagZ = exactZMin + 0.01;
-
-                                                XYZ tagPlacementPoint = new XYZ(tagMidPoint.X, tagMidPoint.Y, tagZ);
-                                                // =========================================================
-
-                                                bool isLinked = !mepItem.SourceProject.IsMainModel;
-                                                ElementId linkInstId = isLinked ? mepItem.SourceProject.LinkInstance.Id : ElementId.InvalidElementId;
-
-                                                string sysSig = GetSystemSignature(elem, isLinked, linkInstId);
-
-                                                // 【系統級防重複】主模型與連結模型在同一視圖內都只標一次。
-                                                // 差異在於：連結模型的「既有標籤」不寫入 taggedSystemSignatures（掃描階段），
-                                                // 但本次執行中新建的連結標籤仍會寫入，確保同一視圖內不重複。
-                                                if (sysSig != null && taggedSystemSignatures.Contains(sysSig))
-                                                {
-                                                    continue;
-                                                }
-
-                                                try
-                                                {
-                                                    IndependentTag newTag = IndependentTag.Create(
-                                                        doc,
-                                                        checkViewPlan.Id,
-                                                        pipeRef,
-                                                        true,
-                                                        TagMode.TM_ADDBY_CATEGORY,
-                                                        TagOrientation.Horizontal,
-                                                        tagPlacementPoint
-                                                    );
-
-                                                    if (newTag != null)
-                                                    {
-                                                        newTag.ChangeTypeId(targetSymbol.Id);
-                                                        newTagCounts++;
-
-                                                        // 本次執行中新建的標籤（主模型與連結模型）都寫入 taggedSystemSignatures，
-                                                        // 確保同一視圖內同一系統不重複標注。
-                                                        // 注意：掃描「既有標籤」階段，連結模型的標籤不寫入此 set，
-                                                        // 因為這些標籤之後會被關閉，不應影響本次執行的判斷。
-                                                        if (sysSig != null)
+                                                        foreach (TargetMepElement mepItem in validMepInThisView)
                                                         {
-                                                            taggedSystemSignatures.Add(sysSig);
+                                                            string currentSig = mepItem.SourceProject.IsMainModel
+                                                                ? $"Local_{mepItem.MepElement.Id}"
+                                                                : $"Linked_{mepItem.SourceProject.LinkInstance.Id}_{mepItem.MepElement.Id}";
+
+                                                            if (alreadyTaggedSignatures.Contains(currentSig)) continue;
+
+                                                            Element elem = mepItem.MepElement;
+                                                            FamilySymbol targetSymbol = null;
+
+                                                            if (elem is Pipe && pipeTagSym != null) targetSymbol = pipeTagSym;
+                                                            else if (elem is Duct && ductTagSym != null) targetSymbol = ductTagSym;
+                                                            else if (elem is CableTray && trayTagSym != null) targetSymbol = trayTagSym;
+
+                                                            if (targetSymbol == null) continue;
+
+                                                            XYZ pt0 = null, pt1 = null;
+                                                            if (elem.Location is LocationCurve locCurve && locCurve.Curve != null)
+                                                            {
+                                                                pt0 = locCurve.Curve.GetEndPoint(0);
+                                                                pt1 = locCurve.Curve.GetEndPoint(1);
+
+                                                                if (!mepItem.SourceProject.IsMainModel)
+                                                                {
+                                                                    Transform linkTransform = mepItem.SourceProject.LinkInstance.GetTotalTransform();
+                                                                    pt0 = linkTransform.OfPoint(pt0);
+                                                                    pt1 = linkTransform.OfPoint(pt1);
+                                                                }
+                                                            }
+
+                                                            if (pt0 == null || pt1 == null) continue;
+
+                                                            // =========================================================
+                                                            // 【新增過濾條件：不進行標籤的物件】
+                                                            // =========================================================
+
+                                                            // 條件一：立管不標籤 (起終點的 X, Y 座標幾乎相同，給予 0.01 呎約 3mm 容差)
+                                                            if (Math.Abs(pt1.X - pt0.X) < 0.01 && Math.Abs(pt1.Y - pt0.Y) < 0.01)
+                                                            {
+                                                                continue;
+                                                            }
+
+                                                            // 條件二：長度低於 1M 不標籤 (將英呎轉換為公尺)
+                                                            double lengthMeter = pt0.DistanceTo(pt1) * 0.3048;
+                                                            if (lengthMeter < 1.0)
+                                                            {
+                                                                continue;
+                                                            }
+
+                                                            // 條件三：50mm(不含)以下的管徑/尺寸不標籤（擴展至 Pipe、Duct、CableTray）
+                                                            if (elem is Pipe)
+                                                            {
+                                                                Parameter diaParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
+                                                                if (diaParam != null && diaParam.HasValue)
+                                                                {
+                                                                    double diaMm = diaParam.AsDouble() * 304.8;
+                                                                    if (diaMm < 49.9) continue;
+                                                                }
+                                                            }
+                                                            else if (elem is Duct)
+                                                            {
+                                                                // 風管：取寬與高的最小邊，最小邊 < 50mm 則不標籤
+                                                                double widthMm = (elem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM)?.AsDouble() ?? 0) * 304.8;
+                                                                double heightMm = (elem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM)?.AsDouble() ?? 0) * 304.8;
+                                                                if (Math.Min(widthMm, heightMm) < 49.9) continue;
+                                                            }
+                                                            else if (elem is CableTray)
+                                                            {
+                                                                // 電纜架：取寬與高的最小邊，最小邊 < 50mm 則不標籤
+                                                                double widthMm = (elem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_WIDTH_PARAM)?.AsDouble() ?? 0) * 304.8;
+                                                                double heightMm = (elem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_HEIGHT_PARAM)?.AsDouble() ?? 0) * 304.8;
+                                                                if (Math.Min(widthMm, heightMm) < 49.9) continue;
+                                                            }
+                                                            // =========================================================
+
+                                                            double minZ = Math.Min(pt0.Z, pt1.Z);
+                                                            double maxZ = Math.Max(pt0.Z, pt1.Z);
+
+                                                            if (maxZ < validZ_Min || minZ > validZ_Max)
+                                                            {
+                                                                continue;
+                                                            }
+
+                                                            Reference pipeRef = mepItem.SourceProject.IsMainModel
+                                                                ? new Reference(elem)
+                                                                : new Reference(elem).CreateLinkReference(mepItem.SourceProject.LinkInstance);
+
+                                                            // =========================================================
+                                                            // 計算標籤放置點：
+                                                            //   - 管道兩端皆在視圖 XY 範圍內 → 取原始中點
+                                                            //   - 管道被視圖裁切 → 取「視圖內可見線段」的中點
+                                                            //   - 管道完全在視圖外 → 跳過
+                                                            // =========================================================
+                                                            BoundingBoxXYZ cropBox = checkViewPlan.CropBox;
+                                                            Transform cropTransform = cropBox.Transform;
+
+                                                            double viewMinX, viewMinY, viewMaxX, viewMaxY;
+
+                                                            if (checkViewPlan.CropBoxActive)
+                                                            {
+                                                                viewMinX = double.MaxValue; viewMinY = double.MaxValue;
+                                                                viewMaxX = double.MinValue; viewMaxY = double.MinValue;
+                                                                double[] localXs = new double[] { cropBox.Min.X, cropBox.Max.X };
+                                                                double[] localYs = new double[] { cropBox.Min.Y, cropBox.Max.Y };
+                                                                foreach (double lx in localXs)
+                                                                    foreach (double ly in localYs)
+                                                                    {
+                                                                        XYZ worldPt = cropTransform.OfPoint(new XYZ(lx, ly, 0));
+                                                                        if (worldPt.X < viewMinX) viewMinX = worldPt.X;
+                                                                        if (worldPt.Y < viewMinY) viewMinY = worldPt.Y;
+                                                                        if (worldPt.X > viewMaxX) viewMaxX = worldPt.X;
+                                                                        if (worldPt.Y > viewMaxY) viewMaxY = worldPt.Y;
+                                                                    }
+                                                            }
+                                                            else
+                                                            {
+                                                                viewMinX = double.MinValue / 2; viewMinY = double.MinValue / 2;
+                                                                viewMaxX = double.MaxValue / 2; viewMaxY = double.MaxValue / 2;
+                                                            }
+
+                                                            const double xyTol = 1e-6;
+                                                            bool pt0InView = pt0.X >= viewMinX - xyTol && pt0.X <= viewMaxX + xyTol &&
+                                                                             pt0.Y >= viewMinY - xyTol && pt0.Y <= viewMaxY + xyTol;
+                                                            bool pt1InView = pt1.X >= viewMinX - xyTol && pt1.X <= viewMaxX + xyTol &&
+                                                                             pt1.Y >= viewMinY - xyTol && pt1.Y <= viewMaxY + xyTol;
+
+                                                            XYZ tagMidPoint;
+                                                            double visibleLength; // 在視圖內可見的線段長度，用於選最長管道
+
+                                                            if (pt0InView && pt1InView)
+                                                            {
+                                                                tagMidPoint = (pt0 + pt1) / 2.0;
+                                                                visibleLength = pt0.DistanceTo(pt1);
+                                                            }
+                                                            else
+                                                            {
+                                                                XYZ clippedPt0, clippedPt1;
+                                                                bool clipped = ClipSegmentToViewBounds(
+                                                                    pt0, pt1, viewMinX, viewMaxX, viewMinY, viewMaxY,
+                                                                    out clippedPt0, out clippedPt1);
+                                                                if (!clipped) continue;
+                                                                tagMidPoint = (clippedPt0 + clippedPt1) / 2.0;
+                                                                visibleLength = clippedPt0.DistanceTo(clippedPt1);
+                                                            }
+
+                                                            double tagZ = tagMidPoint.Z;
+                                                            if (tagZ > exactZMax) tagZ = exactZMax - 0.01;
+                                                            if (tagZ < exactZMin) tagZ = exactZMin + 0.01;
+
+                                                            XYZ tagPlacementPoint = new XYZ(tagMidPoint.X, tagMidPoint.Y, tagZ);
+                                                            // =========================================================
+
+                                                            bool isLinked = !mepItem.SourceProject.IsMainModel;
+                                                            ElementId linkInstId = isLinked ? mepItem.SourceProject.LinkInstance.Id : ElementId.InvalidElementId;
+
+                                                            string sysSig = GetSystemSignature(elem, isLinked, linkInstId);
+
+                                                            // =========================================================
+                                                            // 【條件二】同視圖 + 同簽章（同系統+同標籤內容）→ 只保留視圖內最長的候選
+                                                            // 不立即建立標籤，先收集候選，等所有管道掃描完後再統一建立
+                                                            // =========================================================
+                                                            if (sysSig != null)
+                                                            {
+                                                                if (tagCandidates.TryGetValue(sysSig, out TagCandidate existing))
+                                                                {
+                                                                    // 已有候選：比較視圖內可見長度，保留較長者
+                                                                    if (visibleLength > existing.VisibleLength)
+                                                                    {
+                                                                        tagCandidates[sysSig] = new TagCandidate
+                                                                        {
+                                                                            ElemRef = pipeRef,
+                                                                            TargetSym = targetSymbol,
+                                                                            PlacementPt = tagPlacementPoint,
+                                                                            VisibleLength = visibleLength,
+                                                                            SysSig = sysSig
+                                                                        };
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    // 尚無候選：直接加入
+                                                                    if (!taggedSystemSignatures.Contains(sysSig))
+                                                                    {
+                                                                        tagCandidates[sysSig] = new TagCandidate
+                                                                        {
+                                                                            ElemRef = pipeRef,
+                                                                            TargetSym = targetSymbol,
+                                                                            PlacementPt = tagPlacementPoint,
+                                                                            VisibleLength = visibleLength,
+                                                                            SysSig = sysSig
+                                                                        };
+                                                                    }
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                // sysSig 為 null（理論上不發生）：直接建立，不做防重複
+                                                                tagCandidates[$"NoSig_{elem.Id.Value}"] = new TagCandidate
+                                                                {
+                                                                    ElemRef = pipeRef,
+                                                                    TargetSym = targetSymbol,
+                                                                    PlacementPt = tagPlacementPoint,
+                                                                    VisibleLength = visibleLength,
+                                                                    SysSig = null
+                                                                };
+                                                            }
                                                         }
+
+                                                        // =========================================================
+                                                        // 【候選確定後】對每個簽章的最長管道建立標籤
+                                                        // =========================================================
+                                                        foreach (TagCandidate candidate in tagCandidates.Values)
+                                                        {
+                                                            try
+                                                            {
+                                                                IndependentTag newTag = IndependentTag.Create(
+                                                                    doc,
+                                                                    checkViewPlan.Id,
+                                                                    candidate.ElemRef,
+                                                                    true,
+                                                                    TagMode.TM_ADDBY_CATEGORY,
+                                                                    TagOrientation.Horizontal,
+                                                                    candidate.PlacementPt
+                                                                );
+
+                                                                if (newTag != null)
+                                                                {
+                                                                    newTag.ChangeTypeId(candidate.TargetSym.Id);
+                                                                    newTagCounts++;
+                                                                    if (candidate.SysSig != null)
+                                                                        taggedSystemSignatures.Add(candidate.SysSig);
+                                                                }
+                                                            }
+                                                            catch (Autodesk.Revit.Exceptions.ArgumentException) { }
+                                                        }
+
                                                     }
+                                                    t.Commit();
                                                 }
-                                                catch (Autodesk.Revit.Exceptions.ArgumentException) { }
                                             }
+                                            catch { }
                                         }
-
-                                        t.Commit();
                                     }
+
                                     DateTime timeEnd = DateTime.Now;
                                     TimeSpan totalTime = timeEnd - timeStart;
                                     if (newTagCounts > 0)
@@ -485,15 +537,23 @@ namespace Sinotech.CSDSEM
             if (lengthMeter < 1.0)
                 return false;
 
-            // 條件三：水管管徑 50mm(不含)以下不標籤
+            // 條件三：尺寸過濾（Pipe/Duct/CableTray 皆適用）
             if (elem is Pipe)
             {
-                Parameter diaParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
-                if (diaParam != null && diaParam.HasValue)
-                {
-                    double diaMm = diaParam.AsDouble() * 304.8;
-                    if (diaMm < 49.9) return false;
-                }
+                double diaMm = (elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.AsDouble() ?? 0) * 304.8;
+                if (diaMm < 49.9) return false;
+            }
+            else if (elem is Duct)
+            {
+                double widthMm = (elem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM)?.AsDouble() ?? 0) * 304.8;
+                double heightMm = (elem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM)?.AsDouble() ?? 0) * 304.8;
+                if (Math.Min(widthMm, heightMm) < 49.9) return false;
+            }
+            else if (elem is CableTray)
+            {
+                double widthMm = (elem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_WIDTH_PARAM)?.AsDouble() ?? 0) * 304.8;
+                double heightMm = (elem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_HEIGHT_PARAM)?.AsDouble() ?? 0) * 304.8;
+                if (Math.Min(widthMm, heightMm) < 49.9) return false;
             }
 
             return true;
@@ -552,28 +612,26 @@ namespace Sinotech.CSDSEM
 
                 if (elem is Pipe)
                 {
-                    // 管徑 (mm)
                     double diaMm = Math.Round((elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.AsDouble() ?? 0) * 304.8);
-                    // 管底高程 (mm)：中心高程 - 半徑
                     double centerElev = (elem.get_Parameter(BuiltInParameter.RBS_PIPE_BOTTOM_ELEVATION)?.AsDouble() ?? 0) * 304.8;
-                    double elevMm = Math.Round(centerElev);
+                    // 【修正】高程四捨五入至最接近的 100mm，
+                    // 避免同系統斜管因坡度造成兩端高程略有差異，導致簽章不同而重複標注
+                    double elevMm = Math.Round(centerElev / 100.0) * 100.0;
                     return $"P_{diaMm}_{sysAbbr}_{elevMm}";
                 }
 
                 if (elem is Duct)
                 {
-                    // 風管：寬 x 高 (mm)
                     double widthMm = Math.Round((elem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM)?.AsDouble() ?? 0) * 304.8);
                     double heightMm = Math.Round((elem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM)?.AsDouble() ?? 0) * 304.8);
-                    // 中心高程 (mm)
                     double centerElev = (elem.get_Parameter(BuiltInParameter.RBS_DUCT_BOTTOM_ELEVATION)?.AsDouble() ?? 0) * 304.8;
-                    double elevMm = Math.Round(centerElev);
+                    // 【修正】同上，高程四捨五入至最接近的 100mm
+                    double elevMm = Math.Round(centerElev / 100.0) * 100.0;
                     return $"D_{widthMm}x{heightMm}_{sysAbbr}_{elevMm}";
                 }
             }
             catch { }
 
-            // fallback：用元件 Id，確保不會誤跳過
             return $"Elem_{elem.Id.Value}";
         }
 
@@ -823,5 +881,17 @@ namespace Sinotech.CSDSEM
                 return "未知類型";
             }
         }
+    }
+
+    /// <summary>
+    /// 同一簽章（同系統+同標籤內容）的標籤候選，只保留視圖內可見長度最長的管道。
+    /// </summary>
+    public class TagCandidate
+    {
+        public Reference ElemRef { get; set; }
+        public FamilySymbol TargetSym { get; set; }
+        public XYZ PlacementPt { get; set; }
+        public double VisibleLength { get; set; }
+        public string SysSig { get; set; }
     }
 }

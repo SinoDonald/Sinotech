@@ -76,7 +76,7 @@ namespace Sinotech_2020.CSDSEM
         double prjWE = 0.0; // 專案基準點：W/E
         double prjElev = 0.0; // 專案基準點高程
         //double angle = 0.0; // 旋轉角度
-        double originalPrjElev = 0.0; // 基準座標
+        //double originalPrjElev = 0.0; // 基準座標
         double elevationOffset = 0.0; // 高程偏移
         int prjCode = 0; // 專案代碼
         public static double unit_conversion = 304.8; // 專案單位轉換
