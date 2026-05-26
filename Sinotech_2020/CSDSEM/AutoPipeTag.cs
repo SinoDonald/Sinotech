@@ -99,7 +99,7 @@ namespace Sinotech_2020.CSDSEM
                                                     t.Start();
 
                                                     FamilySymbol pipeTagSym = GetTagSymbol(doc, BuiltInCategory.OST_PipeTags, "管底_尺寸+系統");
-                                                    FamilySymbol ductTagSym = GetTagSymbol(doc, BuiltInCategory.OST_DuctTags, "管道標籤_寬高_高程");
+                                                    FamilySymbol ductTagSym = GetTagSymbol(doc, BuiltInCategory.OST_DuctTags, "管道標籤_寬高_一行");
                                                     FamilySymbol trayTagSym = GetTagSymbol(doc, BuiltInCategory.OST_CableTrayTags, "MRT_電纜托盤編號標籤");
 
                                                     if (pipeTagSym != null && !pipeTagSym.IsActive) pipeTagSym.Activate();
@@ -126,13 +126,6 @@ namespace Sinotech_2020.CSDSEM
 
                                                         // =========================================================
                                                         // 【系統級防重複機制】
-                                                        // alreadyTaggedSignatures：記錄「已被任意標籤標注過的管道實體 ID」
-                                                        //   → 防止對同一根管道重複建立標籤（無論標籤族類型）
-                                                        // taggedSystemSignatures：記錄「已被本程式目標標籤族標注過的系統 ID」
-                                                        //   → 防止同一系統在同一視圖中被標注兩次
-                                                        //   → 【關鍵】只有「目標標籤族」才能寫入此 set；
-                                                        //     非目標族的標籤不得污染此 set，否則會導致某系統
-                                                        //     因為「被其他族標過」而被誤跳過（Bug 2 根因）
                                                         // =========================================================
                                                         HashSet<string> alreadyTaggedSignatures = new HashSet<string>(); // 紀錄實體 ID
                                                         HashSet<string> taggedSystemSignatures = new HashSet<string>();  // 紀錄系統 ID（僅目標標籤族）
@@ -154,6 +147,7 @@ namespace Sinotech_2020.CSDSEM
                                                                 {
                                                                     isTargetTag = true;
                                                                 }
+
                                                                 Reference tagRef = tag.GetTaggedReference(); // 2020
                                                                 //foreach (Reference tagRef in tag.GetTaggedReferences())
                                                                 //{
@@ -162,22 +156,15 @@ namespace Sinotech_2020.CSDSEM
 
                                                                     if (isLinked)
                                                                     {
-                                                                        // 【設計決策】連結模型的既有標籤：
-                                                                        // 僅目標標籤族才寫入 alreadyTaggedSignatures，防止本次執行對同一管道重複建立。
-                                                                        // 非目標族不寫入，因為連結模型的標籤之後會全部關閉，
-                                                                        // 不應讓其他族的標籤封鎖本次執行對連結管道的標注。
                                                                         if (isTargetTag)
                                                                         {
                                                                             alreadyTaggedSignatures.Add($"Linked_{tagRef.ElementId}_{tagRef.LinkedElementId}");
                                                                         }
-                                                                        // taggedSystemSignatures：連結模型既有標籤一律不寫入（同上理由）
                                                                     }
                                                                     else
                                                                     {
-                                                                        // 主模型：任何標籤族都寫入 alreadyTaggedSignatures，防止重複建立
                                                                         alreadyTaggedSignatures.Add($"Local_{tagRef.ElementId}");
 
-                                                                        // 只有主模型 + 目標標籤族：才記錄系統 ID
                                                                         if (isTargetTag)
                                                                         {
                                                                             Element taggedElem = doc.GetElement(tagRef.ElementId);
@@ -233,8 +220,6 @@ namespace Sinotech_2020.CSDSEM
 
                                                         if (validMepInThisView.Count == 0) continue;
 
-                                                        // 【條件二】候選字典：key=sysSig，value=當前最長候選
-                                                        // 掃描完所有管道後，每個簽章只對最長的建立標籤
                                                         Dictionary<string, TagCandidate> tagCandidates = new Dictionary<string, TagCandidate>();
 
                                                         foreach (TargetMepElement mepItem in validMepInThisView)
@@ -270,24 +255,20 @@ namespace Sinotech_2020.CSDSEM
 
                                                             if (pt0 == null || pt1 == null) continue;
 
-                                                            // =========================================================
-                                                            // 【新增過濾條件：不進行標籤的物件】
-                                                            // =========================================================
-
                                                             // 條件一：立管不標籤 (起終點的 X, Y 座標幾乎相同，給予 0.01 呎約 3mm 容差)
                                                             if (Math.Abs(pt1.X - pt0.X) < 0.01 && Math.Abs(pt1.Y - pt0.Y) < 0.01)
                                                             {
                                                                 continue;
                                                             }
 
-                                                            // 條件二：長度低於 1M 不標籤 (將英呎轉換為公尺)
+                                                            // 條件二：長度低於 2M 不標籤 (將英呎轉換為公尺)
                                                             double lengthMeter = pt0.DistanceTo(pt1) * 0.3048;
-                                                            if (lengthMeter < 1.0)
+                                                            if (lengthMeter < 2.0)
                                                             {
                                                                 continue;
                                                             }
 
-                                                            // 條件三：50mm(不含)以下的管徑/尺寸不標籤（擴展至 Pipe、Duct、CableTray）
+                                                            // 條件三：50mm(不含)以下的管徑/尺寸不標籤
                                                             if (elem is Pipe)
                                                             {
                                                                 Parameter diaParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
@@ -299,19 +280,16 @@ namespace Sinotech_2020.CSDSEM
                                                             }
                                                             else if (elem is Duct)
                                                             {
-                                                                // 風管：取寬與高的最小邊，最小邊 < 50mm 則不標籤
                                                                 double widthMm = (elem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM)?.AsDouble() ?? 0) * 304.8;
                                                                 double heightMm = (elem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM)?.AsDouble() ?? 0) * 304.8;
                                                                 if (Math.Min(widthMm, heightMm) < 49.9) continue;
                                                             }
                                                             else if (elem is CableTray)
                                                             {
-                                                                // 電纜架：取寬與高的最小邊，最小邊 < 50mm 則不標籤
                                                                 double widthMm = (elem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_WIDTH_PARAM)?.AsDouble() ?? 0) * 304.8;
                                                                 double heightMm = (elem.get_Parameter(BuiltInParameter.RBS_CABLETRAY_HEIGHT_PARAM)?.AsDouble() ?? 0) * 304.8;
                                                                 if (Math.Min(widthMm, heightMm) < 49.9) continue;
                                                             }
-                                                            // =========================================================
 
                                                             double minZ = Math.Min(pt0.Z, pt1.Z);
                                                             double maxZ = Math.Max(pt0.Z, pt1.Z);
@@ -325,12 +303,6 @@ namespace Sinotech_2020.CSDSEM
                                                                 ? new Reference(elem)
                                                                 : new Reference(elem).CreateLinkReference(mepItem.SourceProject.LinkInstance);
 
-                                                            // =========================================================
-                                                            // 計算標籤放置點：
-                                                            //   - 管道兩端皆在視圖 XY 範圍內 → 取原始中點
-                                                            //   - 管道被視圖裁切 → 取「視圖內可見線段」的中點
-                                                            //   - 管道完全在視圖外 → 跳過
-                                                            // =========================================================
                                                             BoundingBoxXYZ cropBox = checkViewPlan.CropBox;
                                                             Transform cropTransform = cropBox.Transform;
 
@@ -365,7 +337,7 @@ namespace Sinotech_2020.CSDSEM
                                                                              pt1.Y >= viewMinY - xyTol && pt1.Y <= viewMaxY + xyTol;
 
                                                             XYZ tagMidPoint;
-                                                            double visibleLength; // 在視圖內可見的線段長度，用於選最長管道
+                                                            double visibleLength;
 
                                                             if (pt0InView && pt1InView)
                                                             {
@@ -388,7 +360,6 @@ namespace Sinotech_2020.CSDSEM
                                                             if (tagZ < exactZMin) tagZ = exactZMin + 0.01;
 
                                                             XYZ tagPlacementPoint = new XYZ(tagMidPoint.X, tagMidPoint.Y, tagZ);
-                                                            // =========================================================
 
                                                             bool isLinked = !mepItem.SourceProject.IsMainModel;
                                                             ElementId linkInstId = isLinked ? mepItem.SourceProject.LinkInstance.Id : ElementId.InvalidElementId;
@@ -396,14 +367,29 @@ namespace Sinotech_2020.CSDSEM
                                                             string sysSig = GetSystemSignature(elem, isLinked, linkInstId);
 
                                                             // =========================================================
-                                                            // 【條件二】同視圖 + 同簽章（同系統+同標籤內容）→ 只保留視圖內最長的候選
-                                                            // 不立即建立標籤，先收集候選，等所有管道掃描完後再統一建立
+                                                            // 【長管強制標籤條件】
                                                             // =========================================================
+                                                            double visibleLengthMeter = visibleLength * 0.3048;
+                                                            bool isLongPipe = visibleLengthMeter > 10.0;
+
+                                                            if (isLongPipe)
+                                                            {
+                                                                string longPipeKey = $"LongPipe_{(isLinked ? $"Linked_{linkInstId.IntegerValue}" : "Local")}_{elem.Id.IntegerValue}";
+                                                                tagCandidates[longPipeKey] = new TagCandidate
+                                                                {
+                                                                    ElemRef = pipeRef,
+                                                                    TargetSym = targetSymbol,
+                                                                    PlacementPt = tagPlacementPoint,
+                                                                    VisibleLength = visibleLength,
+                                                                    SysSig = null,  // null = 不寫入 taggedSystemSignatures，不封鎖其他管道
+                                                                    ElementUniqueId = currentSig // 【關鍵修正】把實體 ID 寫進去防重複
+                                                                };
+                                                            }
+
                                                             if (sysSig != null)
                                                             {
                                                                 if (tagCandidates.TryGetValue(sysSig, out TagCandidate existing))
                                                                 {
-                                                                    // 已有候選：比較視圖內可見長度，保留較長者
                                                                     if (visibleLength > existing.VisibleLength)
                                                                     {
                                                                         tagCandidates[sysSig] = new TagCandidate
@@ -412,13 +398,13 @@ namespace Sinotech_2020.CSDSEM
                                                                             TargetSym = targetSymbol,
                                                                             PlacementPt = tagPlacementPoint,
                                                                             VisibleLength = visibleLength,
-                                                                            SysSig = sysSig
+                                                                            SysSig = sysSig,
+                                                                            ElementUniqueId = currentSig // 【關鍵修正】
                                                                         };
                                                                     }
                                                                 }
                                                                 else
                                                                 {
-                                                                    // 尚無候選：直接加入
                                                                     if (!taggedSystemSignatures.Contains(sysSig))
                                                                     {
                                                                         tagCandidates[sysSig] = new TagCandidate
@@ -427,21 +413,22 @@ namespace Sinotech_2020.CSDSEM
                                                                             TargetSym = targetSymbol,
                                                                             PlacementPt = tagPlacementPoint,
                                                                             VisibleLength = visibleLength,
-                                                                            SysSig = sysSig
+                                                                            SysSig = sysSig,
+                                                                            ElementUniqueId = currentSig // 【關鍵修正】
                                                                         };
                                                                     }
                                                                 }
                                                             }
                                                             else
                                                             {
-                                                                // sysSig 為 null（理論上不發生）：直接建立，不做防重複
                                                                 tagCandidates[$"NoSig_{elem.Id.IntegerValue}"] = new TagCandidate
                                                                 {
                                                                     ElemRef = pipeRef,
                                                                     TargetSym = targetSymbol,
                                                                     PlacementPt = tagPlacementPoint,
                                                                     VisibleLength = visibleLength,
-                                                                    SysSig = null
+                                                                    SysSig = null,
+                                                                    ElementUniqueId = currentSig // 【關鍵修正】
                                                                 };
                                                             }
                                                         }
@@ -451,6 +438,10 @@ namespace Sinotech_2020.CSDSEM
                                                         // =========================================================
                                                         foreach (TagCandidate candidate in tagCandidates.Values)
                                                         {
+                                                            // 【關鍵防呆】：如果這個管線實體 ID 已經打過標籤（例如它是長管，剛好又是系統內最長），直接跳過！
+                                                            if (alreadyTaggedSignatures.Contains(candidate.ElementUniqueId))
+                                                                continue;
+
                                                             try
                                                             {
                                                                 IndependentTag newTag = IndependentTag.Create(
@@ -469,6 +460,9 @@ namespace Sinotech_2020.CSDSEM
                                                                     newTagCounts++;
                                                                     if (candidate.SysSig != null)
                                                                         taggedSystemSignatures.Add(candidate.SysSig);
+
+                                                                    // 建立標籤後，立刻將這個實體 ID 加入「已標註名單」，斷絕雙重標註
+                                                                    alreadyTaggedSignatures.Add(candidate.ElementUniqueId);
                                                                 }
                                                             }
                                                             catch (Autodesk.Revit.Exceptions.ArgumentException) { }
@@ -505,14 +499,6 @@ namespace Sinotech_2020.CSDSEM
             return Result.Cancelled;
         }
 
-        /// <summary>
-        /// 判斷管道元件是否符合「值得建立標籤」的條件，供掃描現有標籤與放置標籤兩處共用。
-        /// 條件與放置標籤時的過濾條件完全一致：
-        ///   1. 非立管（XY 位移需超過 0.01 呎）
-        ///   2. 長度 >= 1M
-        ///   3. 水管管徑 >= 50mm
-        /// linkTransform 為 null 表示主模型元件，不需座標轉換。
-        /// </summary>
         private bool IsEligibleForTag(Element elem, Transform linkTransform = null)
         {
             if (elem == null) return false;
@@ -527,16 +513,13 @@ namespace Sinotech_2020.CSDSEM
                 pt1 = linkTransform.OfPoint(pt1);
             }
 
-            // 條件一：立管不標籤
             if (Math.Abs(pt1.X - pt0.X) < 0.01 && Math.Abs(pt1.Y - pt0.Y) < 0.01)
                 return false;
 
-            // 條件二：長度低於 1M 不標籤
             double lengthMeter = pt0.DistanceTo(pt1) * 0.3048;
             if (lengthMeter < 1.0)
                 return false;
 
-            // 條件三：尺寸過濾（Pipe/Duct/CableTray 皆適用）
             if (elem is Pipe)
             {
                 double diaMm = (elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.AsDouble() ?? 0) * 304.8;
@@ -558,12 +541,6 @@ namespace Sinotech_2020.CSDSEM
             return true;
         }
 
-        /// <summary>
-        /// 取得元件的「防重複簽章」。
-        /// 防重複基準：同一來源（主/連結）+ 同一系統 + 同一標籤內容，才視為重複，只建立一次。
-        /// 標籤內容由元件的尺寸、系統縮寫、高程參數組成，與標籤族實際顯示內容一致。
-        /// 同一系統但尺寸或高程不同（標籤內容不同）→ 簽章不同 → 各自建立標籤。
-        /// </summary>
         private string GetSystemSignature(Element elem, bool isLinked, ElementId linkInstanceId)
         {
             if (elem == null) return null;
@@ -576,7 +553,6 @@ namespace Sinotech_2020.CSDSEM
                     ? mepCurve.MEPSystem.Id.IntegerValue.ToString()
                     : "NoSys_" + elem.Id.IntegerValue.ToString();
 
-                // 取得標籤內容相關參數，組成與標籤顯示一致的簽章
                 string tagContent = GetTagContentSignature(elem);
 
                 return $"{prefix}System_{systemId}__{tagContent}";
@@ -594,11 +570,6 @@ namespace Sinotech_2020.CSDSEM
             return $"{prefix}Isolated_{elem.Id.IntegerValue}";
         }
 
-        /// <summary>
-        /// 從元件參數組出與標籤族顯示內容一致的字串，作為防重複簽章的一部分。
-        /// Pipe  → 管徑(mm) + 系統縮寫 + 管底高程(mm)
-        /// Duct  → 寬(mm) x 高(mm) + 系統縮寫 + 中心高程(mm)
-        /// </summary>
         private string GetTagContentSignature(Element elem)
         {
             try
@@ -613,8 +584,6 @@ namespace Sinotech_2020.CSDSEM
                 {
                     double diaMm = Math.Round((elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.AsDouble() ?? 0) * 304.8);
                     double centerElev = (elem.get_Parameter(BuiltInParameter.RBS_PIPE_BOTTOM_ELEVATION)?.AsDouble() ?? 0) * 304.8;
-                    // 【修正】高程四捨五入至最接近的 100mm，
-                    // 避免同系統斜管因坡度造成兩端高程略有差異，導致簽章不同而重複標注
                     double elevMm = Math.Round(centerElev / 100.0) * 100.0;
                     return $"P_{diaMm}_{sysAbbr}_{elevMm}";
                 }
@@ -624,7 +593,6 @@ namespace Sinotech_2020.CSDSEM
                     double widthMm = Math.Round((elem.get_Parameter(BuiltInParameter.RBS_CURVE_WIDTH_PARAM)?.AsDouble() ?? 0) * 304.8);
                     double heightMm = Math.Round((elem.get_Parameter(BuiltInParameter.RBS_CURVE_HEIGHT_PARAM)?.AsDouble() ?? 0) * 304.8);
                     double centerElev = (elem.get_Parameter(BuiltInParameter.RBS_DUCT_BOTTOM_ELEVATION)?.AsDouble() ?? 0) * 304.8;
-                    // 【修正】同上，高程四捨五入至最接近的 100mm
                     double elevMm = Math.Round(centerElev / 100.0) * 100.0;
                     return $"D_{widthMm}x{heightMm}_{sysAbbr}_{elevMm}";
                 }
@@ -751,19 +719,12 @@ namespace Sinotech_2020.CSDSEM
             );
         }
 
-        /// <summary>
-        /// 將線段 (p0→p1) 裁切到矩形範圍 [xMin,xMax]×[yMin,yMax]。
-        /// 回傳 true 表示裁切後線段有效（至少部分在範圍內）；
-        /// out 參數為裁切後的兩端點（Z 值以線性插值計算）。
-        /// </summary>
         private bool ClipSegmentToViewBounds(
             XYZ p0, XYZ p1,
             double xMin, double xMax,
             double yMin, double yMax,
             out XYZ clipped0, out XYZ clipped1)
         {
-            // 使用參數式裁切（Liang-Barsky 演算法）
-            // 線段表示為 P(t) = p0 + t*(p1-p0)，t ∈ [0,1]
             double dx = p1.X - p0.X;
             double dy = p1.Y - p0.Y;
             double dz = p1.Z - p0.Z;
@@ -771,11 +732,6 @@ namespace Sinotech_2020.CSDSEM
             double tMin = 0.0;
             double tMax = 1.0;
 
-            // 對四個邊界各做一次參數裁切
-            // 左邊界 (x >= xMin)：p = -dx, q = p0.X - xMin
-            // 右邊界 (x <= xMax)：p =  dx, q = xMax - p0.X
-            // 下邊界 (y >= yMin)：p = -dy, q = p0.Y - yMin
-            // 上邊界 (y <= yMax)：p =  dy, q = yMax - p0.Y
             double[] p = new double[] { -dx, dx, -dy, dy };
             double[] q = new double[] {
         p0.X - xMin,
@@ -786,42 +742,36 @@ namespace Sinotech_2020.CSDSEM
 
             for (int i = 0; i < 4; i++)
             {
-                if (Math.Abs(p[i]) < 1e-10) // 平行於此邊界
+                if (Math.Abs(p[i]) < 1e-10)
                 {
                     if (q[i] < 0)
                     {
-                        // 線段完全在此邊界外
                         clipped0 = p0;
                         clipped1 = p1;
                         return false;
                     }
-                    // 否則此邊界不限制，繼續
                 }
                 else
                 {
                     double t = q[i] / p[i];
                     if (p[i] < 0)
                     {
-                        // 進入邊界：更新 tMin
                         if (t > tMin) tMin = t;
                     }
                     else
                     {
-                        // 離開邊界：更新 tMax
                         if (t < tMax) tMax = t;
                     }
                 }
 
                 if (tMin > tMax)
                 {
-                    // 線段完全在範圍外
                     clipped0 = p0;
                     clipped1 = p1;
                     return false;
                 }
             }
 
-            // 計算裁切後端點（Z 值線性插值）
             clipped0 = new XYZ(
                 p0.X + tMin * dx,
                 p0.Y + tMin * dy,
@@ -892,5 +842,7 @@ namespace Sinotech_2020.CSDSEM
         public XYZ PlacementPt { get; set; }
         public double VisibleLength { get; set; }
         public string SysSig { get; set; }
+        // 【新增】：用於防重複判定，記錄該管線的實體特徵碼 (如: Local_7018300)
+        public string ElementUniqueId { get; set; }
     }
 }
