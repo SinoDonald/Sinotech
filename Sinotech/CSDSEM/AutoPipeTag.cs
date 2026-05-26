@@ -99,7 +99,7 @@ namespace Sinotech.CSDSEM
                                                     t.Start();
 
                                                     FamilySymbol pipeTagSym = GetTagSymbol(doc, BuiltInCategory.OST_PipeTags, "管底_尺寸+系統");
-                                                    FamilySymbol ductTagSym = GetTagSymbol(doc, BuiltInCategory.OST_DuctTags, "管道標籤_寬高_高程");
+                                                    FamilySymbol ductTagSym = GetTagSymbol(doc, BuiltInCategory.OST_DuctTags, "管道標籤_寬高_一行");
                                                     FamilySymbol trayTagSym = GetTagSymbol(doc, BuiltInCategory.OST_CableTrayTags, "MRT_電纜托盤編號標籤");
 
                                                     if (pipeTagSym != null && !pipeTagSym.IsActive) pipeTagSym.Activate();
@@ -281,9 +281,9 @@ namespace Sinotech.CSDSEM
                                                                 continue;
                                                             }
 
-                                                            // 條件二：長度低於 1M 不標籤 (將英呎轉換為公尺)
+                                                            // 條件二：長度低於 2M 不標籤 (將英呎轉換為公尺)
                                                             double lengthMeter = pt0.DistanceTo(pt1) * 0.3048;
-                                                            if (lengthMeter < 1.0)
+                                                            if (lengthMeter < 2.0)
                                                             {
                                                                 continue;
                                                             }
@@ -395,6 +395,30 @@ namespace Sinotech.CSDSEM
                                                             ElementId linkInstId = isLinked ? mepItem.SourceProject.LinkInstance.Id : ElementId.InvalidElementId;
 
                                                             string sysSig = GetSystemSignature(elem, isLinked, linkInstId);
+
+                                                            // =========================================================
+                                                            // 【長管強制標籤條件】
+                                                            // 視圖內可見長度 > 10m 的管道，不論系統、標籤內容是否相同，
+                                                            // 一律強制各自建立標籤，繞過簽章防重複機制。
+                                                            // 以元件 ID 作為獨立 key，確保每根長管都有自己的候選。
+                                                            // =========================================================
+                                                            double visibleLengthMeter = visibleLength * 0.3048;
+                                                            bool isLongPipe = visibleLengthMeter > 10.0;
+
+                                                            if (isLongPipe)
+                                                            {
+                                                                string longPipeKey = $"LongPipe_{(isLinked ? $"Linked_{linkInstId.Value}" : "Local")}_{elem.Id.Value}";
+                                                                tagCandidates[longPipeKey] = new TagCandidate
+                                                                {
+                                                                    ElemRef = pipeRef,
+                                                                    TargetSym = targetSymbol,
+                                                                    PlacementPt = tagPlacementPoint,
+                                                                    VisibleLength = visibleLength,
+                                                                    SysSig = null  // null = 不寫入 taggedSystemSignatures，不封鎖其他管道
+                                                                };
+                                                                // 長管仍繼續往下走一般簽章邏輯，
+                                                                // 讓同簽章的非長管候選也有機會被保留（互不干擾）
+                                                            }
 
                                                             // =========================================================
                                                             // 【條件二】同視圖 + 同簽章（同系統+同標籤內容）→ 只保留視圖內最長的候選
