@@ -58,6 +58,10 @@ namespace Sinotech_2020.CSDSEM
                                     int newTagCounts = 0;
                                     List<ViewPlan> checkViewPlans = chooseMultiViewPlansForm.checkViewPlans;
 
+                                    // 進度條視窗
+                                    ProgressForm progressForm = new ProgressForm("自動管線標籤", checkViewPlans.Count);
+                                    progressForm.Show();
+
                                     // =========================================================
                                     // 【新增】Transaction 外：預先開啟子視圖對應的母視圖
                                     // 原因：標籤放置在子視圖時，若母視圖未開啟，標籤將無法移動
@@ -116,6 +120,9 @@ namespace Sinotech_2020.CSDSEM
 
                                                     foreach (ViewPlan checkViewPlan in sameParentViewId)
                                                     {
+                                                        // 更新進度條
+                                                        progressForm.UpdateProgress(checkViewPlan.Name);
+                                                        Application.DoEvents();
                                                         double exactZMax = GetPlaneElevation(checkViewPlan, PlanViewPlane.TopClipPlane, 1000.0, -1000.0);
                                                         double exactZMin = GetPlaneElevation(checkViewPlan, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
                                                         double defaultCutZ = (exactZMax + exactZMin) / 2.0;
@@ -368,22 +375,35 @@ namespace Sinotech_2020.CSDSEM
 
                                                             // =========================================================
                                                             // 【長管強制標籤條件】
+                                                            // 視圖內可見長度 > 10m：不論系統/標籤內容是否相同，
+                                                            // 每根都各自建立標籤。
+                                                            //
+                                                            // 修正重複標籤 Bug 的根本做法：
+                                                            //   - 以 currentSig（元件實體 ID）作為 key，確保同一根
+                                                            //     管道只會有一筆候選，不會因為「長管 key」+「sysSig key」
+                                                            //     各自放進字典而建立兩次標籤。
+                                                            //   - isLongPipe 時直接 continue，跳過下方的 sysSig 邏輯，
+                                                            //     兩條路徑完全互斥，不需要 ElementUniqueId 防呆。
                                                             // =========================================================
                                                             double visibleLengthMeter = visibleLength * 0.3048;
                                                             bool isLongPipe = visibleLengthMeter > 10.0;
 
                                                             if (isLongPipe)
                                                             {
-                                                                string longPipeKey = $"LongPipe_{(isLinked ? $"Linked_{linkInstId.IntegerValue}" : "Local")}_{elem.Id.IntegerValue}";
-                                                                tagCandidates[longPipeKey] = new TagCandidate
+                                                                // key = currentSig（元件 ID），確保同一根管道只有一筆候選
+                                                                if (!tagCandidates.TryGetValue(currentSig, out TagCandidate existingLong)
+                                                                    || visibleLength > existingLong.VisibleLength)
                                                                 {
-                                                                    ElemRef = pipeRef,
-                                                                    TargetSym = targetSymbol,
-                                                                    PlacementPt = tagPlacementPoint,
-                                                                    VisibleLength = visibleLength,
-                                                                    SysSig = null,  // null = 不寫入 taggedSystemSignatures，不封鎖其他管道
-                                                                    ElementUniqueId = currentSig // 【關鍵修正】把實體 ID 寫進去防重複
-                                                                };
+                                                                    tagCandidates[currentSig] = new TagCandidate
+                                                                    {
+                                                                        ElemRef = pipeRef,
+                                                                        TargetSym = targetSymbol,
+                                                                        PlacementPt = tagPlacementPoint,
+                                                                        VisibleLength = visibleLength,
+                                                                        SysSig = null  // null = 不寫入 taggedSystemSignatures
+                                                                    };
+                                                                }
+                                                                continue; // 長管路徑結束，跳過下方 sysSig 邏輯，確保不重複
                                                             }
 
                                                             if (sysSig != null)
@@ -398,8 +418,7 @@ namespace Sinotech_2020.CSDSEM
                                                                             TargetSym = targetSymbol,
                                                                             PlacementPt = tagPlacementPoint,
                                                                             VisibleLength = visibleLength,
-                                                                            SysSig = sysSig,
-                                                                            ElementUniqueId = currentSig // 【關鍵修正】
+                                                                            SysSig = sysSig
                                                                         };
                                                                     }
                                                                 }
@@ -413,22 +432,21 @@ namespace Sinotech_2020.CSDSEM
                                                                             TargetSym = targetSymbol,
                                                                             PlacementPt = tagPlacementPoint,
                                                                             VisibleLength = visibleLength,
-                                                                            SysSig = sysSig,
-                                                                            ElementUniqueId = currentSig // 【關鍵修正】
+                                                                            SysSig = sysSig
                                                                         };
                                                                     }
                                                                 }
                                                             }
                                                             else
                                                             {
-                                                                tagCandidates[$"NoSig_{elem.Id.IntegerValue}"] = new TagCandidate
+                                                                // sysSig 為 null（理論上不發生）：以元件 ID 為 key
+                                                                tagCandidates[currentSig] = new TagCandidate
                                                                 {
                                                                     ElemRef = pipeRef,
                                                                     TargetSym = targetSymbol,
                                                                     PlacementPt = tagPlacementPoint,
                                                                     VisibleLength = visibleLength,
-                                                                    SysSig = null,
-                                                                    ElementUniqueId = currentSig // 【關鍵修正】
+                                                                    SysSig = null
                                                                 };
                                                             }
                                                         }
@@ -438,10 +456,6 @@ namespace Sinotech_2020.CSDSEM
                                                         // =========================================================
                                                         foreach (TagCandidate candidate in tagCandidates.Values)
                                                         {
-                                                            // 【關鍵防呆】：如果這個管線實體 ID 已經打過標籤（例如它是長管，剛好又是系統內最長），直接跳過！
-                                                            if (alreadyTaggedSignatures.Contains(candidate.ElementUniqueId))
-                                                                continue;
-
                                                             try
                                                             {
                                                                 IndependentTag newTag = IndependentTag.Create(
@@ -460,9 +474,6 @@ namespace Sinotech_2020.CSDSEM
                                                                     newTagCounts++;
                                                                     if (candidate.SysSig != null)
                                                                         taggedSystemSignatures.Add(candidate.SysSig);
-
-                                                                    // 建立標籤後，立刻將這個實體 ID 加入「已標註名單」，斷絕雙重標註
-                                                                    alreadyTaggedSignatures.Add(candidate.ElementUniqueId);
                                                                 }
                                                             }
                                                             catch (Autodesk.Revit.Exceptions.ArgumentException) { }
@@ -475,6 +486,9 @@ namespace Sinotech_2020.CSDSEM
                                             catch { }
                                         }
                                     }
+
+                                    progressForm.Close();
+                                    progressForm.Dispose();
 
                                     DateTime timeEnd = DateTime.Now;
                                     TimeSpan totalTime = timeEnd - timeStart;
@@ -834,6 +848,7 @@ namespace Sinotech_2020.CSDSEM
 
     /// <summary>
     /// 同一簽章（同系統+同標籤內容）的標籤候選，只保留視圖內可見長度最長的管道。
+    /// 長管（>10m）以 currentSig（元件 ID）為 key，與 sysSig 路徑完全互斥，不需額外防重複。
     /// </summary>
     public class TagCandidate
     {
@@ -842,7 +857,92 @@ namespace Sinotech_2020.CSDSEM
         public XYZ PlacementPt { get; set; }
         public double VisibleLength { get; set; }
         public string SysSig { get; set; }
-        // 【新增】：用於防重複判定，記錄該管線的實體特徵碼 (如: Local_7018300)
-        public string ElementUniqueId { get; set; }
+    }
+
+    /// <summary>
+    /// 進度條視窗：顯示目前處理中的視圖名稱與完成百分比。
+    /// </summary>
+    public class ProgressForm : System.Windows.Forms.Form
+    {
+        private System.Windows.Forms.Label _labelTitle;
+        private System.Windows.Forms.Label _labelCurrent;
+        private System.Windows.Forms.ProgressBar _progressBar;
+        private System.Windows.Forms.Label _labelPercent;
+
+        private readonly int _total;
+        private int _current = 0;
+
+        public ProgressForm(string title, int totalCount)
+        {
+            _total = Math.Max(1, totalCount);
+            InitializeComponents(title);
+        }
+
+        private void InitializeComponents(string title)
+        {
+            this.Text = title;
+            this.Width = 420;
+            this.Height = 150;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.ControlBox = false; // 不顯示關閉按鈕，避免被誤關
+
+            _labelTitle = new System.Windows.Forms.Label
+            {
+                Text = title,
+                Left = 12,
+                Top = 10,
+                Width = 390,
+                Font = new System.Drawing.Font("微軟正黑體", 10, System.Drawing.FontStyle.Bold)
+            };
+
+            _labelCurrent = new System.Windows.Forms.Label
+            {
+                Text = "準備中...",
+                Left = 12,
+                Top = 35,
+                Width = 390,
+                Font = new System.Drawing.Font("微軟正黑體", 9)
+            };
+
+            _progressBar = new System.Windows.Forms.ProgressBar
+            {
+                Left = 12,
+                Top = 60,
+                Width = 390,
+                Height = 22,
+                Minimum = 0,
+                Maximum = _total,
+                Value = 0,
+                Style = System.Windows.Forms.ProgressBarStyle.Continuous
+            };
+
+            _labelPercent = new System.Windows.Forms.Label
+            {
+                Text = $"0 / {_total}（0%）",
+                Left = 12,
+                Top = 88,
+                Width = 390,
+                TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
+                Font = new System.Drawing.Font("微軟正黑體", 9)
+            };
+
+            this.Controls.Add(_labelTitle);
+            this.Controls.Add(_labelCurrent);
+            this.Controls.Add(_progressBar);
+            this.Controls.Add(_labelPercent);
+        }
+
+        /// <summary>推進一格並顯示目前處理的視圖名稱。</summary>
+        public void UpdateProgress(string currentViewName)
+        {
+            _current++;
+            int pct = (int)Math.Round(_current * 100.0 / _total);
+            _labelCurrent.Text = $"處理中：{currentViewName}";
+            _progressBar.Value = Math.Min(_current, _total);
+            _labelPercent.Text = $"{_current} / {_total}（{pct}%）";
+        }
     }
 }
