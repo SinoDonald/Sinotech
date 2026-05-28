@@ -34,6 +34,13 @@ namespace Sinotech_2025.CSDSEM
             {
                 SelectedProjects.Add((ProjectItem)item);
             }
+
+            if (SelectedProjects.Count == 0)
+            {
+                MessageBox.Show("請至少選擇一個視圖！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
