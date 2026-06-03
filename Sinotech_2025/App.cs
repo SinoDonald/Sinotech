@@ -90,6 +90,8 @@ namespace Sinotech_2025
             manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動編號);
             PushButton autoPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeTag", "自動標籤", addinAssmeblyPath, "Sinotech_2025.CSDSEM.AutoPipeTag")) as PushButton;
             autoPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.自動標籤);
+            PushButton tagArrayBtn = ribbonPanel.AddItem(new PushButtonData("TagArray", "標籤排序", addinAssmeblyPath, "Sinotech_2025.CSDSEM.TagArray")) as PushButton;
+            tagArrayBtn.LargeImage = convertFromBitmap(Properties.Resources.標籤排序);
             PushButton PCCESBtn = ribbonPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", addinAssmeblyPath, "Sinotech_2025.CSDSEM.OutPutPCCES")) as PushButton;
             PCCESBtn.LargeImage = convertFromBitmap(Properties.Resources.PCCES);
 

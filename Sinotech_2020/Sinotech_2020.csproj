@@ -249,6 +249,7 @@
     <Compile Include="CSDSEM\ProfessionalCodeForm.Designer.cs">
       <DependentUpon>ProfessionalCodeForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CSDSEM\TagArray.cs" />
     <Compile Include="CSDSEM\UpdateExcel.cs" />
     <Compile Include="FamilyProtect\ChooseElems.cs">
       <SubType>Form</SubType>
@@ -486,6 +487,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="pic\自動編號.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\標籤排序.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
