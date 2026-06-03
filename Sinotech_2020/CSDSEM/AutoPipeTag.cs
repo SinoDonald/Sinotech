@@ -134,16 +134,70 @@ namespace Sinotech_2020.CSDSEM
                                                             double validZ_Min = exactZMin - 0.5;
                                                             double validZ_Max = exactZMax + 0.5;
 
+                                                            // 視圖 XY 裁切範圍（提前計算，供掃描現有標籤與放置點邏輯共用）
+                                                            double viewMinX, viewMinY, viewMaxX, viewMaxY;
+                                                            {
+                                                                BoundingBoxXYZ cb = checkViewPlan.CropBox;
+                                                                Transform ct = cb.Transform;
+                                                                if (checkViewPlan.CropBoxActive)
+                                                                {
+                                                                    viewMinX = double.MaxValue; viewMinY = double.MaxValue;
+                                                                    viewMaxX = double.MinValue; viewMaxY = double.MinValue;
+                                                                    foreach (double lx in new[] { cb.Min.X, cb.Max.X })
+                                                                        foreach (double ly in new[] { cb.Min.Y, cb.Max.Y })
+                                                                        {
+                                                                            XYZ wp = ct.OfPoint(new XYZ(lx, ly, 0));
+                                                                            if (wp.X < viewMinX) viewMinX = wp.X;
+                                                                            if (wp.Y < viewMinY) viewMinY = wp.Y;
+                                                                            if (wp.X > viewMaxX) viewMaxX = wp.X;
+                                                                            if (wp.Y > viewMaxY) viewMaxY = wp.Y;
+                                                                        }
+                                                                }
+                                                                else
+                                                                {
+                                                                    viewMinX = double.MinValue / 2; viewMinY = double.MinValue / 2;
+                                                                    viewMaxX = double.MaxValue / 2; viewMaxY = double.MaxValue / 2;
+                                                                }
+                                                            }
+
                                                             // =========================================================
                                                             // 【系統級防重複機制】
+                                                            // alreadyTaggedSignatures : 已標注的元件實體 ID
+                                                            // taggedSystemSignatures  : 已標注的系統簽章（僅目標族、僅主模型）
+                                                            // taggedSysSigMaxLength   : 各 sysSig 已標注管道的最大可見長度（英呎）
+                                                            //   → Bug 修正：重新執行時若已標注的是最長管道，整個 sysSig 不再補標
                                                             // =========================================================
-                                                            HashSet<string> alreadyTaggedSignatures = new HashSet<string>(); // 紀錄實體 ID
-                                                            HashSet<string> taggedSystemSignatures = new HashSet<string>();  // 紀錄系統 ID（僅目標標籤族）
+                                                            HashSet<string> alreadyTaggedSignatures = new HashSet<string>();
+                                                            HashSet<string> taggedSystemSignatures = new HashSet<string>();
+                                                            Dictionary<string, double> taggedSysSigMaxLength = new Dictionary<string, double>();
 
-                                                            FilteredElementCollector existingTags = new FilteredElementCollector(doc, checkViewPlan.Id)
-                                                                .OfClass(typeof(IndependentTag));
+                                                            // =========================================================
+                                                            // 掃描現有標籤：收集子視圖本身 + 母視圖的標籤
+                                                            // 原因：當管道靠近子視圖裁切線時，標籤可能建立在子視圖
+                                                            // CropBox 之外而無法顯示，但標籤實際存在於母視圖空間中。
+                                                            // 若只掃描子視圖，會找不到這些標籤，每次執行都誤判為
+                                                            // 「尚未標注」而重複建立標籤。
+                                                            // 解法：同時掃描母視圖的標籤，一併納入防重複判斷。
+                                                            // =========================================================
+                                                            List<IndependentTag> allExistingTags = new List<IndependentTag>();
 
-                                                            foreach (IndependentTag tag in existingTags.Cast<IndependentTag>())
+                                                            // 子視圖自身的標籤
+                                                            allExistingTags.AddRange(
+                                                                new FilteredElementCollector(doc, checkViewPlan.Id)
+                                                                    .OfClass(typeof(IndependentTag))
+                                                                    .Cast<IndependentTag>());
+
+                                                            // 母視圖的標籤（若為子視圖才需要）
+                                                            ElementId primaryViewId2 = checkViewPlan.GetPrimaryViewId();
+                                                            if (primaryViewId2 != null && primaryViewId2 != ElementId.InvalidElementId)
+                                                            {
+                                                                allExistingTags.AddRange(
+                                                                    new FilteredElementCollector(doc, primaryViewId2)
+                                                                        .OfClass(typeof(IndependentTag))
+                                                                        .Cast<IndependentTag>());
+                                                            }
+
+                                                            foreach (IndependentTag tag in allExistingTags)
                                                             {
                                                                 try
                                                                 {
@@ -169,7 +223,32 @@ namespace Sinotech_2020.CSDSEM
                                                                             if (isTargetTag)
                                                                             {
                                                                                 alreadyTaggedSignatures.Add($"Linked_{tagRef.ElementId}_{tagRef.LinkedElementId}");
+
+                                                                                // 【Bug 修正】連結管道也要記錄已標注長度，
+                                                                                // 雖然不寫入 taggedSystemSignatures（後續連結標籤將關閉），
+                                                                                // 但仍需記錄長度，避免第二次執行時最長管道被跳過後
+                                                                                // 補標了較短的管道。
+                                                                                RevitLinkInstance linkInst = doc.GetElement(tagRef.ElementId) as RevitLinkInstance;
+                                                                                Element taggedElem = linkInst?.GetLinkDocument()?.GetElement(tagRef.LinkedElementId);
+                                                                                if (taggedElem != null && IsEligibleForTag(taggedElem))
+                                                                                {
+                                                                                    ElementId lInstId = tagRef.ElementId;
+                                                                                    string sysSigLinked = GetSystemSignature(taggedElem, true, lInstId);
+                                                                                    if (sysSigLinked != null)
+                                                                                    {
+                                                                                        Transform linkXform = linkInst.GetTotalTransform();
+                                                                                        double taggedVisLen = GetVisibleLengthInView(
+                                                                                            taggedElem, linkXform,
+                                                                                            viewMinX, viewMaxX, viewMinY, viewMaxY);
+                                                                                        if (!taggedSysSigMaxLength.ContainsKey(sysSigLinked)
+                                                                                            || taggedVisLen > taggedSysSigMaxLength[sysSigLinked])
+                                                                                        {
+                                                                                            taggedSysSigMaxLength[sysSigLinked] = taggedVisLen;
+                                                                                        }
+                                                                                    }
+                                                                                }
                                                                             }
+                                                                            // taggedSystemSignatures：連結標籤一律不寫入（後續將關閉）
                                                                         }
                                                                         else
                                                                         {
@@ -181,7 +260,18 @@ namespace Sinotech_2020.CSDSEM
                                                                                 if (taggedElem != null && IsEligibleForTag(taggedElem))
                                                                                 {
                                                                                     string sysSig = GetSystemSignature(taggedElem, false, ElementId.InvalidElementId);
-                                                                                    if (sysSig != null) taggedSystemSignatures.Add(sysSig);
+                                                                                    if (sysSig != null)
+                                                                                    {
+                                                                                        taggedSystemSignatures.Add(sysSig);
+                                                                                        double taggedVisLen = GetVisibleLengthInView(
+                                                                                            taggedElem, null,
+                                                                                            viewMinX, viewMaxX, viewMinY, viewMaxY);
+                                                                                        if (!taggedSysSigMaxLength.ContainsKey(sysSig)
+                                                                                            || taggedVisLen > taggedSysSigMaxLength[sysSig])
+                                                                                        {
+                                                                                            taggedSysSigMaxLength[sysSig] = taggedVisLen;
+                                                                                        }
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         }
@@ -249,6 +339,26 @@ namespace Sinotech_2020.CSDSEM
 
                                                                 if (targetSymbol == null) continue;
 
+                                                                // =========================================================
+                                                                // 【排除 BusWay】
+                                                                // DuctType 名稱含 "BUSWAY"（不分大小寫）的風管不標籤
+                                                                // =========================================================
+                                                                if (elem is Duct ductElem)
+                                                                {
+                                                                    ElementId dtId = ductElem.GetTypeId();
+                                                                    if (dtId != null && dtId != ElementId.InvalidElementId)
+                                                                    {
+                                                                        Element dtElem = (mepItem.SourceProject.IsMainModel
+                                                                            ? doc
+                                                                            : mepItem.SourceProject.Doc).GetElement(dtId);
+                                                                        if (dtElem != null &&
+                                                                            (dtElem.Name ?? string.Empty).IndexOf("BUSWAY", StringComparison.OrdinalIgnoreCase) >= 0)
+                                                                        {
+                                                                            continue;
+                                                                        }
+                                                                    }
+                                                                }
+
                                                                 XYZ pt0 = null, pt1 = null;
                                                                 if (elem.Location is LocationCurve locCurve && locCurve.Curve != null)
                                                                 {
@@ -313,33 +423,7 @@ namespace Sinotech_2020.CSDSEM
                                                                     ? new Reference(elem)
                                                                     : new Reference(elem).CreateLinkReference(mepItem.SourceProject.LinkInstance);
 
-                                                                BoundingBoxXYZ cropBox = checkViewPlan.CropBox;
-                                                                Transform cropTransform = cropBox.Transform;
-
-                                                                double viewMinX, viewMinY, viewMaxX, viewMaxY;
-
-                                                                if (checkViewPlan.CropBoxActive)
-                                                                {
-                                                                    viewMinX = double.MaxValue; viewMinY = double.MaxValue;
-                                                                    viewMaxX = double.MinValue; viewMaxY = double.MinValue;
-                                                                    double[] localXs = new double[] { cropBox.Min.X, cropBox.Max.X };
-                                                                    double[] localYs = new double[] { cropBox.Min.Y, cropBox.Max.Y };
-                                                                    foreach (double lx in localXs)
-                                                                        foreach (double ly in localYs)
-                                                                        {
-                                                                            XYZ worldPt = cropTransform.OfPoint(new XYZ(lx, ly, 0));
-                                                                            if (worldPt.X < viewMinX) viewMinX = worldPt.X;
-                                                                            if (worldPt.Y < viewMinY) viewMinY = worldPt.Y;
-                                                                            if (worldPt.X > viewMaxX) viewMaxX = worldPt.X;
-                                                                            if (worldPt.Y > viewMaxY) viewMaxY = worldPt.Y;
-                                                                        }
-                                                                }
-                                                                else
-                                                                {
-                                                                    viewMinX = double.MinValue / 2; viewMinY = double.MinValue / 2;
-                                                                    viewMaxX = double.MaxValue / 2; viewMaxY = double.MaxValue / 2;
-                                                                }
-
+                                                                // viewMinX/Y/MaxX/Y 已在視圖迴圈外計算，直接使用
                                                                 const double xyTol = 1e-6;
                                                                 bool pt0InView = pt0.X >= viewMinX - xyTol && pt0.X <= viewMaxX + xyTol &&
                                                                                  pt0.Y >= viewMinY - xyTol && pt0.Y <= viewMaxY + xyTol;
@@ -378,7 +462,7 @@ namespace Sinotech_2020.CSDSEM
 
                                                                 // =========================================================
                                                                 // 【長管強制標籤條件】
-                                                                // 視圖內可見長度 > 10m：不論系統/標籤內容是否相同，
+                                                                // 視圖內可見長度 > 10m(使用者設定必標長度)：不論系統/標籤內容是否相同，
                                                                 // 每根都各自建立標籤。
                                                                 //
                                                                 // 修正重複標籤 Bug 的根本做法：
@@ -411,6 +495,21 @@ namespace Sinotech_2020.CSDSEM
 
                                                                 if (sysSig != null)
                                                                 {
+                                                                    // =========================================================
+                                                                    // 【防重複核心邏輯】
+                                                                    // 以 taggedSysSigMaxLength 判斷：此 sysSig 是否已有標注，
+                                                                    // 且已標注的管道可見長度 >= 當前候選。
+                                                                    // 條件成立 → 最長管道已標注，整個 sysSig 跳過，不補標。
+                                                                    // 此邏輯同時適用主模型（taggedSystemSignatures 也記錄）
+                                                                    // 和連結模型（僅 taggedSysSigMaxLength 記錄）。
+                                                                    // =========================================================
+                                                                    if (taggedSysSigMaxLength.TryGetValue(sysSig, out double existingTaggedLen)
+                                                                        && existingTaggedLen >= visibleLength)
+                                                                    {
+                                                                        continue; // 已標注的管道不比當前候選短，不需補標
+                                                                    }
+
+                                                                    // 尚未有標注，或已標注的比當前候選短：加入/更新候選
                                                                     if (tagCandidates.TryGetValue(sysSig, out TagCandidate existing))
                                                                     {
                                                                         if (visibleLength > existing.VisibleLength)
@@ -438,6 +537,19 @@ namespace Sinotech_2020.CSDSEM
                                                                                 SysSig = sysSig
                                                                             };
                                                                         }
+                                                                        else
+                                                                        {
+                                                                            // sysSig 在 taggedSystemSignatures 中（主模型已標注）
+                                                                            // 但已標注的長度 < 當前候選，更新候選（補標更長的）
+                                                                            tagCandidates[sysSig] = new TagCandidate
+                                                                            {
+                                                                                ElemRef = pipeRef,
+                                                                                TargetSym = targetSymbol,
+                                                                                PlacementPt = tagPlacementPoint,
+                                                                                VisibleLength = visibleLength,
+                                                                                SysSig = sysSig
+                                                                            };
+                                                                        }
                                                                     }
                                                                 }
                                                                 else
@@ -456,6 +568,7 @@ namespace Sinotech_2020.CSDSEM
 
                                                             // =========================================================
                                                             // 【候選確定後】對每個簽章的最長管道建立標籤
+                                                            // 第四個參數 true = hasLeader，確保每個標籤都有引線
                                                             // =========================================================
                                                             foreach (TagCandidate candidate in tagCandidates.Values)
                                                             {
@@ -465,7 +578,7 @@ namespace Sinotech_2020.CSDSEM
                                                                         doc,
                                                                         checkViewPlan.Id,
                                                                         candidate.ElemRef,
-                                                                        true,
+                                                                        true,  // hasLeader = true，強制建立引線
                                                                         TagMode.TM_ADDBY_CATEGORY,
                                                                         TagOrientation.Horizontal,
                                                                         candidate.PlacementPt
@@ -474,6 +587,12 @@ namespace Sinotech_2020.CSDSEM
                                                                     if (newTag != null)
                                                                     {
                                                                         newTag.ChangeTypeId(candidate.TargetSym.Id);
+
+                                                                        // 確保引線端點附著在管道上（LeaderEndCondition = Attached）
+                                                                        // 2024
+                                                                        try { newTag.LeaderEndCondition = LeaderEndCondition.Attached; } catch { }
+                                                                        // 2020
+
                                                                         newTagCounts++;
                                                                         if (candidate.SysSig != null)
                                                                             taggedSystemSignatures.Add(candidate.SysSig);
@@ -557,6 +676,39 @@ namespace Sinotech_2020.CSDSEM
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 計算元件在指定視圖 XY 裁切範圍內的可見長度（英呎）。
+        /// 用於掃描現有標籤時，記錄已標注管道的視圖內可見長度，
+        /// 與後續候選比較，判斷已標注的是否為最長管道。
+        /// </summary>
+        private double GetVisibleLengthInView(
+            Element elem, Transform linkTransform,
+            double viewMinX, double viewMaxX,
+            double viewMinY, double viewMaxY)
+        {
+            try
+            {
+                if (!(elem.Location is LocationCurve lc) || lc.Curve == null) return 0;
+                XYZ p0 = lc.Curve.GetEndPoint(0);
+                XYZ p1 = lc.Curve.GetEndPoint(1);
+                if (linkTransform != null) { p0 = linkTransform.OfPoint(p0); p1 = linkTransform.OfPoint(p1); }
+
+                const double tol = 1e-6;
+                bool p0In = p0.X >= viewMinX - tol && p0.X <= viewMaxX + tol &&
+                            p0.Y >= viewMinY - tol && p0.Y <= viewMaxY + tol;
+                bool p1In = p1.X >= viewMinX - tol && p1.X <= viewMaxX + tol &&
+                            p1.Y >= viewMinY - tol && p1.Y <= viewMaxY + tol;
+
+                if (p0In && p1In) return p0.DistanceTo(p1);
+
+                XYZ c0, c1;
+                if (ClipSegmentToViewBounds(p0, p1, viewMinX, viewMaxX, viewMinY, viewMaxY, out c0, out c1))
+                    return c0.DistanceTo(c1);
+            }
+            catch { }
+            return 0;
         }
 
         private string GetSystemSignature(Element elem, bool isLinked, ElementId linkInstanceId)
