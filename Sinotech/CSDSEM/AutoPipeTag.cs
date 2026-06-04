@@ -389,6 +389,32 @@ namespace Sinotech.CSDSEM
                                                                     if (Math.Min(widthMm, heightMm) < 49.9) continue;
                                                                 }
 
+                                                                // 條件四：高程(下端底部高程)為負值時不標籤
+                                                                if (elem is Pipe)
+                                                                {
+                                                                    Parameter pipeParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_BOTTOM_ELEVATION);
+                                                                    if (pipeParam != null && pipeParam.HasValue)
+                                                                    {
+                                                                        if (pipeParam.AsDouble() < 0) continue;
+                                                                    }
+                                                                }
+                                                                else if (elem is Duct)
+                                                                {
+                                                                    Parameter ductParam = elem.get_Parameter(BuiltInParameter.RBS_DUCT_BOTTOM_ELEVATION);
+                                                                    if (ductParam != null && ductParam.HasValue)
+                                                                    {
+                                                                        if (ductParam.AsDouble() < 0) continue;
+                                                                    }
+                                                                }
+                                                                else if (elem is CableTray)
+                                                                {
+                                                                    Parameter ctcParam = elem.get_Parameter(BuiltInParameter.RBS_CTC_BOTTOM_ELEVATION);
+                                                                    if (ctcParam != null && ctcParam.HasValue)
+                                                                    {
+                                                                        if (ctcParam.AsDouble() < 0) continue;
+                                                                    }
+                                                                }
+
                                                                 double minZ = Math.Min(pt0.Z, pt1.Z);
                                                                 double maxZ = Math.Max(pt0.Z, pt1.Z);
 
