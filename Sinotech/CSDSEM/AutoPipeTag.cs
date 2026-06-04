@@ -171,33 +171,11 @@ namespace Sinotech.CSDSEM
                                                             HashSet<string> taggedSystemSignatures = new HashSet<string>();
                                                             Dictionary<string, double> taggedSysSigMaxLength = new Dictionary<string, double>();
 
-                                                            // =========================================================
-                                                            // 掃描現有標籤：收集子視圖本身 + 母視圖的標籤
-                                                            // 原因：當管道靠近子視圖裁切線時，標籤可能建立在子視圖
-                                                            // CropBox 之外而無法顯示，但標籤實際存在於母視圖空間中。
-                                                            // 若只掃描子視圖，會找不到這些標籤，每次執行都誤判為
-                                                            // 「尚未標注」而重複建立標籤。
-                                                            // 解法：同時掃描母視圖的標籤，一併納入防重複判斷。
-                                                            // =========================================================
-                                                            List<IndependentTag> allExistingTags = new List<IndependentTag>();
+                                                            // 只掃描子視圖本身的標籤（不含母視圖，避免污染其他子視圖的判斷）
+                                                            FilteredElementCollector existingTags = new FilteredElementCollector(doc, checkViewPlan.Id)
+                                                                .OfClass(typeof(IndependentTag));
 
-                                                            // 子視圖自身的標籤
-                                                            allExistingTags.AddRange(
-                                                                new FilteredElementCollector(doc, checkViewPlan.Id)
-                                                                    .OfClass(typeof(IndependentTag))
-                                                                    .Cast<IndependentTag>());
-
-                                                            // 母視圖的標籤（若為子視圖才需要）
-                                                            ElementId primaryViewId2 = checkViewPlan.GetPrimaryViewId();
-                                                            if (primaryViewId2 != null && primaryViewId2 != ElementId.InvalidElementId)
-                                                            {
-                                                                allExistingTags.AddRange(
-                                                                    new FilteredElementCollector(doc, primaryViewId2)
-                                                                        .OfClass(typeof(IndependentTag))
-                                                                        .Cast<IndependentTag>());
-                                                            }
-
-                                                            foreach (IndependentTag tag in allExistingTags)
+                                                            foreach (IndependentTag tag in existingTags.Cast<IndependentTag>())
                                                             {
                                                                 try
                                                                 {
@@ -574,6 +552,23 @@ namespace Sinotech.CSDSEM
                                                             {
                                                                 try
                                                                 {
+                                                                    // =========================================================
+                                                                    // 【放置前檢查】確認標籤放置點在視圖 CropBox 內
+                                                                    // 若管道靠近裁切線，clippedMid 可能仍落在 CropBox 邊緣外，
+                                                                    // 建立的標籤在視圖中不顯示，但掃描時也找不到，
+                                                                    // 導致每次執行都重複建立「隱形標籤」。
+                                                                    // 解法：放置點在 CropBox 外則跳過，不建立標籤。
+                                                                    // =========================================================
+                                                                    if (checkViewPlan.CropBoxActive)
+                                                                    {
+                                                                        XYZ pt = candidate.PlacementPt;
+                                                                        const double cropTol = 1e-4;
+                                                                        if (pt.X < viewMinX - cropTol || pt.X > viewMaxX + cropTol ||
+                                                                            pt.Y < viewMinY - cropTol || pt.Y > viewMaxY + cropTol)
+                                                                        {
+                                                                            continue; // 放置點在 CropBox 外，跳過不建立
+                                                                        }
+                                                                    }
                                                                     IndependentTag newTag = IndependentTag.Create(
                                                                         doc,
                                                                         checkViewPlan.Id,
@@ -589,10 +584,7 @@ namespace Sinotech.CSDSEM
                                                                         newTag.ChangeTypeId(candidate.TargetSym.Id);
 
                                                                         // 確保引線端點附著在管道上（LeaderEndCondition = Attached）
-                                                                        // 2024
                                                                         try { newTag.LeaderEndCondition = LeaderEndCondition.Attached; } catch { }
-                                                                        // 2020
-
                                                                         newTagCounts++;
                                                                         if (candidate.SysSig != null)
                                                                             taggedSystemSignatures.Add(candidate.SysSig);
