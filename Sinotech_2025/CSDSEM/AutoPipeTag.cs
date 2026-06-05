@@ -50,7 +50,7 @@ namespace Sinotech_2025.CSDSEM
                         try
                         {
                             List<ViewPlan> viewPlans = GetAutoNumberViewPlans(doc, autoNumberForm.viewFamilyTypeName);
-                            using (ChooseMultiViewPlansForm chooseMultiViewPlansForm = new ChooseMultiViewPlansForm(doc, viewPlans))
+                            using (ChooseMultiViewPlansForm chooseMultiViewPlansForm = new ChooseMultiViewPlansForm(doc, viewPlans, ChooseMultiViewPlansForm.FormMode.AutoPipeTag))
                             {
                                 if (chooseMultiViewPlansForm.ShowDialog() == DialogResult.OK)
                                 {

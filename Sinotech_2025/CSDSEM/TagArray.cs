@@ -4,18 +4,11 @@ using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
+using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 
 namespace Sinotech_2025.CSDSEM
 {
-    // 自訂一個類別，用來記憶標籤原始的引線狀態與座標
-    public class TagLeaderState
-    {
-        public bool HasLeader { get; set; }
-        public LeaderEndCondition Condition { get; set; }
-        public Reference HostRef { get; set; }
-        public XYZ EndPosition { get; set; }
-    }
-
     [Transaction(TransactionMode.Manual)]
     public class TagArray : IExternalCommand
     {
@@ -24,237 +17,306 @@ namespace Sinotech_2025.CSDSEM
             UIApplication uiapp = commandData.Application;
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
-            //View activeView = doc.ActiveView;
 
-            // 選擇要輸出視圖的ViewFamilyType
             AutoNumberForm autoNumberForm = new AutoNumberForm(doc);
             autoNumberForm.ShowDialog();
-            if (autoNumberForm.trueOrFalse == true)
+            if (autoNumberForm.trueOrFalse != true) return Result.Cancelled;
+
+            List<ViewPlan> viewPlans = AutoPipeTag.GetAutoNumberViewPlans(doc, autoNumberForm.viewFamilyTypeName);
+            ChooseMultiViewPlansForm chooseForm = new ChooseMultiViewPlansForm(doc, viewPlans, ChooseMultiViewPlansForm.FormMode.TagArray);
+
+            if (chooseForm.ShowDialog() != DialogResult.OK) return Result.Cancelled;
+
+            List<ViewPlan> selectedViews = chooseForm.checkViewPlans;
+            if (selectedViews == null || selectedViews.Count == 0) return Result.Failed;
+
+            // 【正確讀取單選按鈕回傳結果】
+            bool isAutoMode = chooseForm.IsAutoResult;
+
+            List<ProjectItem> availableProjects = new List<ProjectItem> { new ProjectItem(doc) };
+            FilteredElementCollector linkCollector = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance));
+            foreach (RevitLinkInstance linkInst in linkCollector.Cast<RevitLinkInstance>())
             {
-                try
+                Document linkedDoc = linkInst.GetLinkDocument();
+                if (linkedDoc != null) availableProjects.Add(new ProjectItem(linkedDoc, linkInst));
+            }
+
+            BuiltInCategory[] targetCategories = new BuiltInCategory[]
+            {
+                BuiltInCategory.OST_StructuralColumns,
+                BuiltInCategory.OST_Columns,
+                BuiltInCategory.OST_StructuralFraming,
+                //BuiltInCategory.OST_Floors,
+                BuiltInCategory.OST_Walls,
+                BuiltInCategory.OST_PipeCurves,
+                BuiltInCategory.OST_DuctCurves,
+                BuiltInCategory.OST_CableTray,
+                BuiltInCategory.OST_PipeTags,
+                BuiltInCategory.OST_DuctTags,
+                BuiltInCategory.OST_CableTrayTags,
+                BuiltInCategory.OST_MultiCategoryTags
+            };
+            ElementMulticategoryFilter multiCatFilter = new ElementMulticategoryFilter(targetCategories);
+
+            using (Transaction trans = new Transaction(doc, "標籤順序"))
+            {
+                trans.Start();
+
+                // 這裡可以依據自動或手動做後續邏輯切換
+                if (isAutoMode)
                 {
-                    List<ViewPlan> viewPlans = AutoPipeTag.GetAutoNumberViewPlans(doc, autoNumberForm.viewFamilyTypeName); // 找到相同的ViewFamilyType與要進行編號的ViewPlan
-                    ChooseMultiViewPlansForm chooseMultiViewPlansForm = new ChooseMultiViewPlansForm(doc, viewPlans);
-                    chooseMultiViewPlansForm.ShowDialog();
-                    List<ViewPlan> checkViewPlans = chooseMultiViewPlansForm.checkViewPlans; // 選擇要編號的ViewPlan
-                    using (Transaction trans = new Transaction(doc, "標籤排序"))
+                    foreach (ViewPlan viewPlan in selectedViews)
                     {
-                        DateTime timeStart = DateTime.Now; // 計時開始 取得目前時間
-                        trans.Start();
+                        // 計算該平面圖嚴格的 Top/Bottom 與最關鍵的剖切面 CutPlane 高程
+                        double exactZMax = GetPlaneElevation(viewPlan, PlanViewPlane.TopClipPlane, 1000.0, -1000.0);
+                        double exactZMin = GetPlaneElevation(viewPlan, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
+                        double defaultCutZ = (exactZMax + exactZMin) / 2.0;
 
-                        foreach (ViewPlan viewPlan in checkViewPlans)
+                        // 【關鍵修正 1】：取得平面圖當前的剖切面高度，模型線畫在這裡絕對看得到！
+                        double exactCutZ = GetPlaneElevation(viewPlan, PlanViewPlane.CutPlane, defaultCutZ, defaultCutZ);
+
+                        double validZ_Min = exactZMin - 0.5;
+                        double validZ_Max = exactZMax + 0.5;
+
+                        double viewMinX, viewMinY, viewMaxX, viewMaxY;
+                        BoundingBoxXYZ cb = viewPlan.CropBox;
+                        Transform ct = cb.Transform;
+                        if (viewPlan.CropBoxActive)
                         {
-                            try
-                            {
-                                var tagsToMove = new FilteredElementCollector(doc, viewPlan.Id).OfClass(typeof(IndependentTag)).Cast<IndependentTag>().ToList();
-
-                                //if (tagsToMove.Count == 0) return Result.Cancelled;
-
-                                // 用來存放每個標籤原始引線狀態的字典
-                                Dictionary<ElementId, TagLeaderState> leaderStates = new Dictionary<ElementId, TagLeaderState>();
-
-                                // 1. 【狀態快照與清理】記錄所有引線狀態，然後關閉引線以取得純淨文字框
-                                foreach (IndependentTag tag in tagsToMove)
+                            viewMinX = double.MaxValue; viewMinY = double.MaxValue;
+                            viewMaxX = double.MinValue; viewMaxY = double.MinValue;
+                            foreach (double lx in new[] { cb.Min.X, cb.Max.X })
+                                foreach (double ly in new[] { cb.Min.Y, cb.Max.Y })
                                 {
-                                    TagLeaderState state = new TagLeaderState();
-                                    state.HasLeader = tag.HasLeader;
-
-                                    if (tag.HasLeader)
-                                    {
-                                        state.Condition = tag.LeaderEndCondition;
-
-                                        //// 2020 如果原本是自由端點(Free), 把箭頭座標備份起來, 2020直接讀取LeaderEnd屬性, 不需要Reference
-                                        //if (state.Condition == LeaderEndCondition.Free)
-                                        //{
-                                        //    try
-                                        //    {
-                                        //        state.EndPosition = tag.LeaderEnd;
-                                        //    }
-                                        //    catch { } // 防呆保護
-                                        //}
-
-                                        // 2024 取得標籤所參考的元件 (Reference)
-                                        var refs = tag.GetTaggedReferences();
-                                        if (refs != null && refs.Count > 0)
-                                        {
-                                            state.HostRef = refs.First();
-
-                                            // 如果原本是自由端點(Free)，把你在 AutoTag 算好的箭頭座標備份起來
-                                            if (state.Condition == LeaderEndCondition.Free)
-                                            {
-                                                try
-                                                {
-                                                    state.EndPosition = tag.GetLeaderEnd(state.HostRef);
-                                                }
-                                                catch { } // 防呆保護
-                                            }
-                                        }
-
-                                        // 記錄完畢後，關閉引線
-                                        tag.HasLeader = false;
-                                    }
-                                    leaderStates[tag.Id] = state;
+                                    XYZ wp = ct.OfPoint(new XYZ(lx, ly, 0));
+                                    if (wp.X < viewMinX) viewMinX = wp.X;
+                                    if (wp.Y < viewMinY) viewMinY = wp.Y;
+                                    if (wp.X > viewMaxX) viewMaxX = wp.X;
+                                    if (wp.Y > viewMaxY) viewMaxY = wp.Y;
                                 }
-
-                                // 強制更新幾何，現在所有的 BoundingBox 都是乾淨的文字/符號大小
-                                doc.Regenerate();
-
-                                int scale = viewPlan.Scale;
-                                double stepSize = (1.5 * scale) / 304.8;
-                                double leaderThreshold = (4.0 * scale) / 304.8;
-                                double padding = (1.5 * scale) / 304.8;
-
-                                Dictionary<ElementId, Outline> allOutlines = new Dictionary<ElementId, Outline>();
-
-                                // 2. 建立膨脹輪廓並【降維壓平 Z 軸】
-                                foreach (IndependentTag tag in tagsToMove)
-                                {
-                                    try
-                                    {
-                                        BoundingBoxXYZ bb = tag.get_BoundingBox(viewPlan);
-                                        if (bb != null)
-                                        {
-                                            double minX = bb.Min.X - padding;
-                                            double minY = bb.Min.Y - padding;
-                                            double maxX = bb.Max.X + padding;
-                                            double maxY = bb.Max.Y + padding;
-
-                                            // 強制設定在 Z = -1.0 到 1.0
-                                            XYZ flatMin = new XYZ(minX, minY, -1.0);
-                                            XYZ flatMax = new XYZ(maxX, maxY, 1.0);
-
-                                            allOutlines[tag.Id] = new Outline(flatMin, flatMax);
-                                        }
-                                    }
-                                    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                                }
-
-                                // 3. 螺旋避讓演算法
-                                foreach (IndependentTag tag in tagsToMove)
-                                {
-                                    try
-                                    {
-                                        if (!allOutlines.ContainsKey(tag.Id)) continue;
-
-                                        Outline myPaddedOutline = allOutlines[tag.Id];
-                                        XYZ initialPos = tag.TagHeadPosition;
-
-                                        double offsetXToMin = myPaddedOutline.MinimumPoint.X - initialPos.X;
-                                        double offsetYToMin = myPaddedOutline.MinimumPoint.Y - initialPos.Y;
-                                        double offsetXToMax = myPaddedOutline.MaximumPoint.X - initialPos.X;
-                                        double offsetYToMax = myPaddedOutline.MaximumPoint.Y - initialPos.Y;
-
-                                        allOutlines.Remove(tag.Id);
-
-                                        bool isOverlapping = true;
-                                        int maxIterations = 800;
-                                        int iteration = 0;
-                                        double angle = 0;
-                                        XYZ currentPos = initialPos;
-                                        Outline virtualOutline = new Outline(myPaddedOutline.MinimumPoint, myPaddedOutline.MaximumPoint);
-
-                                        while (isOverlapping && iteration < maxIterations)
-                                        {
-                                            try
-                                            {
-                                                isOverlapping = false;
-
-                                                foreach (Outline existing in allOutlines.Values)
-                                                {
-                                                    if (virtualOutline.Intersects(existing, 0))
-                                                    {
-                                                        isOverlapping = true;
-                                                        break;
-                                                    }
-                                                }
-
-                                                if (isOverlapping)
-                                                {
-                                                    angle += Math.PI / 4;
-                                                    double radius = stepSize * ((iteration / 8) + 1);
-
-                                                    double dx = radius * Math.Cos(angle);
-                                                    double dy = radius * Math.Sin(angle);
-
-                                                    currentPos = new XYZ(initialPos.X + dx, initialPos.Y + dy, initialPos.Z);
-
-                                                    XYZ newMin = new XYZ(currentPos.X + offsetXToMin, currentPos.Y + offsetYToMin, -1.0);
-                                                    XYZ newMax = new XYZ(currentPos.X + offsetXToMax, currentPos.Y + offsetYToMax, 1.0);
-                                                    virtualOutline = new Outline(newMin, newMax);
-                                                }
-
-                                                iteration++;
-                                            }
-                                            catch (Exception ex) { string error = ex.ToString(); }
-                                        }
-
-                                        // 4. 更新模型實際文字位置
-                                        if (!currentPos.IsAlmostEqualTo(initialPos))
-                                        {
-                                            tag.TagHeadPosition = currentPos;
-                                        }
-
-                                        // 5. 【狀態還原】重新套用你原本在 AutoTag.cs 設計好的引線樣式與端點座標
-                                        if (leaderStates.ContainsKey(tag.Id))
-                                        {
-                                            TagLeaderState originalState = leaderStates[tag.Id];
-
-                                            // 判斷是否因為演算法移動過遠，而被迫需要引線
-                                            XYZ flatCurrentPos = new XYZ(currentPos.X, currentPos.Y, 0);
-                                            XYZ flatInitialPos = new XYZ(initialPos.X, initialPos.Y, 0);
-                                            bool forcedLeader = flatCurrentPos.DistanceTo(flatInitialPos) > leaderThreshold;
-
-                                            if (originalState.HasLeader || forcedLeader)
-                                            {
-                                                tag.HasLeader = true;
-
-                                                // 2020 不需要檢查 HostRef != null
-                                                if (originalState.HasLeader && originalState.HostRef != null)
-                                                {
-                                                    // 恢復原本的端點條件 (Free 或 Attached)
-                                                    tag.LeaderEndCondition = originalState.Condition;
-
-                                                    // 如果原本是自由端點且有記錄座標，把箭頭精準還原到你計算的厚度位置
-                                                    if (originalState.Condition == LeaderEndCondition.Free && originalState.EndPosition != null)
-                                                    {
-                                                        try
-                                                        {
-                                                            //tag.LeaderEnd = originalState.EndPosition; // 2020
-                                                            tag.SetLeaderEnd(originalState.HostRef, originalState.EndPosition); // 2024
-                                                        }
-                                                        catch { }
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    // 如果原本沒有引線，是被迫加上的，預設使用貼附
-                                                    tag.LeaderEndCondition = LeaderEndCondition.Attached;
-                                                }
-                                            }
-                                            else
-                                            {
-                                                tag.HasLeader = false;
-                                            }
-                                        }
-
-                                        allOutlines[tag.Id] = virtualOutline;
-                                    }
-                                    catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                                }
-                            }
-                            catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        }
+                        else
+                        {
+                            viewMinX = -5000.0; viewMinY = -5000.0;
+                            viewMaxX = 5000.0; viewMaxY = 5000.0;
                         }
 
-                        trans.Commit();
-                        DateTime timeEnd = DateTime.Now; // 計時結束 取得目前時間
-                        TimeSpan totalTime = timeEnd - timeStart;
-                        TaskDialog.Show("Revit", "耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒 ");
+                        // 建立大底板幾何固體面時，高度改用 exactCutZ 剖切面高程
+                        List<CurveLoop> baseLoops = new List<CurveLoop>();
+                        CurveLoop viewExtentLoop = new CurveLoop();
+                        viewExtentLoop.Append(Line.CreateBound(new XYZ(viewMinX, viewMinY, exactCutZ), new XYZ(viewMaxX, viewMinY, exactCutZ)));
+                        viewExtentLoop.Append(Line.CreateBound(new XYZ(viewMaxX, viewMinY, exactCutZ), new XYZ(viewMaxX, viewMaxY, exactCutZ)));
+                        viewExtentLoop.Append(Line.CreateBound(new XYZ(viewMaxX, viewMaxY, exactCutZ), new XYZ(viewMinX, viewMaxY, exactCutZ)));
+                        viewExtentLoop.Append(Line.CreateBound(new XYZ(viewMinX, viewMaxY, exactCutZ), new XYZ(viewMinX, viewMinY, exactCutZ)));
+                        baseLoops.Add(viewExtentLoop);
+
+                        Solid emptyAreaSolid = GeometryCreationUtilities.CreateExtrusionGeometry(baseLoops, XYZ.BasisZ, 0.1);
+
+                        foreach (ProjectItem projItem in availableProjects)
+                        {
+                            List<Element> validElements = new List<Element>();
+
+                            if (projItem.IsMainModel)
+                            {
+                                FilteredElementCollector mainCollector = new FilteredElementCollector(doc, viewPlan.Id)
+                                    .WherePasses(multiCatFilter)
+                                    .WhereElementIsNotElementType();
+                                validElements = mainCollector.ToList();
+                            }
+                            else
+                            {
+                                Transform invTransform = projItem.LinkInstance.GetTotalTransform().Inverse;
+                                Outline linkOutline = GetTransformedOutline(viewPlan, cb, invTransform, validZ_Min, validZ_Max);
+                                BoundingBoxIntersectsFilter bboxFilter = new BoundingBoxIntersectsFilter(linkOutline);
+
+                                FilteredElementCollector linkedCollector = new FilteredElementCollector(projItem.Doc)
+                                    .WherePasses(multiCatFilter)
+                                    .WherePasses(bboxFilter)
+                                    .WhereElementIsNotElementType();
+
+                                validElements = linkedCollector.ToList();
+                            }
+
+                            foreach (Element elem in validElements)
+                            {
+                                Transform linkXform = projItem.IsMainModel ? null : projItem.LinkInstance.GetTotalTransform();
+
+                                if (elem.Location is LocationCurve locCurve && locCurve.Curve != null)
+                                {
+                                    double visLen = GetVisibleLengthInView(elem, linkXform, viewMinX, viewMaxX, viewMinY, viewMaxY);
+                                    if (visLen <= 0) continue;
+                                }
+
+                                // 採用先前修正：唯獨傳入 View，不手動指定 DetailLevel 避免衝突
+                                Options opt = new Options { View = viewPlan };
+                                GeometryElement geomElem = elem.get_Geometry(opt);
+                                if (geomElem == null) continue;
+
+                                foreach (GeometryObject geomObj in geomElem)
+                                {
+                                    if (geomObj is GeometryInstance geomInst)
+                                    {
+                                        GeometryElement instGeom = geomInst.GetInstanceGeometry();
+                                        foreach (GeometryObject instObj in instGeom)
+                                        {
+                                            if (instObj is Solid s && s.Volume > 0)
+                                            {
+                                                Solid transformedSolid = linkXform != null ? SolidUtils.CreateTransformed(s, linkXform) : s;
+                                                emptyAreaSolid = SubtractSolid2D(emptyAreaSolid, transformedSolid);
+                                            }
+                                        }
+                                    }
+                                    else if (geomObj is Solid solid && solid.Volume > 0)
+                                    {
+                                        Solid transformedSolid = linkXform != null ? SolidUtils.CreateTransformed(solid, linkXform) : solid;
+                                        emptyAreaSolid = SubtractSolid2D(emptyAreaSolid, transformedSolid);
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3. 劃設殘餘空白區的模型線
+                        if (emptyAreaSolid != null)
+                        {
+                            // 【關鍵修正 2】：草圖平面同樣精準建立在剖切面高度上
+                            SketchPlane sketchPlane = CreateSketchPlaneForZ(doc, exactCutZ);
+
+                            foreach (Edge edge in emptyAreaSolid.Edges)
+                            {
+                                Curve curve = edge.AsCurve();
+                                XYZ startPt = curve.GetEndPoint(0);
+                                XYZ endPt = curve.GetEndPoint(1);
+
+                                // 【關鍵修正 3】：將邊界線的起終點精準投影至視圖剖切面高度 exactCutZ
+                                XYZ projectedStart = new XYZ(startPt.X, startPt.Y, exactCutZ);
+                                XYZ projectedEnd = new XYZ(endPt.X, endPt.Y, exactCutZ);
+
+                                if (projectedStart.DistanceTo(projectedEnd) > 0.001)
+                                {
+                                    try
+                                    {
+                                        Line modelLine = Line.CreateBound(projectedStart, projectedEnd);
+                                        doc.Create.NewModelCurve(modelLine, sketchPlane);
+                                    }
+                                    catch { }
+                                }
+                            }
+                        }
                     }
+
+                    TaskDialog.Show("Revit", "分割空白區完成！");
                 }
-                catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                else
+                {
+                    TaskDialog.Show("Revit", "開發中...");
+                }
+
+                trans.Commit();
             }
 
             return Result.Succeeded;
+        }
+
+        // =========================================================================
+        // 幾何核心輔助方法（不變）
+        // =========================================================================
+        private double GetVisibleLengthInView(Element elem, Transform linkTransform, double viewMinX, double viewMaxX, double viewMinY, double viewMaxY)
+        {
+            try
+            {
+                if (!(elem.Location is LocationCurve lc) || lc.Curve == null) return 0;
+                XYZ p0 = lc.Curve.GetEndPoint(0); XYZ p1 = lc.Curve.GetEndPoint(1);
+                if (linkTransform != null) { p0 = linkTransform.OfPoint(p0); p1 = linkTransform.OfPoint(p1); }
+                const double tol = 1e-6;
+                bool p0In = p0.X >= viewMinX - tol && p0.X <= viewMaxX + tol && p0.Y >= viewMinY - tol && p0.Y <= viewMaxY + tol;
+                bool p1In = p1.X >= viewMinX - tol && p1.X <= viewMaxX + tol && p1.Y >= viewMinY - tol && p1.Y <= viewMaxY + tol;
+                if (p0In && p1In) return p0.DistanceTo(p1);
+                XYZ c0, c1;
+                if (ClipSegmentToViewBounds(p0, p1, viewMinX, viewMaxX, viewMinY, viewMaxY, out c0, out c1)) return c0.DistanceTo(c1);
+            }
+            catch { }
+            return 0;
+        }
+
+        private bool ClipSegmentToViewBounds(XYZ p0, XYZ p1, double xMin, double xMax, double yMin, double yMax, out XYZ clipped0, out XYZ clipped1)
+        {
+            double dx = p1.X - p0.X; double dy = p1.Y - p0.Y; double dz = p1.Z - p0.Z;
+            double tMin = 0.0; double tMax = 1.0;
+            double[] p = new double[] { -dx, dx, -dy, dy };
+            double[] q = new double[] { p0.X - xMin, xMax - p0.X, p0.Y - yMin, yMax - p0.Y };
+            for (int i = 0; i < 4; i++)
+            {
+                if (Math.Abs(p[i]) < 1e-10) { if (q[i] < 0) { clipped0 = p0; clipped1 = p1; return false; } }
+                else
+                {
+                    double t = q[i] / p[i];
+                    if (p[i] < 0) { if (t > tMin) tMin = t; } else { if (t < tMax) tMax = t; }
+                }
+                if (tMin > tMax) { clipped0 = p0; clipped1 = p1; return false; }
+            }
+            clipped0 = new XYZ(p0.X + tMin * dx, p0.Y + tMin * dy, p0.Z + tMin * dz);
+            clipped1 = new XYZ(p0.X + tMax * dx, p0.Y + tMax * dy, p0.Z + tMax * dz);
+            return true;
+        }
+
+        private double GetPlaneElevation(ViewPlan view, PlanViewPlane plane, double defaultHigh, double defaultLow)
+        {
+            PlanViewRange viewRange = view.GetViewRange();
+            ElementId levelId = viewRange.GetLevelId(plane);
+            double offset = viewRange.GetOffset(plane);
+            if (levelId == ElementId.InvalidElementId) return plane == PlanViewPlane.TopClipPlane ? defaultHigh : defaultLow;
+            if (levelId.Value < 0)
+            {
+                long specialId = levelId.Value;
+                if (specialId == -5) return plane == PlanViewPlane.TopClipPlane ? defaultHigh : defaultLow;
+                if (specialId == -2) return (view.GenLevel != null ? view.GenLevel.Elevation : 0) + offset;
+                if (specialId == -4) return defaultHigh;
+                if (specialId == -3) return defaultLow;
+            }
+            Element elem = view.Document.GetElement(levelId);
+            if (elem is Level lvl) return lvl.Elevation + offset;
+            return (view.GenLevel != null ? view.GenLevel.Elevation : 0) + offset;
+        }
+
+        private Outline GetTransformedOutline(ViewPlan view, BoundingBoxXYZ viewBBox, Transform hostToLinkTransform, double hostZMin, double hostZMax)
+        {
+            Transform viewToHostTransform = viewBBox.Transform;
+            double lMinX = view.CropBoxActive ? viewBBox.Min.X : -100000.0;
+            double lMinY = view.CropBoxActive ? viewBBox.Min.Y : -100000.0;
+            double lMaxX = view.CropBoxActive ? viewBBox.Max.X : 100000.0;
+            double lMaxY = view.CropBoxActive ? viewBBox.Max.Y : 100000.0;
+            XYZ[] hostCorners = new XYZ[4] {
+                viewToHostTransform.OfPoint(new XYZ(lMinX, lMinY, 0)), viewToHostTransform.OfPoint(new XYZ(lMaxX, lMinY, 0)),
+                viewToHostTransform.OfPoint(new XYZ(lMinX, lMaxY, 0)), viewToHostTransform.OfPoint(new XYZ(lMaxX, lMaxY, 0))
+            };
+            List<XYZ> worldPoints = new List<XYZ>();
+            foreach (XYZ pt in hostCorners) { worldPoints.Add(new XYZ(pt.X, pt.Y, hostZMin)); worldPoints.Add(new XYZ(pt.X, pt.Y, hostZMax)); }
+            double minX = double.MaxValue, minY = double.MaxValue, minZ = double.MaxValue;
+            double maxX = double.MinValue, maxY = double.MinValue, maxZ = double.MinValue;
+            foreach (XYZ pt in worldPoints)
+            {
+                XYZ linkPt = hostToLinkTransform.OfPoint(pt);
+                if (linkPt.X < minX) minX = linkPt.X; if (linkPt.Y < minY) minY = linkPt.Y; if (linkPt.Z < minZ) minZ = linkPt.Z;
+                if (linkPt.X > maxX) maxX = linkPt.X; if (linkPt.Y > maxY) maxY = linkPt.Y; if (linkPt.Z > maxZ) maxZ = linkPt.Z;
+            }
+            return new Outline(new XYZ(minX - 5.0, minY - 5.0, minZ - 1.0), new XYZ(maxX + 5.0, maxY + 5.0, maxZ + 1.0));
+        }
+
+        private Solid SubtractSolid2D(Solid baseSolid, Solid subtractorSolid)
+        {
+            try
+            {
+                Solid result = BooleanOperationsUtils.ExecuteBooleanOperation(baseSolid, subtractorSolid, BooleanOperationsType.Difference);
+                if (result != null && result.Edges.Size > 0) return result;
+            }
+            catch { }
+            return baseSolid;
+        }
+
+        private SketchPlane CreateSketchPlaneForZ(Document doc, double z)
+        {
+            Plane plane = Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 0, z));
+            return SketchPlane.Create(doc, plane);
         }
     }
 }
