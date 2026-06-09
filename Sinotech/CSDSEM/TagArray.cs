@@ -73,7 +73,8 @@ namespace Sinotech.CSDSEM
                         double defaultCutZ = (exactZMax + exactZMin) / 2.0;
 
                         // 【關鍵修正 1】：取得平面圖當前的剖切面高度，模型線畫在這裡絕對看得到！
-                        double exactCutZ = GetPlaneElevation(viewPlan, PlanViewPlane.CutPlane, defaultCutZ, defaultCutZ);
+                        //double exactCutZ = GetPlaneElevation(viewPlan, PlanViewPlane.CutPlane, defaultCutZ, defaultCutZ);
+                        double exactCutZ = viewPlan.GenLevel != null ? viewPlan.GenLevel.Elevation : exactZMin;
 
                         double validZ_Min = exactZMin - 0.5;
                         double validZ_Max = exactZMax + 0.5;
@@ -190,13 +191,13 @@ namespace Sinotech.CSDSEM
                                 // 【關鍵修正 3】：將邊界線的起終點精準投影至視圖剖切面高度 exactCutZ
                                 XYZ projectedStart = new XYZ(startPt.X, startPt.Y, exactCutZ);
                                 XYZ projectedEnd = new XYZ(endPt.X, endPt.Y, exactCutZ);
-
                                 if (projectedStart.DistanceTo(projectedEnd) > 0.001)
                                 {
                                     try
                                     {
                                         Line modelLine = Line.CreateBound(projectedStart, projectedEnd);
-                                        doc.Create.NewModelCurve(modelLine, sketchPlane);
+                                        //doc.Create.NewModelCurve(modelLine, sketchPlane);
+                                        DrawLine(doc, modelLine);
                                     }
                                     catch { }
                                 }
@@ -317,6 +318,23 @@ namespace Sinotech.CSDSEM
         {
             Plane plane = Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 0, z));
             return SketchPlane.Create(doc, plane);
+        }
+        /// <summary>
+        /// 3D視圖中畫模型線
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="curve"></param>
+        private void DrawLine(Document doc, Curve curve)
+        {
+            try
+            {
+                Line line = Line.CreateBound(curve.Tessellate()[0], curve.Tessellate()[curve.Tessellate().Count - 1]);
+                XYZ normal = new XYZ(line.Direction.Z - line.Direction.Y, line.Direction.X - line.Direction.Z, line.Direction.Y - line.Direction.X); // 使用與線不平行的任意向量
+                Plane plane = Plane.CreateByNormalAndOrigin(normal, curve.Tessellate()[0]);
+                SketchPlane sketchPlane = SketchPlane.Create(doc, plane);
+                ModelCurve modelCurve = doc.Create.NewModelCurve(line, sketchPlane);
+            }
+            catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
         }
     }
 }
