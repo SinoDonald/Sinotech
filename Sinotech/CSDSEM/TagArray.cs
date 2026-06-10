@@ -30,7 +30,6 @@ namespace Sinotech.CSDSEM
             List<ViewPlan> selectedViews = chooseForm.checkViewPlans;
             if (selectedViews == null || selectedViews.Count == 0) return Result.Failed;
 
-            // 【正確讀取單選按鈕回傳結果】
             bool isAutoMode = chooseForm.IsAutoResult;
 
             List<ProjectItem> availableProjects = new List<ProjectItem> { new ProjectItem(doc) };
@@ -46,7 +45,6 @@ namespace Sinotech.CSDSEM
                 BuiltInCategory.OST_StructuralColumns,
                 BuiltInCategory.OST_Columns,
                 BuiltInCategory.OST_StructuralFraming,
-                //BuiltInCategory.OST_Floors,
                 BuiltInCategory.OST_Walls,
                 BuiltInCategory.OST_PipeCurves,
                 BuiltInCategory.OST_DuctCurves,
@@ -58,32 +56,56 @@ namespace Sinotech.CSDSEM
             };
             ElementMulticategoryFilter multiCatFilter = new ElementMulticategoryFilter(targetCategories);
 
+            List<BuiltInCategory> tagCategories = new List<BuiltInCategory>
+            {
+                BuiltInCategory.OST_PipeTags,
+                BuiltInCategory.OST_DuctTags,
+                BuiltInCategory.OST_CableTrayTags
+            };
+            ElementMulticategoryFilter tagFilter = new ElementMulticategoryFilter(tagCategories);
+
             using (Transaction trans = new Transaction(doc, "標籤順序"))
             {
                 trans.Start();
 
-                // 這裡可以依據自動或手動做後續邏輯切換
                 if (isAutoMode)
                 {
                     foreach (ViewPlan viewPlan in selectedViews)
                     {
-                        // 計算該平面圖嚴格的 Top/Bottom 與最關鍵的剖切面 CutPlane 高程
                         double exactZMax = GetPlaneElevation(viewPlan, PlanViewPlane.TopClipPlane, 1000.0, -1000.0);
                         double exactZMin = GetPlaneElevation(viewPlan, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
-                        double defaultCutZ = (exactZMax + exactZMin) / 2.0;
-
-                        // 【關鍵修正 1】：取得平面圖當前的剖切面高度，模型線畫在這裡絕對看得到！
-                        //double exactCutZ = GetPlaneElevation(viewPlan, PlanViewPlane.CutPlane, defaultCutZ, defaultCutZ);
                         double exactCutZ = viewPlan.GenLevel != null ? viewPlan.GenLevel.Elevation : exactZMin;
-
                         double validZ_Min = exactZMin - 0.5;
                         double validZ_Max = exactZMax + 0.5;
 
+                        // =========================================================
+                        // 1. 獲取單一標籤的物理尺寸 (網格的基礎單位)
+                        // =========================================================
+                        double tagW = 1000.0 / 304.8; // 預設寬度
+                        double tagH = 300.0 / 304.8;  // 預設高度
+                        int minTagsFit = 5;           // 【參數】：此空白區至少要能塞得下幾個標籤才畫框！
+
+                        IndependentTag sampleTag = new FilteredElementCollector(doc, viewPlan.Id)
+                            .WherePasses(tagFilter).OfClass(typeof(IndependentTag)).Cast<IndependentTag>().FirstOrDefault();
+
+                        if (sampleTag != null)
+                        {
+                            BoundingBoxXYZ tagBbox = sampleTag.get_BoundingBox(viewPlan);
+                            if (tagBbox != null)
+                            {
+                                double w = tagBbox.Max.X - tagBbox.Min.X;
+                                double h = tagBbox.Max.Y - tagBbox.Min.Y;
+                                if (w > 0 && w < 15.0) tagW = w;
+                                if (h > 0 && h < 15.0) tagH = h;
+                            }
+                        }
+
+                        // 視圖邊界計算
                         double viewMinX, viewMinY, viewMaxX, viewMaxY;
                         BoundingBoxXYZ cb = viewPlan.CropBox;
-                        Transform ct = cb.Transform;
                         if (viewPlan.CropBoxActive)
                         {
+                            Transform ct = cb.Transform;
                             viewMinX = double.MaxValue; viewMinY = double.MaxValue;
                             viewMaxX = double.MinValue; viewMaxY = double.MinValue;
                             foreach (double lx in new[] { cb.Min.X, cb.Max.X })
@@ -98,11 +120,13 @@ namespace Sinotech.CSDSEM
                         }
                         else
                         {
-                            viewMinX = -5000.0; viewMinY = -5000.0;
-                            viewMaxX = 5000.0; viewMaxY = 5000.0;
+                            viewMinX = -2000.0; viewMinY = -2000.0;
+                            viewMaxX = 2000.0; viewMaxY = 2000.0;
                         }
 
-                        // 建立大底板幾何固體面時，高度改用 exactCutZ 剖切面高程
+                        // =========================================================
+                        // 2. 布林運算：建立基底大面，並扣除所有建築管線實體
+                        // =========================================================
                         List<CurveLoop> baseLoops = new List<CurveLoop>();
                         CurveLoop viewExtentLoop = new CurveLoop();
                         viewExtentLoop.Append(Line.CreateBound(new XYZ(viewMinX, viewMinY, exactCutZ), new XYZ(viewMaxX, viewMinY, exactCutZ)));
@@ -116,96 +140,198 @@ namespace Sinotech.CSDSEM
                         foreach (ProjectItem projItem in availableProjects)
                         {
                             List<Element> validElements = new List<Element>();
-
                             if (projItem.IsMainModel)
                             {
-                                FilteredElementCollector mainCollector = new FilteredElementCollector(doc, viewPlan.Id)
-                                    .WherePasses(multiCatFilter)
-                                    .WhereElementIsNotElementType();
-                                validElements = mainCollector.ToList();
+                                validElements = new FilteredElementCollector(doc, viewPlan.Id).WherePasses(multiCatFilter).WhereElementIsNotElementType().ToList();
                             }
                             else
                             {
                                 Transform invTransform = projItem.LinkInstance.GetTotalTransform().Inverse;
                                 Outline linkOutline = GetTransformedOutline(viewPlan, cb, invTransform, validZ_Min, validZ_Max);
-                                BoundingBoxIntersectsFilter bboxFilter = new BoundingBoxIntersectsFilter(linkOutline);
-
-                                FilteredElementCollector linkedCollector = new FilteredElementCollector(projItem.Doc)
-                                    .WherePasses(multiCatFilter)
-                                    .WherePasses(bboxFilter)
-                                    .WhereElementIsNotElementType();
-
-                                validElements = linkedCollector.ToList();
+                                validElements = new FilteredElementCollector(projItem.Doc).WherePasses(multiCatFilter)
+                                    .WherePasses(new BoundingBoxIntersectsFilter(linkOutline)).WhereElementIsNotElementType().ToList();
                             }
 
                             foreach (Element elem in validElements)
                             {
                                 Transform linkXform = projItem.IsMainModel ? null : projItem.LinkInstance.GetTotalTransform();
-
                                 if (elem.Location is LocationCurve locCurve && locCurve.Curve != null)
                                 {
                                     double visLen = GetVisibleLengthInView(elem, linkXform, viewMinX, viewMaxX, viewMinY, viewMaxY);
                                     if (visLen <= 0) continue;
                                 }
 
-                                // 採用先前修正：唯獨傳入 View，不手動指定 DetailLevel 避免衝突
-                                Options opt = new Options { View = viewPlan };
-                                GeometryElement geomElem = elem.get_Geometry(opt);
+                                GeometryElement geomElem = elem.get_Geometry(new Options { View = viewPlan });
                                 if (geomElem == null) continue;
 
                                 foreach (GeometryObject geomObj in geomElem)
                                 {
                                     if (geomObj is GeometryInstance geomInst)
                                     {
-                                        GeometryElement instGeom = geomInst.GetInstanceGeometry();
-                                        foreach (GeometryObject instObj in instGeom)
+                                        foreach (GeometryObject instObj in geomInst.GetInstanceGeometry())
                                         {
                                             if (instObj is Solid s && s.Volume > 0)
-                                            {
-                                                Solid transformedSolid = linkXform != null ? SolidUtils.CreateTransformed(s, linkXform) : s;
-                                                emptyAreaSolid = SubtractSolid2D(emptyAreaSolid, transformedSolid);
-                                            }
+                                                emptyAreaSolid = SubtractSolid2D(emptyAreaSolid, linkXform != null ? SolidUtils.CreateTransformed(s, linkXform) : s);
                                         }
                                     }
                                     else if (geomObj is Solid solid && solid.Volume > 0)
                                     {
-                                        Solid transformedSolid = linkXform != null ? SolidUtils.CreateTransformed(solid, linkXform) : solid;
-                                        emptyAreaSolid = SubtractSolid2D(emptyAreaSolid, transformedSolid);
+                                        emptyAreaSolid = SubtractSolid2D(emptyAreaSolid, linkXform != null ? SolidUtils.CreateTransformed(solid, linkXform) : solid);
                                     }
                                 }
                             }
                         }
 
-                        // 3. 劃設殘餘空白區的模型線
-                        if (emptyAreaSolid != null)
+                        // =========================================================
+                        // 3. 網格化與洪水演算法 (過濾室內空間)
+                        // =========================================================
+                        if (emptyAreaSolid == null) continue;
+
+                        PlanarFace topFace = null;
+                        foreach (Face face in emptyAreaSolid.Faces)
                         {
-                            // 【關鍵修正 2】：草圖平面同樣精準建立在剖切面高度上
-                            SketchPlane sketchPlane = CreateSketchPlaneForZ(doc, exactCutZ);
-
-                            foreach (Edge edge in emptyAreaSolid.Edges)
+                            if (face is PlanarFace pf && pf.FaceNormal.IsAlmostEqualTo(XYZ.BasisZ, 0.01))
                             {
-                                Curve curve = edge.AsCurve();
-                                XYZ startPt = curve.GetEndPoint(0);
-                                XYZ endPt = curve.GetEndPoint(1);
+                                topFace = pf; break; // 取得扣除完畢的頂面
+                            }
+                        }
+                        if (topFace == null) continue;
 
-                                // 【關鍵修正 3】：將邊界線的起終點精準投影至視圖剖切面高度 exactCutZ
-                                XYZ projectedStart = new XYZ(startPt.X, startPt.Y, exactCutZ);
-                                XYZ projectedEnd = new XYZ(endPt.X, endPt.Y, exactCutZ);
-                                if (projectedStart.DistanceTo(projectedEnd) > 0.001)
+                        int cols = (int)Math.Ceiling((viewMaxX - viewMinX) / tagW);
+                        int rows = (int)Math.Ceiling((viewMaxY - viewMinY) / tagH);
+                        bool[,] isFree = new bool[cols, rows];
+
+                        // 判斷每一格「磁磚」是否落在安全面內
+                        double zTop = topFace.Origin.Z;
+                        for (int c = 0; c < cols; c++)
+                        {
+                            for (int r = 0; r < rows; r++)
+                            {
+                                double x = viewMinX + c * tagW + tagW / 2;
+                                double y = viewMinY + r * tagH + tagH / 2;
+                                XYZ testPt = new XYZ(x, y, zTop);
+                                IntersectionResult ir = topFace.Project(testPt);
+                                if (ir != null && ir.Distance < 0.01 && topFace.IsInside(ir.UVPoint))
                                 {
-                                    try
-                                    {
-                                        Line modelLine = Line.CreateBound(projectedStart, projectedEnd);
-                                        //doc.Create.NewModelCurve(modelLine, sketchPlane);
-                                        DrawLine(doc, modelLine);
-                                    }
-                                    catch { }
+                                    isFree[c, r] = true;
                                 }
                             }
                         }
-                    }
 
-                    TaskDialog.Show("Revit", "分割空白區完成！");
+                        // 洪水演算法 (BFS)：只保留與視圖邊界相連的空間 (剔除室內房間)
+                        bool[,] isExterior = new bool[cols, rows];
+                        Queue<int[]> queue = new Queue<int[]>();
+                        for (int c = 0; c < cols; c++)
+                        {
+                            for (int r = 0; r < rows; r++)
+                            {
+                                if (c == 0 || c == cols - 1 || r == 0 || r == rows - 1)
+                                {
+                                    if (isFree[c, r])
+                                    {
+                                        isExterior[c, r] = true;
+                                        queue.Enqueue(new int[] { c, r });
+                                    }
+                                }
+                            }
+                        }
+
+                        int[] dc = { -1, 1, 0, 0 };
+                        int[] dr = { 0, 0, -1, 1 };
+                        while (queue.Count > 0)
+                        {
+                            int[] curr = queue.Dequeue();
+                            for (int i = 0; i < 4; i++)
+                            {
+                                int nc = curr[0] + dc[i];
+                                int nr = curr[1] + dr[i];
+                                if (nc >= 0 && nc < cols && nr >= 0 && nr < rows)
+                                {
+                                    if (isFree[nc, nr] && !isExterior[nc, nr])
+                                    {
+                                        isExterior[nc, nr] = true;
+                                        queue.Enqueue(new int[] { nc, nr });
+                                    }
+                                }
+                            }
+                        }
+
+                        // =========================================================
+                        // 4. 最大矩形演算法 (Maximal Rectangle) - 只抓外圍邊界
+                        // =========================================================
+                        List<int[]> finalRectangles = new List<int[]>(); // [minC, maxC, minR, maxR]
+
+                        while (true)
+                        {
+                            int maxArea = 0;
+                            int bestMinC = 0, bestMaxC = 0, bestMinR = 0, bestMaxR = 0;
+                            int[] heights = new int[cols];
+
+                            for (int r = 0; r < rows; r++)
+                            {
+                                for (int c = 0; c < cols; c++)
+                                    heights[c] = isExterior[c, r] ? heights[c] + 1 : 0;
+
+                                for (int c = 0; c < cols; c++)
+                                {
+                                    int minH = heights[c];
+                                    for (int c2 = c; c2 < cols; c2++)
+                                    {
+                                        minH = Math.Min(minH, heights[c2]);
+                                        if (minH == 0) break;
+
+                                        int area = minH * (c2 - c + 1); // area 就代表這個矩形能放幾個標籤！
+                                        if (area > maxArea)
+                                        {
+                                            maxArea = area;
+                                            bestMinC = c; bestMaxC = c2;
+                                            bestMinR = r - minH + 1; bestMaxR = r;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 如果找出來的最大矩形，連使用者指定的標籤數量都塞不下，就停止尋找
+                            if (maxArea < minTagsFit) break;
+
+                            finalRectangles.Add(new int[] { bestMinC, bestMaxC, bestMinR, bestMaxR });
+
+                            // 將找到的大矩形區域從網格中抹除，避免重複計算
+                            for (int c = bestMinC; c <= bestMaxC; c++)
+                                for (int r = bestMinR; r <= bestMaxR; r++)
+                                    isExterior[c, r] = false;
+                        }
+
+                        // =========================================================
+                        // 5. 將找出的矩形頂點轉回 3D 座標，並只畫出外圍四邊
+                        // =========================================================
+                        SketchPlane sketchPlane = CreateSketchPlaneForZ(doc, exactCutZ);
+
+                        foreach (var rect in finalRectangles)
+                        {
+                            double pMinX = viewMinX + rect[0] * tagW;
+                            double pMinY = viewMinY + rect[2] * tagH;
+                            // +1 是因為 max index 包含該格本身的寬度
+                            double pMaxX = viewMinX + (rect[1] + 1) * tagW;
+                            double pMaxY = viewMinY + (rect[3] + 1) * tagH;
+
+                            XYZ p1 = new XYZ(pMinX, pMinY, exactCutZ);
+                            XYZ p2 = new XYZ(pMaxX, pMinY, exactCutZ);
+                            XYZ p3 = new XYZ(pMaxX, pMaxY, exactCutZ);
+                            XYZ p4 = new XYZ(pMinX, pMaxY, exactCutZ);
+
+                            try
+                            {
+                                doc.Create.NewModelCurve(Line.CreateBound(p1, p2), sketchPlane);
+                                doc.Create.NewModelCurve(Line.CreateBound(p2, p3), sketchPlane);
+                                doc.Create.NewModelCurve(Line.CreateBound(p3, p4), sketchPlane);
+                                doc.Create.NewModelCurve(Line.CreateBound(p4, p1), sketchPlane);
+                            }
+                            catch { }
+                        }
+
+                        //TaskDialog.Show("Revit", $"已過濾建築室內空間！\n並成功繪製出所有可容納 {minTagsFit} 個以上標籤的矩形安全區！");
+                    }
                 }
                 else
                 {
@@ -318,23 +444,6 @@ namespace Sinotech.CSDSEM
         {
             Plane plane = Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 0, z));
             return SketchPlane.Create(doc, plane);
-        }
-        /// <summary>
-        /// 3D視圖中畫模型線
-        /// </summary>
-        /// <param name="doc"></param>
-        /// <param name="curve"></param>
-        private void DrawLine(Document doc, Curve curve)
-        {
-            try
-            {
-                Line line = Line.CreateBound(curve.Tessellate()[0], curve.Tessellate()[curve.Tessellate().Count - 1]);
-                XYZ normal = new XYZ(line.Direction.Z - line.Direction.Y, line.Direction.X - line.Direction.Z, line.Direction.Y - line.Direction.X); // 使用與線不平行的任意向量
-                Plane plane = Plane.CreateByNormalAndOrigin(normal, curve.Tessellate()[0]);
-                SketchPlane sketchPlane = SketchPlane.Create(doc, plane);
-                ModelCurve modelCurve = doc.Create.NewModelCurve(line, sketchPlane);
-            }
-            catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
         }
     }
 }
