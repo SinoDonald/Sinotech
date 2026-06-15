@@ -62,7 +62,7 @@ namespace Sinotech_2025.Plotting
         {
             formatOptionList = new List<FormatOption>(); // 清空格式類型與選項
             string[] formats = new string[] { "DWG", "DGN", "PDF" };
-            foreach(string format in formats)
+            foreach (string format in formats)
             {
                 FormatOption formatOption = new FormatOption();
                 formatOption.format = format; // 格式類型
@@ -77,7 +77,7 @@ namespace Sinotech_2025.Plotting
                 else if (format.Equals("PDF"))
                 {
                     ICollection<PrintSetting> printSettings = new FilteredElementCollector(doc).OfClass(typeof(PrintSetting)).Cast<PrintSetting>().ToList();
-                    foreach(PrintSetting printSetting in printSettings)
+                    foreach (PrintSetting printSetting in printSettings)
                     {
                         formatOption.options.Add(printSetting.Name);
                     }
@@ -104,16 +104,21 @@ namespace Sinotech_2025.Plotting
                         viewInfo.view = view;
                         viewInfo.vftName = viewTitle[0].Trim();
                         viewInfo.name = viewTitle[1].Trim();
-                        if(view is ViewSheet)
+                        if (view is ViewSheet)
                         {
                             // 電腦圖號
                             try
                             {
                                 string picNumber = string.Empty;
-                                try { picNumber = view.LookupParameter("圖框-電腦圖號").AsString(); } catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                                try { picNumber = view.LookupParameter("圖框-電腦圖號").AsString(); } catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
 
                                 if (!String.IsNullOrEmpty(picNumber))
                                 {
+                                    // 如果名字有特殊字元時則替換為"_"
+                                    foreach (char invalidChar in Path.GetInvalidFileNameChars())
+                                    {
+                                        picNumber = picNumber.Replace(invalidChar, '_');
+                                    }
                                     viewInfo.picNumber = picNumber;
                                 }
                                 else
@@ -270,19 +275,19 @@ namespace Sinotech_2025.Plotting
                         {
                             try
                             {
-                                // 開啟View
-                                formUIApp.ActiveUIDocument.ActiveView = viewInfo.view;
-                                // 關閉其他視圖
-                                View currView = formDoc.ActiveView;
-                                formUIApp.ActiveUIDocument.RequestViewChange(currView);
-                                IList<UIView> openViews = formUIApp.ActiveUIDocument.GetOpenUIViews();
-                                foreach (UIView openView in openViews)
-                                {
-                                    if (openView.ViewId != currView.Id)
-                                    {
-                                        openView.Close();
-                                    }
-                                }
+                                //// 開啟View
+                                //formUIApp.ActiveUIDocument.ActiveView = viewInfo.view;
+                                //// 關閉其他視圖
+                                //View currView = formDoc.ActiveView;
+                                //formUIApp.ActiveUIDocument.RequestViewChange(currView);
+                                //IList<UIView> openViews = formUIApp.ActiveUIDocument.GetOpenUIViews();
+                                //foreach (UIView openView in openViews)
+                                //{
+                                //    if (openView.ViewId != currView.Id)
+                                //    {
+                                //        openView.Close();
+                                //    }
+                                //}
                                 // 執行交易
                                 using (Transaction trans = new Transaction(doc, "匯出視圖"))
                                 {
@@ -341,7 +346,7 @@ namespace Sinotech_2025.Plotting
                                             options.ColorDepth = ColorDepthType.BlackLine; // 色彩深度
                                             options.ExportQuality = PDFExportQualityType.DPI300; // 匯出品質
                                             options.Combine = true; // 合併檔案
-                                            options.HideCropBoundaries = false;                                            
+                                            options.HideCropBoundaries = false;
                                             ICollection<ElementId> views = new List<ElementId>() { viewInfo.view.Id }; // 準備要輸出的View
                                             bool result = doc.Export(path, views.ToList(), options); // 匯出 PDF
 
@@ -428,10 +433,10 @@ namespace Sinotech_2025.Plotting
         {
             List<string> options = (from x in formatOptionList
                                     where x.format.Equals(formatCB.Text)
-                                    select x.options).FirstOrDefault();            
+                                    select x.options).FirstOrDefault();
             optionCB.Items.Clear(); // 清除setupCB選項
             // 更新setupCB選項
-            foreach(string option in options)
+            foreach (string option in options)
             {
                 optionCB.Items.Add(option);
             }

@@ -608,7 +608,11 @@ namespace Sinotech.CSDSEM
                                                                     if (newTag != null)
                                                                     {
                                                                         newTag.ChangeTypeId(candidate.TargetSym.Id);
-
+                                                                        // 風管標籤不開啟引線
+                                                                        if (newTag.Category.BuiltInCategory == BuiltInCategory.OST_DuctTags)
+                                                                        {
+                                                                            newTag.HasLeader = false;
+                                                                        }
                                                                         // 確保引線端點附著在管道上（LeaderEndCondition = Attached）
                                                                         try { newTag.LeaderEndCondition = LeaderEndCondition.Attached; } catch { }
                                                                         newTagCounts++;

@@ -298,6 +298,7 @@ namespace Sinotech.CSDSEM
             int movedCount = 0;
             List<IndependentTag> existingTags = new FilteredElementCollector(doc, viewPlan.Id)
                 .WherePasses(tagFilter).OfClass(typeof(IndependentTag)).Cast<IndependentTag>().ToList();
+            existingTags = existingTags.Where(x => x.Category.BuiltInCategory != BuiltInCategory.OST_DuctTags).ToList(); // 風管標籤不移動
 
             foreach (IndependentTag tag in existingTags)
             {

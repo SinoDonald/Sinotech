@@ -6,6 +6,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 using View = Autodesk.Revit.DB.View;
 
 namespace Sinotech.Plotting
@@ -113,6 +114,11 @@ namespace Sinotech.Plotting
 
                                 if (!String.IsNullOrEmpty(picNumber))
                                 {
+                                    // 如果名字有特殊字元時則替換為"_"
+                                    foreach (char invalidChar in Path.GetInvalidFileNameChars())
+                                    {
+                                        picNumber = picNumber.Replace(invalidChar, '_');
+                                    }
                                     viewInfo.picNumber = picNumber;
                                 }
                                 else
@@ -269,19 +275,19 @@ namespace Sinotech.Plotting
                         {
                             try
                             {
-                                // 開啟View
-                                formUIApp.ActiveUIDocument.ActiveView = viewInfo.view;
-                                // 關閉其他視圖
-                                View currView = formDoc.ActiveView;
-                                formUIApp.ActiveUIDocument.RequestViewChange(currView);
-                                IList<UIView> openViews = formUIApp.ActiveUIDocument.GetOpenUIViews();
-                                foreach (UIView openView in openViews)
-                                {
-                                    if (openView.ViewId != currView.Id)
-                                    {
-                                        openView.Close();
-                                    }
-                                }
+                                //// 開啟View
+                                //formUIApp.ActiveUIDocument.ActiveView = viewInfo.view;
+                                //// 關閉其他視圖
+                                //View currView = formDoc.ActiveView;
+                                //formUIApp.ActiveUIDocument.RequestViewChange(currView);
+                                //IList<UIView> openViews = formUIApp.ActiveUIDocument.GetOpenUIViews();
+                                //foreach (UIView openView in openViews)
+                                //{
+                                //    if (openView.ViewId != currView.Id)
+                                //    {
+                                //        openView.Close();
+                                //    }
+                                //}
                                 // 執行交易
                                 using (Transaction trans = new Transaction(doc, "匯出視圖"))
                                 {
