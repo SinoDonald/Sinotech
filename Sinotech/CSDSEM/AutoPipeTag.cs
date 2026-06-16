@@ -459,6 +459,14 @@ namespace Sinotech.CSDSEM
 
                                                                 XYZ tagPlacementPoint = new XYZ(tagMidPoint.X, tagMidPoint.Y, tagZ);
 
+                                                                // =========================================================
+                                                                // 【計算管道角度】保證文字水平易讀 (控制在 -90 到 90 度)
+                                                                // =========================================================
+                                                                XYZ dir = (pt1 - pt0).Normalize();
+                                                                double pipeAngle = Math.Atan2(dir.Y, dir.X);
+                                                                if (pipeAngle > Math.PI / 2.0 + 1e-6) pipeAngle -= Math.PI;
+                                                                else if (pipeAngle < -Math.PI / 2.0 - 1e-6) pipeAngle += Math.PI;
+
                                                                 bool isLinked = !mepItem.SourceProject.IsMainModel;
                                                                 ElementId linkInstId = isLinked ? mepItem.SourceProject.LinkInstance.Id : ElementId.InvalidElementId;
 
@@ -468,13 +476,6 @@ namespace Sinotech.CSDSEM
                                                                 // 【長管強制標籤條件】
                                                                 // 視圖內可見長度 > 10m(使用者設定必標長度)：不論系統/標籤內容是否相同，
                                                                 // 每根都各自建立標籤。
-                                                                //
-                                                                // 修正重複標籤 Bug 的根本做法：
-                                                                //   - 以 currentSig（元件實體 ID）作為 key，確保同一根
-                                                                //     管道只會有一筆候選，不會因為「長管 key」+「sysSig key」
-                                                                //     各自放進字典而建立兩次標籤。
-                                                                //   - isLongPipe 時直接 continue，跳過下方的 sysSig 邏輯，
-                                                                //     兩條路徑完全互斥，不需要 ElementUniqueId 防呆。
                                                                 // =========================================================
                                                                 double visibleLengthMeter = visibleLength * 0.3048;
                                                                 bool isLongPipe = visibleLengthMeter > maxM;
@@ -491,7 +492,8 @@ namespace Sinotech.CSDSEM
                                                                             TargetSym = targetSymbol,
                                                                             PlacementPt = tagPlacementPoint,
                                                                             VisibleLength = visibleLength,
-                                                                            SysSig = null  // null = 不寫入 taggedSystemSignatures
+                                                                            SysSig = null,  // null = 不寫入 taggedSystemSignatures
+                                                                            Angle = pipeAngle
                                                                         };
                                                                     }
                                                                     continue; // 長管路徑結束，跳過下方 sysSig 邏輯，確保不重複
@@ -501,11 +503,6 @@ namespace Sinotech.CSDSEM
                                                                 {
                                                                     // =========================================================
                                                                     // 【防重複核心邏輯】
-                                                                    // 以 taggedSysSigMaxLength 判斷：此 sysSig 是否已有標注，
-                                                                    // 且已標注的管道可見長度 >= 當前候選。
-                                                                    // 條件成立 → 最長管道已標注，整個 sysSig 跳過，不補標。
-                                                                    // 此邏輯同時適用主模型（taggedSystemSignatures 也記錄）
-                                                                    // 和連結模型（僅 taggedSysSigMaxLength 記錄）。
                                                                     // =========================================================
                                                                     if (taggedSysSigMaxLength.TryGetValue(sysSig, out double existingTaggedLen)
                                                                         && existingTaggedLen >= visibleLength)
@@ -524,7 +521,8 @@ namespace Sinotech.CSDSEM
                                                                                 TargetSym = targetSymbol,
                                                                                 PlacementPt = tagPlacementPoint,
                                                                                 VisibleLength = visibleLength,
-                                                                                SysSig = sysSig
+                                                                                SysSig = sysSig,
+                                                                                Angle = pipeAngle
                                                                             };
                                                                         }
                                                                     }
@@ -538,7 +536,8 @@ namespace Sinotech.CSDSEM
                                                                                 TargetSym = targetSymbol,
                                                                                 PlacementPt = tagPlacementPoint,
                                                                                 VisibleLength = visibleLength,
-                                                                                SysSig = sysSig
+                                                                                SysSig = sysSig,
+                                                                                Angle = pipeAngle
                                                                             };
                                                                         }
                                                                         else
@@ -551,7 +550,8 @@ namespace Sinotech.CSDSEM
                                                                                 TargetSym = targetSymbol,
                                                                                 PlacementPt = tagPlacementPoint,
                                                                                 VisibleLength = visibleLength,
-                                                                                SysSig = sysSig
+                                                                                SysSig = sysSig,
+                                                                                Angle = pipeAngle
                                                                             };
                                                                         }
                                                                     }
@@ -565,14 +565,14 @@ namespace Sinotech.CSDSEM
                                                                         TargetSym = targetSymbol,
                                                                         PlacementPt = tagPlacementPoint,
                                                                         VisibleLength = visibleLength,
-                                                                        SysSig = null
+                                                                        SysSig = null,
+                                                                        Angle = pipeAngle
                                                                     };
                                                                 }
                                                             }
 
                                                             // =========================================================
                                                             // 【候選確定後】對每個簽章的最長管道建立標籤
-                                                            // 第四個參數 true = hasLeader，確保每個標籤都有引線
                                                             // =========================================================
                                                             foreach (TagCandidate candidate in tagCandidates.Values)
                                                             {
@@ -580,10 +580,6 @@ namespace Sinotech.CSDSEM
                                                                 {
                                                                     // =========================================================
                                                                     // 【放置前檢查】確認標籤放置點在視圖 CropBox 內
-                                                                    // 若管道靠近裁切線，clippedMid 可能仍落在 CropBox 邊緣外，
-                                                                    // 建立的標籤在視圖中不顯示，但掃描時也找不到，
-                                                                    // 導致每次執行都重複建立「隱形標籤」。
-                                                                    // 解法：放置點在 CropBox 外則跳過，不建立標籤。
                                                                     // =========================================================
                                                                     if (checkViewPlan.CropBoxActive)
                                                                     {
@@ -595,26 +591,47 @@ namespace Sinotech.CSDSEM
                                                                             continue; // 放置點在 CropBox 外，跳過不建立
                                                                         }
                                                                     }
+
+                                                                    // =========================================================
+                                                                    // 【風管特製放置邏輯】直接貼上、關閉引線、隨元件旋轉
+                                                                    // =========================================================
+                                                                    bool isDuctTag = candidate.TargetSym.Category.Id.Value == (long)BuiltInCategory.OST_DuctTags;
+
+                                                                    // 建立標籤 API 要求：如果希望標籤「精準落在 PlacementPt 上」，建立當下就必須設定 hasLeader = false
+                                                                    bool hasLeader = !isDuctTag;
+
+                                                                    // 標籤方向：風管預設使用 Model 隨元件旋轉
+                                                                    TagOrientation tagOri = isDuctTag ? TagOrientation.AnyModelDirection : TagOrientation.Horizontal;
+
                                                                     IndependentTag newTag = IndependentTag.Create(
                                                                         doc,
                                                                         checkViewPlan.Id,
                                                                         candidate.ElemRef,
-                                                                        true,  // hasLeader = true，強制建立引線
+                                                                        hasLeader,
                                                                         TagMode.TM_ADDBY_CATEGORY,
-                                                                        TagOrientation.Horizontal,
+                                                                        tagOri,
                                                                         candidate.PlacementPt
                                                                     );
 
                                                                     if (newTag != null)
                                                                     {
                                                                         newTag.ChangeTypeId(candidate.TargetSym.Id);
-                                                                        // 風管標籤不開啟引線
-                                                                        if (newTag.Category.BuiltInCategory == BuiltInCategory.OST_DuctTags)
+
+                                                                        if (hasLeader)
                                                                         {
-                                                                            newTag.HasLeader = false;
+                                                                            // 確保引線端點附著在管道上
+                                                                            try { newTag.LeaderEndCondition = LeaderEndCondition.Attached; } catch { }
                                                                         }
-                                                                        // 確保引線端點附著在管道上（LeaderEndCondition = Attached）
-                                                                        try { newTag.LeaderEndCondition = LeaderEndCondition.Attached; } catch { }
+
+                                                                        // 【2024 版本專用保護】：若家族編輯器內未勾選「隨元件旋轉」，TagOrientation.AnyModelDirection 會失效
+                                                                        // 利用 2022 以後開放的 RotationAngle 屬性進行強制旋轉修正
+                                                                        // 2024
+                                                                        if (isDuctTag)
+                                                                        {
+                                                                            try { newTag.RotationAngle = candidate.Angle; } catch { }
+                                                                        }
+                                                                        // 2020
+
                                                                         newTagCounts++;
                                                                         if (candidate.SysSig != null)
                                                                             taggedSystemSignatures.Add(candidate.SysSig);
@@ -1035,6 +1052,8 @@ namespace Sinotech.CSDSEM
         public XYZ PlacementPt { get; set; }
         public double VisibleLength { get; set; }
         public string SysSig { get; set; }
+        // 【新增】：用於標籤放置時設定強制旋轉角度
+        public double Angle { get; set; }
     }
 
     /// <summary>
