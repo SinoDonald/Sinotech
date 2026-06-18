@@ -65,10 +65,6 @@ namespace Sinotech.CSDSEM
                                         ProgressForm progressForm = new ProgressForm("自動管線標籤", checkViewPlans.Count);
                                         progressForm.Show();
 
-                                        // =========================================================
-                                        // 【新增】Transaction 外：預先開啟子視圖對應的母視圖
-                                        // 原因：標籤放置在子視圖時，若母視圖未開啟，標籤將無法移動
-                                        // =========================================================
                                         HashSet<ElementId> openedParentViewIds = new HashSet<ElementId>();
                                         foreach (ViewPlan checkViewPlan in checkViewPlans)
                                         {
@@ -82,7 +78,6 @@ namespace Sinotech.CSDSEM
                                                 {
                                                     try
                                                     {
-                                                        // 開啟母視圖（讓 Revit 內部完成視圖初始化）
                                                         uidoc.RequestViewChange(parentView);
                                                         openedParentViewIds.Add(primaryViewId);
                                                     }
@@ -98,9 +93,8 @@ namespace Sinotech.CSDSEM
                                             {
                                                 try
                                                 {
-                                                    // 開啟母視圖（讓 Revit 內部完成視圖初始化）
                                                     uidoc.RequestViewChange(parentView);
-                                                    Application.DoEvents(); // 等待Revit視圖切換完成
+                                                    Application.DoEvents();
                                                     using (Transaction t = new Transaction(doc, "自動標籤"))
                                                     {
                                                         t.Start();
@@ -123,7 +117,6 @@ namespace Sinotech.CSDSEM
 
                                                         foreach (ViewPlan checkViewPlan in sameParentViewId)
                                                         {
-                                                            // 更新進度條
                                                             progressForm.UpdateProgress(checkViewPlan.Name);
                                                             Application.DoEvents();
                                                             double exactZMax = GetPlaneElevation(checkViewPlan, PlanViewPlane.TopClipPlane, 1000.0, -1000.0);
@@ -134,7 +127,6 @@ namespace Sinotech.CSDSEM
                                                             double validZ_Min = exactZMin - 0.5;
                                                             double validZ_Max = exactZMax + 0.5;
 
-                                                            // 視圖 XY 裁切範圍（提前計算，供掃描現有標籤與放置點邏輯共用）
                                                             double viewMinX, viewMinY, viewMaxX, viewMaxY;
                                                             {
                                                                 BoundingBoxXYZ cb = checkViewPlan.CropBox;
@@ -160,14 +152,10 @@ namespace Sinotech.CSDSEM
                                                                 }
                                                             }
 
-                                                            // =========================================================
-                                                            // 【系統級防重複機制】
-                                                            // =========================================================
                                                             HashSet<string> alreadyTaggedSignatures = new HashSet<string>();
                                                             HashSet<string> taggedSystemSignatures = new HashSet<string>();
                                                             Dictionary<string, double> taggedSysSigMaxLength = new Dictionary<string, double>();
 
-                                                            // 只掃描子視圖本身的標籤（不含母視圖，避免污染其他子視圖的判斷）
                                                             FilteredElementCollector existingTags = new FilteredElementCollector(doc, checkViewPlan.Id)
                                                                 .OfClass(typeof(IndependentTag));
 
@@ -186,7 +174,6 @@ namespace Sinotech.CSDSEM
                                                                         isTargetTag = true;
                                                                     }
 
-                                                                    //Reference tagRef = tag.GetTaggedReference(); // 2020
                                                                     foreach (Reference tagRef in tag.GetTaggedReferences())
                                                                     {
                                                                         bool isLinked = tagRef.LinkedElementId != ElementId.InvalidElementId;
@@ -308,9 +295,6 @@ namespace Sinotech.CSDSEM
 
                                                                 if (targetSymbol == null) continue;
 
-                                                                // =========================================================
-                                                                // 【排除 BusWay】
-                                                                // =========================================================
                                                                 if (elem is Duct ductElem)
                                                                 {
                                                                     ElementId dtId = ductElem.GetTypeId();
@@ -343,14 +327,11 @@ namespace Sinotech.CSDSEM
 
                                                                 if (pt0 == null || pt1 == null) continue;
 
-                                                                // 條件一：立管不標籤 (起終點的 X, Y 座標幾乎相同，給予 0.01 呎約 3mm 容差)
                                                                 if (Math.Abs(pt1.X - pt0.X) < 0.01 && Math.Abs(pt1.Y - pt0.Y) < 0.01) continue;
 
-                                                                // 條件二：長度低於 minM 不標籤 (將英呎轉換為公尺)
                                                                 double lengthMeter = pt0.DistanceTo(pt1) * 0.3048;
                                                                 if (lengthMeter < minM) continue;
 
-                                                                // 條件三：50mm(不含)以下的管徑/尺寸不標籤
                                                                 if (elem is Pipe)
                                                                 {
                                                                     Parameter diaParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
@@ -373,7 +354,6 @@ namespace Sinotech.CSDSEM
                                                                     if (Math.Min(widthMm, heightMm) < 49.9) continue;
                                                                 }
 
-                                                                // 條件四：高程(下端底部高程)為負值時不標籤
                                                                 if (elem is Pipe)
                                                                 {
                                                                     Parameter pipeParam = elem.get_Parameter(BuiltInParameter.RBS_PIPE_BOTTOM_ELEVATION);
@@ -438,6 +418,18 @@ namespace Sinotech.CSDSEM
                                                                 if (tagZ < exactZMin) tagZ = exactZMin + 0.01;
 
                                                                 // =========================================================
+                                                                // 【計算管道角度】保證文字水平易讀 (控制在 -90 到 90 度)
+                                                                // 並且藉此判斷是水平管還是垂直管，以決定引線折線邏輯
+                                                                // =========================================================
+                                                                XYZ dir = (pt1 - pt0).Normalize();
+                                                                double pipeAngle = Math.Atan2(dir.Y, dir.X);
+                                                                if (pipeAngle > Math.PI / 2.0 + 1e-6) pipeAngle -= Math.PI;
+                                                                else if (pipeAngle < -Math.PI / 2.0 - 1e-6) pipeAngle += Math.PI;
+
+                                                                // 判斷管線主要是「水平向(X軸)」還是「垂直向(Y軸)」
+                                                                bool isHorizontalPipe = Math.Abs(dir.X) >= Math.Abs(dir.Y);
+
+                                                                // =========================================================
                                                                 // 【四象限標籤偏移與折線邏輯】
                                                                 // =========================================================
                                                                 double viewCenterX = (viewMinX + viewMaxX) / 2.0;
@@ -449,32 +441,37 @@ namespace Sinotech.CSDSEM
 
                                                                 if (elem is Pipe || elem is CableTray)
                                                                 {
-                                                                    // 依照比例尺動態計算偏移量 (圖紙上約 X偏移15mm, Y偏移10mm)
-                                                                    double offX = (15.0 / 304.8) * checkViewPlan.Scale;
-                                                                    double offY = (10.0 / 304.8) * checkViewPlan.Scale;
+                                                                    // 【重要修正】：放大 X 與 Y 的偏移量！
+                                                                    // 若 X 偏移量太小 (例如小於標籤文字的一半)，標籤的文字框會包住轉折點
+                                                                    // Revit 為了避開文字，會強制斜拉引線，破壞 90 度的美觀。
+                                                                    // 此處設定圖面上約偏移 X:50mm, Y:20mm，保證有充足空間劃出 90 度直角。
+                                                                    double offX = (50.0 / 304.8) * checkViewPlan.Scale;
+                                                                    double offY = (20.0 / 304.8) * checkViewPlan.Scale;
 
-                                                                    // 判斷象限並決定推移方向
+                                                                    // 判斷該管線在視圖的哪個象限，決定向外推移的方向
                                                                     double pX = tagMidPoint.X + (tagMidPoint.X >= viewCenterX ? offX : -offX);
                                                                     double pY = tagMidPoint.Y + (tagMidPoint.Y >= viewCenterY ? offY : -offY);
 
                                                                     tagPlacementPoint = new XYZ(pX, pY, tagZ);
 
-                                                                    // 依附件圖片規律，轉折點 (Elbow) 的 X 座標對齊管道中心，Y 座標對齊標籤
-                                                                    elbowPt = new XYZ(tagMidPoint.X, pY, tagZ);
+                                                                    // 【完美 90 度折線邏輯】
+                                                                    if (isHorizontalPipe)
+                                                                    {
+                                                                        // 管道為水平：轉折點先上下走 (Y 與標籤齊平)，再左右接標籤
+                                                                        elbowPt = new XYZ(tagMidPoint.X, pY, tagZ);
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        // 管道為垂直：轉折點先左右走 (X 與標籤齊平)，再上下接標籤
+                                                                        // 這樣引線才不會在起點就跟垂直管線重疊！
+                                                                        elbowPt = new XYZ(pX, tagMidPoint.Y, tagZ);
+                                                                    }
                                                                 }
                                                                 else
                                                                 {
                                                                     // 風管直接放置於中心，無引線
                                                                     tagPlacementPoint = headPt;
                                                                 }
-
-                                                                // =========================================================
-                                                                // 【計算管道角度】保證文字水平易讀 (控制在 -90 到 90 度)
-                                                                // =========================================================
-                                                                XYZ dir = (pt1 - pt0).Normalize();
-                                                                double pipeAngle = Math.Atan2(dir.Y, dir.X);
-                                                                if (pipeAngle > Math.PI / 2.0 + 1e-6) pipeAngle -= Math.PI;
-                                                                else if (pipeAngle < -Math.PI / 2.0 - 1e-6) pipeAngle += Math.PI;
 
                                                                 bool isLinked = !mepItem.SourceProject.IsMainModel;
                                                                 ElementId linkInstId = isLinked ? mepItem.SourceProject.LinkInstance.Id : ElementId.InvalidElementId;
@@ -494,8 +491,8 @@ namespace Sinotech.CSDSEM
                                                                             ElemRef = pipeRef,
                                                                             TargetSym = targetSymbol,
                                                                             PlacementPt = tagPlacementPoint,
-                                                                            HeadPt = headPt,            // 【新增紀錄點】
-                                                                            ElbowPt = elbowPt,          // 【新增紀錄點】
+                                                                            HeadPt = headPt,
+                                                                            ElbowPt = elbowPt,
                                                                             VisibleLength = visibleLength,
                                                                             SysSig = null,
                                                                             Angle = pipeAngle
@@ -601,10 +598,13 @@ namespace Sinotech.CSDSEM
                                                                             // =========================================================
                                                                             // 【引線四象限折線設定】
                                                                             // =========================================================
-                                                                            // 1. 改為自由端點 (Free) 才能自訂轉折點
+                                                                            // 1. 改為自由端點 (Free)
                                                                             try { newTag.LeaderEndCondition = LeaderEndCondition.Free; } catch { }
 
-                                                                            // 2. 設定端點(在管上)與轉折點(90度轉彎)
+                                                                            // 2. 重新對齊標籤文字位置 (避免設為 Free 後，Revit 自動調整導致亂飄)
+                                                                            try { newTag.TagHeadPosition = candidate.PlacementPt; } catch { }
+
+                                                                            // 3. 設定端點(在管上)與轉折點(90度轉彎)
                                                                             // // 2024
                                                                             try
                                                                             {
