@@ -58,12 +58,8 @@ namespace Sinotech_2025.CSDSEM
 
             int grandTotalMovedTags = 0;
 
-            // =========================================================
-            // 模式分流：【自動模式】 vs 【手動模式】
-            // =========================================================
             if (isAutoMode)
             {
-                // 【修改1】將 foreach 包在一個 Transaction 內部，確保只有一個復原紀錄
                 using (Transaction trans = new Transaction(doc, "自動標籤排序"))
                 {
                     trans.Start();
@@ -76,7 +72,6 @@ namespace Sinotech_2025.CSDSEM
                         double validZ_Min = exactZMin - 0.5;
                         double validZ_Max = exactZMax + 0.5;
 
-                        // 1. 獲取單一標籤的物理尺寸 (精準高度)
                         double tagW = 1000.0 / 304.8;
                         double tagH = 300.0 / 304.8;
 
@@ -95,13 +90,11 @@ namespace Sinotech_2025.CSDSEM
                             }
                         }
 
-                        // 【修改3】極度縮小間距，確保排版緊密 (原15cm -> 改為 1cm 高度間距)
-                        double gapX = 30.0 / 304.8; // 左右間距 3cm
-                        double gapY = 10.0 / 304.8; // 上下間距 1cm 
+                        double gapX = 30.0 / 304.8;
+                        double gapY = 10.0 / 304.8;
                         double slotW = tagW + gapX;
                         double slotH = tagH + gapY;
 
-                        // 視圖邊界計算
                         double viewMinX, viewMinY, viewMaxX, viewMaxY;
                         BoundingBoxXYZ cb = viewPlan.CropBox;
                         if (viewPlan.CropBoxActive)
@@ -124,17 +117,12 @@ namespace Sinotech_2025.CSDSEM
                         List<SafeRegion> safeRegions = new List<SafeRegion>();
                         List<int[]> autoRectangles = GenerateAutoRectangles(doc, viewPlan, availableProjects, multiCatFilter, viewMinX, viewMaxX, viewMinY, viewMaxY, exactCutZ, validZ_Min, validZ_Max, tagW, tagH);
 
-                        // SketchPlane sketchPlane = CreateSketchPlaneForZ(doc, exactCutZ); // 如果要畫線需解除此註解
-
                         foreach (var rect in autoRectangles)
                         {
                             double pMinX = viewMinX + rect[0] * tagW;
                             double pMinY = viewMinY + rect[2] * tagH;
                             double pMaxX = viewMinX + (rect[1] + 1) * tagW;
                             double pMaxY = viewMinY + (rect[3] + 1) * tagH;
-
-                            // 【修改2】隱藏畫線
-                            // DrawRectangleLines(doc, sketchPlane, pMinX, pMaxX, pMinY, pMaxY, exactCutZ);
 
                             SafeRegion region = CreateSafeRegion(pMinX, pMaxX, pMinY, pMaxY, exactCutZ, slotW, slotH);
                             if (region != null) safeRegions.Add(region);
@@ -148,11 +136,6 @@ namespace Sinotech_2025.CSDSEM
             }
             else
             {
-                // =========================================================
-                // 【手動框選模式】兩階段處理
-                // =========================================================
-
-                // 【第一階段】：收集所有視圖的框選 (不開啟 Transaction，避免切換視圖報錯)
                 Dictionary<ViewPlan, List<PickedBox>> allPickedBoxes = new Dictionary<ViewPlan, List<PickedBox>>();
 
                 foreach (ViewPlan viewPlan in selectedViews)
@@ -171,11 +154,10 @@ namespace Sinotech_2025.CSDSEM
                         {
                             PickedBox box = uidoc.Selection.PickBox(PickBoxStyle.Directional, "請框選標籤放置的矩形範圍 (完成請按鍵盤 ESC 鍵結束)");
                             pickedBoxes.Add(box);
-                            // 【修改2】取消了即時畫線的回饋，所以不再需要 tDraw
                         }
                         catch (Autodesk.Revit.Exceptions.OperationCanceledException)
                         {
-                            break; // 按下 ESC
+                            break;
                         }
                     }
 
@@ -185,7 +167,6 @@ namespace Sinotech_2025.CSDSEM
                     }
                 }
 
-                // 【第二階段】：【修改1】將收集好的框選矩形，包在單一 Transaction 內進行排版
                 if (allPickedBoxes.Count > 0)
                 {
                     using (Transaction trans = new Transaction(doc, "手動標籤排序"))
@@ -200,7 +181,6 @@ namespace Sinotech_2025.CSDSEM
                             double exactZMin = GetPlaneElevation(viewPlan, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
                             double exactCutZ = viewPlan.GenLevel != null ? viewPlan.GenLevel.Elevation : exactZMin;
 
-                            // 1. 獲取單一標籤的物理尺寸 (精準高度)
                             double tagW = 1000.0 / 304.8;
                             double tagH = 300.0 / 304.8;
 
@@ -219,14 +199,12 @@ namespace Sinotech_2025.CSDSEM
                                 }
                             }
 
-                            // 【修改3】縮小間距，確保排版緊密 
                             double gapX = 30.0 / 304.8;
                             double gapY = 10.0 / 304.8;
                             double slotW = tagW + gapX;
                             double slotH = tagH + gapY;
 
                             List<SafeRegion> safeRegions = new List<SafeRegion>();
-                            // SketchPlane sketchPlane = CreateSketchPlaneForZ(doc, exactCutZ); // 畫線需要
 
                             foreach (PickedBox box in pickedBoxes)
                             {
@@ -234,9 +212,6 @@ namespace Sinotech_2025.CSDSEM
                                 double pMaxX = Math.Max(box.Min.X, box.Max.X);
                                 double pMinY = Math.Min(box.Min.Y, box.Max.Y);
                                 double pMaxY = Math.Max(box.Min.Y, box.Max.Y);
-
-                                // 【修改2】隱藏畫線
-                                // DrawRectangleLines(doc, sketchPlane, pMinX, pMaxX, pMinY, pMaxY, exactCutZ);
 
                                 SafeRegion region = CreateSafeRegion(pMinX, pMaxX, pMinY, pMaxY, exactCutZ, slotW, slotH);
                                 if (region != null) safeRegions.Add(region);
@@ -261,6 +236,7 @@ namespace Sinotech_2025.CSDSEM
         public class SafeRegion
         {
             public XYZ Center { get; set; }
+            public XYZ TopLeft { get; set; } // 【新增】左上角座標
             public List<XYZ> Slots { get; set; } = new List<XYZ>();
             public int NextSlotIndex { get; set; } = 0;
             public bool IsFull => NextSlotIndex >= Slots.Count;
@@ -270,17 +246,18 @@ namespace Sinotech_2025.CSDSEM
         {
             SafeRegion region = new SafeRegion();
             region.Center = new XYZ((pMinX + pMaxX) / 2, (pMinY + pMaxY) / 2, exactCutZ);
+            region.TopLeft = new XYZ(pMinX, pMaxY, exactCutZ); // 【新增】記錄該框的左上角
 
             int slotCols = (int)((pMaxX - pMinX) / slotW);
             int slotRows = (int)((pMaxY - pMinY) / slotH);
 
             if (slotCols < 1 || slotRows < 1) return null;
 
-            // 讓標籤在矩形內置中對齊
-            double startX = pMinX + ((pMaxX - pMinX) - slotCols * slotW) / 2.0 + slotW / 2.0;
-            double startY = pMaxY - ((pMaxY - pMinY) - slotRows * slotH) / 2.0 - slotH / 2.0;
+            // 【修改】嚴格貼齊左上角，不再置中留白
+            double startX = pMinX + slotW / 2.0;
+            double startY = pMaxY - slotH / 2.0;
 
-            // 由左至右 (欄 c)，由上而下排下去 (列 r)
+            // 【核心排序邏輯】：由左至右 (欄 c)，由上而下排下去 (列 r)
             for (int c = 0; c < slotCols; c++)
             {
                 for (int r = 0; r < slotRows; r++)
@@ -299,6 +276,9 @@ namespace Sinotech_2025.CSDSEM
             List<IndependentTag> existingTags = new FilteredElementCollector(doc, viewPlan.Id)
                 .WherePasses(tagFilter).OfClass(typeof(IndependentTag)).Cast<IndependentTag>().ToList();
 
+            // 風管標籤不移動
+            existingTags = existingTags.Where(x => x.Category.BuiltInCategory != BuiltInCategory.OST_DuctTags).ToList();
+
             foreach (IndependentTag tag in existingTags)
             {
                 if (tag.IsOrphaned) continue;
@@ -306,10 +286,10 @@ namespace Sinotech_2025.CSDSEM
                 XYZ originalPos;
                 try { originalPos = tag.TagHeadPosition; } catch { continue; }
 
-                // 尋找「最近」且「還未客滿」的空白區
+                // 【修改】尋找「左上角距離最近」且「還未客滿」的空白區框
                 SafeRegion bestRegion = safeRegions
                     .Where(r => !r.IsFull)
-                    .OrderBy(r => r.Center.DistanceTo(originalPos))
+                    .OrderBy(r => r.TopLeft.DistanceTo(originalPos))
                     .FirstOrDefault();
 
                 if (bestRegion != null)
@@ -317,9 +297,66 @@ namespace Sinotech_2025.CSDSEM
                     XYZ newPos = bestRegion.Slots[bestRegion.NextSlotIndex++];
                     try
                     {
+                        // 1. 移動標籤到新位置並確保引線開啟、設為自由端點
                         tag.HasLeader = true;
-                        tag.LeaderEndCondition = LeaderEndCondition.Attached;
+                        tag.LeaderEndCondition = LeaderEndCondition.Free;
                         tag.TagHeadPosition = newPos;
+
+                        // =========================================================
+                        // 【自動計算 90 度引線轉折點 (Elbow)】
+                        // =========================================================
+                        Reference taggedRef = tag.GetTaggedReferences().FirstOrDefault();
+                        if (taggedRef != null)
+                        {
+                            Element taggedElem = doc.GetElement(taggedRef.ElementId);
+                            Transform linkTransform = null;
+
+                            // 處理連結模型
+                            if (taggedRef.LinkedElementId != ElementId.InvalidElementId)
+                            {
+                                RevitLinkInstance linkInst = taggedElem as RevitLinkInstance;
+                                if (linkInst != null)
+                                {
+                                    taggedElem = linkInst.GetLinkDocument()?.GetElement(taggedRef.LinkedElementId);
+                                    linkTransform = linkInst.GetTotalTransform();
+                                }
+                            }
+
+                            // 判斷管線或電纜架是水平還是垂直走向
+                            bool isHorizontalPipe = true;
+                            if (taggedElem != null && taggedElem.Location is LocationCurve locCurve && locCurve.Curve != null)
+                            {
+                                XYZ p0 = locCurve.Curve.GetEndPoint(0);
+                                XYZ p1 = locCurve.Curve.GetEndPoint(1);
+                                if (linkTransform != null)
+                                {
+                                    p0 = linkTransform.OfPoint(p0);
+                                    p1 = linkTransform.OfPoint(p1);
+                                }
+                                XYZ dir = (p1 - p0).Normalize();
+                                isHorizontalPipe = Math.Abs(dir.X) >= Math.Abs(dir.Y);
+                            }
+
+                            // 取得引線附著在管線上的實際座標點
+                            XYZ endPt = tag.GetLeaderEnd(taggedRef);
+
+                            // 根據管線走向，計算保持 90 度的轉折點
+                            XYZ elbowPt;
+                            if (isHorizontalPipe)
+                            {
+                                // 管線為水平：轉折點 X 對齊管線，Y 對齊標籤
+                                elbowPt = new XYZ(endPt.X, newPos.Y, newPos.Z);
+                            }
+                            else
+                            {
+                                // 管線為垂直：轉折點 X 對齊標籤，Y 對齊管線
+                                elbowPt = new XYZ(newPos.X, endPt.Y, newPos.Z);
+                            }
+
+                            // 套用新的轉折點 (Revit 2022+ 適用)
+                            tag.SetLeaderElbow(taggedRef, elbowPt);
+                        }
+
                         movedCount++;
                     }
                     catch { }
@@ -328,6 +365,10 @@ namespace Sinotech_2025.CSDSEM
             return movedCount;
         }
 
+        // =========================================================================
+        // 【隱藏畫線】
+        // =========================================================================
+        /*
         private void DrawRectangleLines(Document doc, SketchPlane sketchPlane, double minX, double maxX, double minY, double maxY, double z)
         {
             try
@@ -344,6 +385,7 @@ namespace Sinotech_2025.CSDSEM
             }
             catch { }
         }
+        */
 
         // =========================================================================
         // 【自動模式】核心生成邏輯 (封裝原本的布林與洪水演算法)
