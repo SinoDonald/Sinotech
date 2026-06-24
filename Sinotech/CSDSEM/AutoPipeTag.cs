@@ -59,8 +59,21 @@ namespace Sinotech.CSDSEM
                                     List<ViewPlan> checkViewPlans = chooseMultiViewPlansForm.checkViewPlans;
                                     double maxM = chooseMultiViewPlansForm.maxM; // 大於此長度必標
                                     double minM = chooseMultiViewPlansForm.minM; // 小於此長度不標
+
                                     if (checkViewPlans.Count > 0)
                                     {
+                                        // =========================================================
+                                        // 【新增】彈出視窗詢問是否生成引線 (預設選擇為否)
+                                        // =========================================================
+                                        DialogResult leaderResult = MessageBox.Show(
+                                            "「水管」與「電纜架」的標籤是否要生成引線？",
+                                            "引線設定",
+                                            MessageBoxButtons.YesNo,
+                                            MessageBoxIcon.Question,
+                                            MessageBoxDefaultButton.Button2); // 預設選項設定為 Button2 (也就是「否」)
+
+                                        bool useLeader = (leaderResult == DialogResult.Yes);
+
                                         // 進度條視窗
                                         ProgressForm progressForm = new ProgressForm("自動管線標籤", checkViewPlans.Count);
                                         progressForm.Show();
@@ -426,7 +439,6 @@ namespace Sinotech.CSDSEM
                                                                 if (pipeAngle > Math.PI / 2.0 + 1e-6) pipeAngle -= Math.PI;
                                                                 else if (pipeAngle < -Math.PI / 2.0 - 1e-6) pipeAngle += Math.PI;
 
-                                                                // 判斷管線主要是「水平向(X軸)」還是「垂直向(Y軸)」
                                                                 bool isHorizontalPipe = Math.Abs(dir.X) >= Math.Abs(dir.Y);
 
                                                                 // =========================================================
@@ -441,34 +453,33 @@ namespace Sinotech.CSDSEM
 
                                                                 if (elem is Pipe || elem is CableTray)
                                                                 {
-                                                                    //// 【重要修正】：放大 X 與 Y 的偏移量！
-                                                                    //// 若 X 偏移量太小 (例如小於標籤文字的一半)，標籤的文字框會包住轉折點
-                                                                    //// Revit 為了避開文字，會強制斜拉引線，破壞 90 度的美觀。
-                                                                    //// 此處設定圖面上約偏移 X:50mm, Y:20mm，保證有充足空間劃出 90 度直角。
-                                                                    //double offX = (50.0 / 304.8) * checkViewPlan.Scale;
-                                                                    //double offY = (20.0 / 304.8) * checkViewPlan.Scale;
+                                                                    // 【新增】判斷使用者是否要產生引線
+                                                                    if (useLeader)
+                                                                    {
+                                                                        // 放大的 X 與 Y 偏移量，圖面上約偏移 X:50mm, Y:20mm，保證空間劃出直角
+                                                                        double offX = (50.0 / 304.8) * checkViewPlan.Scale;
+                                                                        double offY = (20.0 / 304.8) * checkViewPlan.Scale;
 
-                                                                    //// 判斷該管線在視圖的哪個象限，決定向外推移的方向
-                                                                    //double pX = tagMidPoint.X + (tagMidPoint.X >= viewCenterX ? offX : -offX);
-                                                                    //double pY = tagMidPoint.Y + (tagMidPoint.Y >= viewCenterY ? offY : -offY);
+                                                                        double pX = tagMidPoint.X + (tagMidPoint.X >= viewCenterX ? offX : -offX);
+                                                                        double pY = tagMidPoint.Y + (tagMidPoint.Y >= viewCenterY ? offY : -offY);
 
-                                                                    //tagPlacementPoint = new XYZ(pX, pY, tagZ);
+                                                                        tagPlacementPoint = new XYZ(pX, pY, tagZ);
 
-                                                                    //// 【完美 90 度折線邏輯】
-                                                                    //if (isHorizontalPipe)
-                                                                    //{
-                                                                    //    // 管道為水平：轉折點先上下走 (Y 與標籤齊平)，再左右接標籤
-                                                                    //    elbowPt = new XYZ(tagMidPoint.X, pY, tagZ);
-                                                                    //}
-                                                                    //else
-                                                                    //{
-                                                                    //    // 管道為垂直：轉折點先左右走 (X 與標籤齊平)，再上下接標籤
-                                                                    //    // 這樣引線才不會在起點就跟垂直管線重疊！
-                                                                    //    elbowPt = new XYZ(pX, tagMidPoint.Y, tagZ);
-                                                                    //}
-
-                                                                    // 管道+電纜架直接放置於中心，無引線
-                                                                    tagPlacementPoint = headPt;
+                                                                        // 完美 90 度折線邏輯
+                                                                        if (isHorizontalPipe)
+                                                                        {
+                                                                            elbowPt = new XYZ(tagMidPoint.X, pY, tagZ);
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            elbowPt = new XYZ(pX, tagMidPoint.Y, tagZ);
+                                                                        }
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        // 管道+電纜架直接放置於中心，無引線
+                                                                        tagPlacementPoint = headPt;
+                                                                    }
                                                                 }
                                                                 else
                                                                 {
@@ -579,7 +590,10 @@ namespace Sinotech.CSDSEM
                                                                     }
 
                                                                     bool isDuctTag = candidate.TargetSym.Category.Id.Value == (long)BuiltInCategory.OST_DuctTags;
-                                                                    bool hasLeader = !isDuctTag;
+
+                                                                    // 【修正】根據是否為風管以及使用者的意願，綜合決定是否開啟引線
+                                                                    bool hasLeader = !isDuctTag && useLeader;
+
                                                                     TagOrientation tagOri = isDuctTag ? TagOrientation.AnyModelDirection : TagOrientation.Horizontal;
 
                                                                     IndependentTag newTag = IndependentTag.Create(
