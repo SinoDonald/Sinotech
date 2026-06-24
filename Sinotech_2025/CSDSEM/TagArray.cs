@@ -2,6 +2,7 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using Sinotech_2025.CSDSEM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -200,7 +201,7 @@ namespace Sinotech_2025.CSDSEM
                             }
 
                             double gapX = 30.0 / 304.8;
-                            double gapY = 10.0 / 304.8;
+                            double gapY = 30.0 / 304.8;
                             double slotW = tagW + gapX;
                             double slotH = tagH + gapY;
 
@@ -660,6 +661,29 @@ namespace Sinotech_2025.CSDSEM
         {
             Plane plane = Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 0, z));
             return SketchPlane.Create(doc, plane);
+        }
+        /// <summary>
+        /// 測試畫線
+        /// </summary>
+        private void DrawBoundingBox(Document doc, ViewPlan viewPlan, IndependentTag tag)
+        {
+            try
+            {
+                BoundingBoxXYZ tagBbox = tag.get_BoundingBox(viewPlan);
+                Plane plane = Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 0, viewPlan.Origin.Z));
+                SketchPlane sketchPlane = SketchPlane.Create(doc, plane);
+                XYZ point1 = new XYZ(tagBbox.Max.X, tagBbox.Max.Y, viewPlan.Origin.Z);
+                XYZ point2 = new XYZ(tagBbox.Max.X, tagBbox.Min.Y, viewPlan.Origin.Z);
+                XYZ point3 = new XYZ(tagBbox.Min.X, tagBbox.Min.Y, viewPlan.Origin.Z);
+                XYZ point4 = new XYZ(tagBbox.Min.X, tagBbox.Max.Y, viewPlan.Origin.Z);
+                List<Curve> curves = new List<Curve>() { Line.CreateBound(point1, point2) , Line.CreateBound(point2, point3),
+                                                         Line.CreateBound(point3, point4), Line.CreateBound(point4, point1) };
+                foreach (Curve curve in curves)
+                {
+                    doc.Create.NewModelCurve(curve, sketchPlane);
+                }
+            }
+            catch { }
         }
     }
 }

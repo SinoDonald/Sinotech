@@ -102,7 +102,6 @@ namespace Sinotech_2025.CSDSEM
             this.autoRbtn.Name = "autoRbtn";
             this.autoRbtn.Size = new System.Drawing.Size(51, 21);
             this.autoRbtn.Text = "自動";
-            this.autoRbtn.Checked = true; // 預設自動
             this.autoRbtn.UseVisualStyleBackColor = true;
 
             // 手動 RadioButton (座標相對於 modePanel 容器)
@@ -111,6 +110,7 @@ namespace Sinotech_2025.CSDSEM
             this.manualRbtn.Name = "manualRbtn";
             this.manualRbtn.Size = new System.Drawing.Size(51, 21);
             this.manualRbtn.Text = "手動";
+            this.manualRbtn.Checked = true; // 預設手動
             this.manualRbtn.UseVisualStyleBackColor = true;
 
             // 將兩個按鈕先裝進 Panel

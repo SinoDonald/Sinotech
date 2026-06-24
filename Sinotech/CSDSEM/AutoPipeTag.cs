@@ -441,31 +441,34 @@ namespace Sinotech.CSDSEM
 
                                                                 if (elem is Pipe || elem is CableTray)
                                                                 {
-                                                                    // 【重要修正】：放大 X 與 Y 的偏移量！
-                                                                    // 若 X 偏移量太小 (例如小於標籤文字的一半)，標籤的文字框會包住轉折點
-                                                                    // Revit 為了避開文字，會強制斜拉引線，破壞 90 度的美觀。
-                                                                    // 此處設定圖面上約偏移 X:50mm, Y:20mm，保證有充足空間劃出 90 度直角。
-                                                                    double offX = (50.0 / 304.8) * checkViewPlan.Scale;
-                                                                    double offY = (20.0 / 304.8) * checkViewPlan.Scale;
+                                                                    //// 【重要修正】：放大 X 與 Y 的偏移量！
+                                                                    //// 若 X 偏移量太小 (例如小於標籤文字的一半)，標籤的文字框會包住轉折點
+                                                                    //// Revit 為了避開文字，會強制斜拉引線，破壞 90 度的美觀。
+                                                                    //// 此處設定圖面上約偏移 X:50mm, Y:20mm，保證有充足空間劃出 90 度直角。
+                                                                    //double offX = (50.0 / 304.8) * checkViewPlan.Scale;
+                                                                    //double offY = (20.0 / 304.8) * checkViewPlan.Scale;
 
-                                                                    // 判斷該管線在視圖的哪個象限，決定向外推移的方向
-                                                                    double pX = tagMidPoint.X + (tagMidPoint.X >= viewCenterX ? offX : -offX);
-                                                                    double pY = tagMidPoint.Y + (tagMidPoint.Y >= viewCenterY ? offY : -offY);
+                                                                    //// 判斷該管線在視圖的哪個象限，決定向外推移的方向
+                                                                    //double pX = tagMidPoint.X + (tagMidPoint.X >= viewCenterX ? offX : -offX);
+                                                                    //double pY = tagMidPoint.Y + (tagMidPoint.Y >= viewCenterY ? offY : -offY);
 
-                                                                    tagPlacementPoint = new XYZ(pX, pY, tagZ);
+                                                                    //tagPlacementPoint = new XYZ(pX, pY, tagZ);
 
-                                                                    // 【完美 90 度折線邏輯】
-                                                                    if (isHorizontalPipe)
-                                                                    {
-                                                                        // 管道為水平：轉折點先上下走 (Y 與標籤齊平)，再左右接標籤
-                                                                        elbowPt = new XYZ(tagMidPoint.X, pY, tagZ);
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        // 管道為垂直：轉折點先左右走 (X 與標籤齊平)，再上下接標籤
-                                                                        // 這樣引線才不會在起點就跟垂直管線重疊！
-                                                                        elbowPt = new XYZ(pX, tagMidPoint.Y, tagZ);
-                                                                    }
+                                                                    //// 【完美 90 度折線邏輯】
+                                                                    //if (isHorizontalPipe)
+                                                                    //{
+                                                                    //    // 管道為水平：轉折點先上下走 (Y 與標籤齊平)，再左右接標籤
+                                                                    //    elbowPt = new XYZ(tagMidPoint.X, pY, tagZ);
+                                                                    //}
+                                                                    //else
+                                                                    //{
+                                                                    //    // 管道為垂直：轉折點先左右走 (X 與標籤齊平)，再上下接標籤
+                                                                    //    // 這樣引線才不會在起點就跟垂直管線重疊！
+                                                                    //    elbowPt = new XYZ(pX, tagMidPoint.Y, tagZ);
+                                                                    //}
+
+                                                                    // 管道+電纜架直接放置於中心，無引線
+                                                                    tagPlacementPoint = headPt;
                                                                 }
                                                                 else
                                                                 {
