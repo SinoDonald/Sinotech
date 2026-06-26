@@ -2,7 +2,6 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
-using Sinotech_2025.CSDSEM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -263,7 +262,7 @@ namespace Sinotech_2025.CSDSEM
             {
                 for (int r = 0; r < slotRows; r++)
                 {
-                    double cx = startX + c * slotW;
+                    double cx = startX + c * (slotW + 1);
                     double cy = startY - r * slotH; // 由上往下 Y 遞減 (換行)
                     region.Slots.Add(new XYZ(cx, cy, exactCutZ));
                 }
@@ -296,6 +295,10 @@ namespace Sinotech_2025.CSDSEM
                 if (bestRegion != null)
                 {
                     XYZ newPos = bestRegion.Slots[bestRegion.NextSlotIndex++];
+                    if (tag.Name.Contains("MRT_電纜托盤編號標籤"))
+                    {
+                        newPos = new XYZ(newPos.X - 5.8, newPos.Y, newPos.Z);
+                    }
                     try
                     {
                         // 1. 移動標籤到新位置並確保引線開啟、設為自由端點
