@@ -6,7 +6,9 @@ using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 
@@ -56,6 +58,7 @@ namespace Sinotech_2025.CSDSEM
                                 {
                                     DateTime timeStart = DateTime.Now;
                                     int newTagCounts = 0;
+                                    List<ElementId> createdTagIds = new List<ElementId>();
                                     List<ViewPlan> checkViewPlans = chooseMultiViewPlansForm.checkViewPlans;
                                     double maxM = chooseMultiViewPlansForm.maxM; // 大於此長度必標
                                     double minM = chooseMultiViewPlansForm.minM; // 小於此長度不標
@@ -609,6 +612,7 @@ namespace Sinotech_2025.CSDSEM
                                                                     if (newTag != null)
                                                                     {
                                                                         newTag.ChangeTypeId(candidate.TargetSym.Id);
+                                                                        createdTagIds.Add(newTag.Id);
 
                                                                         if (hasLeader)
                                                                         {
@@ -671,9 +675,58 @@ namespace Sinotech_2025.CSDSEM
 
                                         DateTime timeEnd = DateTime.Now;
                                         TimeSpan totalTime = timeEnd - timeStart;
+
                                         if (newTagCounts > 0)
                                         {
-                                            TaskDialog.Show("Revit", $"已產生 {newTagCounts} 個管線標籤！\n\n耗時：{totalTime.Minutes} 分 {totalTime.Seconds} 秒。");
+                                            // 【修改】使用自訂的 TaskDialog 來提供匯出選項
+                                            TaskDialog td = new TaskDialog("自動標籤完成");
+                                            td.MainInstruction = $"已產生 {newTagCounts} 個管線標籤！\n耗時：{totalTime.Minutes} 分 {totalTime.Seconds} 秒。";
+                                            td.MainContent = "視圖裁切線外的標籤可能會因為無法顯示而導致未來重複建立。\n您可以將本次建立的標籤 ID 匯出成文字檔，以便後續透過「依 ID 選取」來檢查它們的位置。";
+
+                                            // 加入匯出按鈕
+                                            td.AddCommandLink(TaskDialogCommandLinkId.CommandLink1, "匯出標籤 ID 文字檔 (.txt)");
+                                            td.CommonButtons = TaskDialogCommonButtons.Close;
+                                            td.DefaultButton = TaskDialogResult.Close;
+
+                                            TaskDialogResult tdResult = td.Show();
+
+                                            // 若使用者點擊匯出按鈕
+                                            if (tdResult == TaskDialogResult.CommandLink1)
+                                            {
+                                                using (SaveFileDialog sfd = new SaveFileDialog())
+                                                {
+                                                    sfd.Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*";
+                                                    sfd.Title = "儲存標籤 ID 清單";
+                                                    // 預設檔名加上當下時間避免覆蓋
+                                                    sfd.FileName = $"新增標籤ID_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+
+                                                    if (sfd.ShowDialog() == DialogResult.OK)
+                                                    {
+                                                        StringBuilder sb = new StringBuilder();
+                                                        sb.AppendLine("=== 自動產生的管線標籤 ID 清單 ===");
+                                                        sb.AppendLine($"產生時間: {DateTime.Now}");
+                                                        sb.AppendLine($"總數量: {newTagCounts}");
+                                                        sb.AppendLine("-----------------------------------");
+
+                                                        foreach (ElementId id in createdTagIds)
+                                                        {
+                                                            // 根據 Revit 版本，通常使用 id.Value.ToString() (Revit 2024+) 或 id.IntegerValue.ToString() (舊版)
+                                                            // 若您的環境是新版 API，建議使用 id.Value.ToString()；若是舊版則改為 id.IntegerValue
+                                                            sb.AppendLine(id.Value.ToString());
+                                                        }
+
+                                                        try
+                                                        {
+                                                            File.WriteAllText(sfd.FileName, sb.ToString());
+                                                            //TaskDialog.Show("匯出成功", $"已成功匯出至：\n{sfd.FileName}");
+                                                        }
+                                                        catch (Exception ex)
+                                                        {
+                                                            TaskDialog.Show("匯出失敗", $"儲存檔案時發生錯誤：\n{ex.Message}");
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                         else
                                         {
