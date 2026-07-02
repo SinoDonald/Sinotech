@@ -40,12 +40,11 @@ namespace Sinotech.CSDSEM
         private bool HasValidViews = false;
         private FormMode _currentMode;
 
-        // 【新增控制項與回傳屬性】
+        // 【保留控制項宣告】
         private System.Windows.Forms.Panel modePanel;
         private System.Windows.Forms.RadioButton autoRbtn;
         private System.Windows.Forms.RadioButton manualRbtn;
-        /// <summary>回傳使用者選擇的是自動(true)還是手動(false)</summary>
-        public bool IsAutoResult { get; private set; } = true;
+        public bool IsAutoResult { get; private set; } = false; // 預設改為 false (手動)
 
         public ChooseMultiViewPlansForm(Document doc, List<ViewPlan> viewPlans, FormMode mode)
         {
@@ -55,13 +54,11 @@ namespace Sinotech.CSDSEM
 
             InitializeComponent();
 
-            // 如果是 TagArray 模式，初始化單選按鈕
             if (_currentMode == FormMode.TagArray)
             {
                 InitializeRadioButtons();
             }
 
-            // 控制控制項顯示/隱藏
             ToggleLengthControls(mode == FormMode.AutoPipeTag);
 
             if (viewPlans == null || viewPlans.Count == 0)
@@ -83,28 +80,23 @@ namespace Sinotech.CSDSEM
             CenterToParent();
         }
 
-        // =========================================================
-
-        /// <summary>【修正】動態初始化單選按鈕，並使用 Panel 隔離群組</summary>
         private void InitializeRadioButtons()
         {
-            // 建立一個 Panel 當作隔離容器
             this.modePanel = new System.Windows.Forms.Panel();
-            this.modePanel.Location = new System.Drawing.Point(12, 320); // 調整至原本的左下角位置
-            this.modePanel.Size = new System.Drawing.Size(150, 30);      // 給予足夠的寬高容納按鈕
+            this.modePanel.Location = new System.Drawing.Point(12, 320);
+            this.modePanel.Size = new System.Drawing.Size(150, 30);
 
             this.autoRbtn = new System.Windows.Forms.RadioButton();
             this.manualRbtn = new System.Windows.Forms.RadioButton();
 
-            // 自動 RadioButton (座標相對於 modePanel 容器)
             this.autoRbtn.AutoSize = true;
             this.autoRbtn.Location = new System.Drawing.Point(0, 3);
             this.autoRbtn.Name = "autoRbtn";
             this.autoRbtn.Size = new System.Drawing.Size(51, 21);
             this.autoRbtn.Text = "自動";
+            this.autoRbtn.Checked = false; // 取消預設自動
             this.autoRbtn.UseVisualStyleBackColor = true;
 
-            // 手動 RadioButton (座標相對於 modePanel 容器)
             this.manualRbtn.AutoSize = true;
             this.manualRbtn.Location = new System.Drawing.Point(70, 3);
             this.manualRbtn.Name = "manualRbtn";
@@ -113,28 +105,28 @@ namespace Sinotech.CSDSEM
             this.manualRbtn.Checked = true; // 預設手動
             this.manualRbtn.UseVisualStyleBackColor = true;
 
-            // 將兩個按鈕先裝進 Panel
             this.modePanel.Controls.Add(this.autoRbtn);
             this.modePanel.Controls.Add(this.manualRbtn);
 
-            // 最後再將 Panel 裝進主視窗
             this.Controls.Add(this.modePanel);
+
+            // 【依需求】：強制隱藏 UI，保留日後開啟彈性
+            this.modePanel.Visible = false;
         }
 
-        /// <summary>控制下方的 UI 顯示隱藏</summary>
         private void ToggleLengthControls(bool visible)
         {
-            label1.Visible = visible;   
-            textBox1.Visible = visible; 
-            label2.Visible = visible;   
-            label4.Visible = visible;   
-            textBox2.Visible = visible; 
-            label3.Visible = visible;   
+            label1.Visible = visible;
+            textBox1.Visible = visible;
+            label2.Visible = visible;
+            label4.Visible = visible;
+            textBox2.Visible = visible;
+            label3.Visible = visible;
 
-            // 既然按鈕都裝進 Panel 了，只要控制 Panel 的顯示/隱藏即可！
+            // 確保 TagArray 模式下不會不小心顯示出來
             if (this.modePanel != null)
             {
-                this.modePanel.Visible = !visible;
+                this.modePanel.Visible = false;
             }
         }
 
@@ -205,7 +197,6 @@ namespace Sinotech.CSDSEM
                 return;
             }
 
-            // 根據模式儲存對應的結果
             if (_currentMode == FormMode.AutoPipeTag)
             {
                 this.maxM = Convert.ToDouble(textBox1.Text);
@@ -213,7 +204,8 @@ namespace Sinotech.CSDSEM
             }
             else if (_currentMode == FormMode.TagArray)
             {
-                this.IsAutoResult = autoRbtn.Checked; // 紀錄自動或手動
+                // 【依需求】保證傳回手動模式
+                this.IsAutoResult = autoRbtn.Checked;
             }
 
             this.DialogResult = DialogResult.OK;

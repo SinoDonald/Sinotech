@@ -63,74 +63,10 @@ namespace Sinotech.CSDSEM
                 using (Transaction trans = new Transaction(doc, "自動標籤排序"))
                 {
                     trans.Start();
-
                     foreach (ViewPlan viewPlan in selectedViews)
                     {
-                        double exactZMax = GetPlaneElevation(viewPlan, PlanViewPlane.TopClipPlane, 1000.0, -1000.0);
-                        double exactZMin = GetPlaneElevation(viewPlan, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
-                        double exactCutZ = viewPlan.GenLevel != null ? viewPlan.GenLevel.Elevation : exactZMin;
-                        double validZ_Min = exactZMin - 0.5;
-                        double validZ_Max = exactZMax + 0.5;
-
-                        double tagW = 1000.0 / 304.8;
-                        double tagH = 300.0 / 304.8;
-
-                        IndependentTag sampleTag = new FilteredElementCollector(doc, viewPlan.Id)
-                            .WherePasses(tagFilter).OfClass(typeof(IndependentTag)).Cast<IndependentTag>().FirstOrDefault();
-
-                        if (sampleTag != null)
-                        {
-                            BoundingBoxXYZ tagBbox = sampleTag.get_BoundingBox(viewPlan);
-                            if (tagBbox != null)
-                            {
-                                double w = tagBbox.Max.X - tagBbox.Min.X;
-                                double h = tagBbox.Max.Y - tagBbox.Min.Y;
-                                if (w > 0 && w < 15.0) tagW = w;
-                                if (h > 0 && h < 15.0) tagH = h;
-                            }
-                        }
-
-                        double gapX = 30.0 / 304.8;
-                        double gapY = 10.0 / 304.8;
-                        double slotW = tagW + gapX;
-                        double slotH = tagH + gapY;
-
-                        double viewMinX, viewMinY, viewMaxX, viewMaxY;
-                        BoundingBoxXYZ cb = viewPlan.CropBox;
-                        if (viewPlan.CropBoxActive)
-                        {
-                            Transform ct = cb.Transform;
-                            viewMinX = double.MaxValue; viewMinY = double.MaxValue; viewMaxX = double.MinValue; viewMaxY = double.MinValue;
-                            foreach (double lx in new[] { cb.Min.X, cb.Max.X })
-                                foreach (double ly in new[] { cb.Min.Y, cb.Max.Y })
-                                {
-                                    XYZ wp = ct.OfPoint(new XYZ(lx, ly, 0));
-                                    if (wp.X < viewMinX) viewMinX = wp.X; if (wp.Y < viewMinY) viewMinY = wp.Y;
-                                    if (wp.X > viewMaxX) viewMaxX = wp.X; if (wp.Y > viewMaxY) viewMaxY = wp.Y;
-                                }
-                        }
-                        else
-                        {
-                            viewMinX = -2000.0; viewMinY = -2000.0; viewMaxX = 2000.0; viewMaxY = 2000.0;
-                        }
-
-                        List<SafeRegion> safeRegions = new List<SafeRegion>();
-                        List<int[]> autoRectangles = GenerateAutoRectangles(doc, viewPlan, availableProjects, multiCatFilter, viewMinX, viewMaxX, viewMinY, viewMaxY, exactCutZ, validZ_Min, validZ_Max, tagW, tagH);
-
-                        foreach (var rect in autoRectangles)
-                        {
-                            double pMinX = viewMinX + rect[0] * tagW;
-                            double pMinY = viewMinY + rect[2] * tagH;
-                            double pMaxX = viewMinX + (rect[1] + 1) * tagW;
-                            double pMaxY = viewMinY + (rect[3] + 1) * tagH;
-
-                            SafeRegion region = CreateSafeRegion(pMinX, pMaxX, pMinY, pMaxY, exactCutZ, slotW, slotH);
-                            if (region != null) safeRegions.Add(region);
-                        }
-
-                        grandTotalMovedTags += MoveTagsToSafeRegions(doc, viewPlan, tagFilter, safeRegions);
+                        grandTotalMovedTags += ProcessViewTags(doc, viewPlan, true, multiCatFilter, tagFilter, availableProjects, null);
                     }
-
                     trans.Commit();
                 }
             }
@@ -172,71 +108,257 @@ namespace Sinotech.CSDSEM
                     using (Transaction trans = new Transaction(doc, "手動標籤排序"))
                     {
                         trans.Start();
-
                         foreach (var kvp in allPickedBoxes)
                         {
-                            ViewPlan viewPlan = kvp.Key;
-                            List<PickedBox> pickedBoxes = kvp.Value;
-
-                            double exactZMin = GetPlaneElevation(viewPlan, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
-                            double exactCutZ = viewPlan.GenLevel != null ? viewPlan.GenLevel.Elevation : exactZMin;
-
-                            double tagW = 1000.0 / 304.8;
-                            double tagH = 300.0 / 304.8;
-
-                            IndependentTag sampleTag = new FilteredElementCollector(doc, viewPlan.Id)
-                                .WherePasses(tagFilter).OfClass(typeof(IndependentTag)).Cast<IndependentTag>().FirstOrDefault();
-
-                            if (sampleTag != null)
-                            {
-                                BoundingBoxXYZ tagBbox = sampleTag.get_BoundingBox(viewPlan);
-                                if (tagBbox != null)
-                                {
-                                    double w = tagBbox.Max.X - tagBbox.Min.X;
-                                    double h = tagBbox.Max.Y - tagBbox.Min.Y;
-                                    if (w > 0 && w < 15.0) tagW = w;
-                                    if (h > 0 && h < 15.0) tagH = h;
-                                }
-                            }
-
-                            double gapX = 30.0 / 304.8;
-                            double gapY = 30.0 / 304.8;
-                            double slotW = tagW + gapX;
-                            double slotH = tagH + gapY;
-
-                            List<SafeRegion> safeRegions = new List<SafeRegion>();
-
-                            foreach (PickedBox box in pickedBoxes)
-                            {
-                                double pMinX = Math.Min(box.Min.X, box.Max.X);
-                                double pMaxX = Math.Max(box.Min.X, box.Max.X);
-                                double pMinY = Math.Min(box.Min.Y, box.Max.Y);
-                                double pMaxY = Math.Max(box.Min.Y, box.Max.Y);
-
-                                SafeRegion region = CreateSafeRegion(pMinX, pMaxX, pMinY, pMaxY, exactCutZ, slotW, slotH);
-                                if (region != null) safeRegions.Add(region);
-                            }
-
-                            grandTotalMovedTags += MoveTagsToSafeRegions(doc, viewPlan, tagFilter, safeRegions);
+                            grandTotalMovedTags += ProcessViewTags(doc, kvp.Key, false, multiCatFilter, tagFilter, availableProjects, kvp.Value);
                         }
-
                         trans.Commit();
                     }
                 }
             }
 
-            TaskDialog.Show("Revit", $"智慧排版處理完畢！\n共將 {grandTotalMovedTags} 個標籤移動至安全區。");
+            TaskDialog.Show("Revit", $"智慧排版處理完畢！\n共將 {grandTotalMovedTags} 個標籤移動至安全區並精準對齊。");
             return Result.Succeeded;
         }
 
         // =========================================================================
-        // 共用方法區：停車場(SafeRegion)建立、畫矩形、標籤移動邏輯
+        // 【核心大腦】動態邊界分析與群組排版引擎
         // =========================================================================
+        private int ProcessViewTags(Document doc, ViewPlan viewPlan, bool isAutoMode, ElementMulticategoryFilter multiCatFilter, ElementMulticategoryFilter tagFilter, List<ProjectItem> availableProjects, List<PickedBox> pickedBoxes)
+        {
+            List<IndependentTag> existingTags = new FilteredElementCollector(doc, viewPlan.Id)
+                .WherePasses(tagFilter).OfClass(typeof(IndependentTag)).Cast<IndependentTag>()
+                .Where(x => x.Category.BuiltInCategory != BuiltInCategory.OST_DuctTags)
+                .ToList();
 
+            if (existingTags.Count == 0) return 0;
+
+            double tagW = 1000.0 / 304.8;
+            double tagH = 300.0 / 304.8;
+
+            IndependentTag sampleTag = new FilteredElementCollector(doc, viewPlan.Id)
+                .WherePasses(tagFilter).OfClass(typeof(IndependentTag)).Cast<IndependentTag>().FirstOrDefault();
+
+            if (sampleTag != null)
+            {
+                BoundingBoxXYZ tagBbox = sampleTag.get_BoundingBox(viewPlan);
+                if (tagBbox != null)
+                {
+                    double w = tagBbox.Max.X - tagBbox.Min.X;
+                    double h = tagBbox.Max.Y - tagBbox.Min.Y;
+                    if (w > 0 && w < 15.0) tagW = w;
+                    if (h > 0 && h < 15.0) tagH = h;
+                }
+            }
+
+            double gapX = 30.0 / 304.8;
+            double gapY = 30.0 / 304.8;
+            double slotW = tagW + gapX;
+            double slotH = tagH + gapY + 0.3;
+
+            double exactZMin = GetPlaneElevation(viewPlan, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
+            double exactCutZ = viewPlan.GenLevel != null ? viewPlan.GenLevel.Elevation : exactZMin;
+
+            List<SafeRegion> safeRegions = new List<SafeRegion>();
+
+            if (isAutoMode)
+            {
+                double exactZMax = GetPlaneElevation(viewPlan, PlanViewPlane.TopClipPlane, 1000.0, -1000.0);
+                double validZ_Min = exactZMin - 0.5;
+                double validZ_Max = exactZMax + 0.5;
+
+                double viewMinX = -2000.0, viewMinY = -2000.0, viewMaxX = 2000.0, viewMaxY = 2000.0;
+                BoundingBoxXYZ cb = viewPlan.CropBox;
+                if (viewPlan.CropBoxActive)
+                {
+                    Transform ct = cb.Transform;
+                    viewMinX = double.MaxValue; viewMinY = double.MaxValue; viewMaxX = double.MinValue; viewMaxY = double.MinValue;
+                    foreach (double lx in new[] { cb.Min.X, cb.Max.X })
+                        foreach (double ly in new[] { cb.Min.Y, cb.Max.Y })
+                        {
+                            XYZ wp = ct.OfPoint(new XYZ(lx, ly, 0));
+                            if (wp.X < viewMinX) viewMinX = wp.X; if (wp.Y < viewMinY) viewMinY = wp.Y;
+                            if (wp.X > viewMaxX) viewMaxX = wp.X; if (wp.Y > viewMaxY) viewMaxY = wp.Y;
+                        }
+                }
+
+                List<int[]> autoRectangles = GenerateAutoRectangles(doc, viewPlan, availableProjects, multiCatFilter, viewMinX, viewMaxX, viewMinY, viewMaxY, exactCutZ, validZ_Min, validZ_Max, tagW, tagH);
+                foreach (var rect in autoRectangles)
+                {
+                    double pMinX = viewMinX + rect[0] * tagW;
+                    double pMinY = viewMinY + rect[2] * tagH;
+                    double pMaxX = viewMinX + (rect[1] + 1) * tagW;
+                    double pMaxY = viewMinY + (rect[3] + 1) * tagH;
+                    SafeRegion region = CreateSafeRegion(pMinX, pMaxX, pMinY, pMaxY, exactCutZ, slotW, slotH);
+                    if (region != null) safeRegions.Add(region);
+                }
+            }
+            else
+            {
+                if (pickedBoxes != null)
+                {
+                    foreach (PickedBox box in pickedBoxes)
+                    {
+                        double pMinX = Math.Min(box.Min.X, box.Max.X);
+                        double pMaxX = Math.Max(box.Min.X, box.Max.X);
+                        double pMinY = Math.Min(box.Min.Y, box.Max.Y);
+                        double pMaxY = Math.Max(box.Min.Y, box.Max.Y);
+                        SafeRegion region = CreateSafeRegion(pMinX, pMaxX, pMinY, pMaxY, exactCutZ, slotW, slotH);
+                        if (region != null) safeRegions.Add(region);
+                    }
+                }
+            }
+
+            int movedCount = 0;
+
+            // =========================================================
+            // 【群組填入邏輯】：解決跳行問題，確保框選區依序填滿
+            // =========================================================
+            Dictionary<SafeRegion, List<IndependentTag>> regionAssignments = new Dictionary<SafeRegion, List<IndependentTag>>();
+            foreach (var r in safeRegions) regionAssignments[r] = new List<IndependentTag>();
+
+            // 步驟 A：初步分發標籤到最靠近的框選區
+            foreach (IndependentTag tag in existingTags)
+            {
+                if (tag.IsOrphaned) continue;
+                XYZ pos;
+                try { pos = tag.TagHeadPosition; } catch { continue; }
+
+                SafeRegion closestRegion = safeRegions.OrderBy(r => r.TopLeft.DistanceTo(pos)).FirstOrDefault();
+                if (closestRegion != null)
+                {
+                    regionAssignments[closestRegion].Add(tag);
+                }
+            }
+
+            List<IndependentTag> overflowTags = new List<IndependentTag>();
+
+            // 步驟 B：在各個框選區內排序
+            foreach (var kvp in regionAssignments)
+            {
+                SafeRegion region = kvp.Key;
+
+                // 【防交叉演算法】：
+                // 1. 水管標籤優先於電纜架標籤
+                // 2. 以管線實際 Y 座標進行排序 (由上而下)
+                // 3. 以管線實際 X 座標進行排序 (由左至右)
+                List<IndependentTag> tagsInRegion = kvp.Value
+                    .OrderBy(t => t.Category.Id.Value == (long)BuiltInCategory.OST_PipeTags ? 0 : 1)
+                    .ThenByDescending(t => GetTagLeaderEndSafe(doc, t).Y)
+                    .ThenBy(t => GetTagLeaderEndSafe(doc, t).X)
+                    .ToList();
+
+                foreach (var tag in tagsInRegion)
+                {
+                    if (!region.IsFull)
+                    {
+                        ApplyTagToSlot(doc, tag, region, exactCutZ, tagW);
+                        movedCount++;
+                    }
+                    else
+                    {
+                        overflowTags.Add(tag);
+                    }
+                }
+            }
+
+            // 步驟 C：處理塞不下的溢出標籤，尋找下一個框
+            foreach (var tag in overflowTags)
+            {
+                XYZ pos;
+                try { pos = tag.TagHeadPosition; } catch { continue; }
+
+                SafeRegion nextBestRegion = safeRegions.Where(r => !r.IsFull).OrderBy(r => r.TopLeft.DistanceTo(pos)).FirstOrDefault();
+                if (nextBestRegion != null)
+                {
+                    ApplyTagToSlot(doc, tag, nextBestRegion, exactCutZ, tagW);
+                    movedCount++;
+                }
+            }
+
+            return movedCount;
+        }
+
+        // 取得真實的管線附著點做為防交叉排序依據
+        private XYZ GetTagLeaderEndSafe(Document doc, IndependentTag tag)
+        {
+            try
+            {
+                if (tag.HasLeader)
+                {
+                    Reference r = tag.GetTaggedReferences().FirstOrDefault();
+                    if (r != null) return tag.GetLeaderEnd(r);
+                }
+            }
+            catch { }
+            // 若因為手動設置為無引線，則 TagHeadPosition 即為管線位置
+            try { return tag.TagHeadPosition; } catch { return XYZ.Zero; }
+        }
+
+        // =========================================================================
+        // 【移動並修正 引線頭尾錨點】核心函式
+        // =========================================================================
+        private void ApplyTagToSlot(Document doc, IndependentTag tag, SafeRegion region, double exactCutZ, double tagW)
+        {
+            XYZ targetTopLeft = region.Slots[region.NextSlotIndex++];
+
+            // 1. 移動標籤到格子左上角
+            XYZ newHeadPos = new XYZ(targetTopLeft.X, targetTopLeft.Y, exactCutZ);
+            if (tag.Name.Contains("管_尺寸+系統"))
+            {
+                newHeadPos = new XYZ(targetTopLeft.X + 5.8, targetTopLeft.Y, exactCutZ);
+            }
+            try
+            {
+                tag.TagHeadPosition = newHeadPos;
+
+                // 2. 以基準的方式排序後的標籤, 才開啟引線並設定自由端點
+                tag.HasLeader = true;
+                tag.LeaderEndCondition = LeaderEndCondition.Free;
+
+                Reference taggedRef = tag.GetTaggedReferences().FirstOrDefault();
+                if (taggedRef != null)
+                {
+                    // 取得真正附著在管線上的座標點
+                    XYZ endPt = tag.GetLeaderEnd(taggedRef);
+
+                    // =========================================================
+                    // 【智慧錨點】：引線只接在文字的頭或尾，不穿越文字
+                    // =========================================================
+                    double textLeft = newHeadPos.X;
+                    double textRight = newHeadPos.X + tagW;
+                    double midX = (textLeft + textRight) / 2.0;
+
+                    double elbowGap = 10.0 / 304.8; // 預留 10mm 安全間距避免貼太緊
+                    double elbowX = endPt.X;
+
+                    // 若管線附著點在文字上下方，強制將 Elbow 推到文字頭或尾
+                    if (elbowX >= textLeft - elbowGap && elbowX <= textRight + elbowGap)
+                    {
+                        if (elbowX < midX)
+                        {
+                            elbowX = textLeft - elbowGap; // 連接頭部 (左側)
+                        }
+                        else
+                        {
+                            elbowX = textRight + elbowGap; // 連接尾部 (右側)
+                        }
+                    }
+
+                    // 給它們90度的轉折：Y維持標籤高度，X強制移至管線或頭尾避讓區
+                    XYZ elbowPt = new XYZ(elbowX, newHeadPos.Y, exactCutZ);
+                    tag.SetLeaderElbow(taggedRef, elbowPt);
+                }
+            }
+            catch { }
+        }
+
+        // =========================================================================
+        // 共用方法區：停車場(SafeRegion)建立邏輯
+        // =========================================================================
         public class SafeRegion
         {
-            public XYZ Center { get; set; }
-            public XYZ TopLeft { get; set; } // 【新增】左上角座標
+            public XYZ TopLeft { get; set; }
             public List<XYZ> Slots { get; set; } = new List<XYZ>();
             public int NextSlotIndex { get; set; } = 0;
             public bool IsFull => NextSlotIndex >= Slots.Count;
@@ -245,154 +367,31 @@ namespace Sinotech.CSDSEM
         private SafeRegion CreateSafeRegion(double pMinX, double pMaxX, double pMinY, double pMaxY, double exactCutZ, double slotW, double slotH)
         {
             SafeRegion region = new SafeRegion();
-            region.Center = new XYZ((pMinX + pMaxX) / 2, (pMinY + pMaxY) / 2, exactCutZ);
-            region.TopLeft = new XYZ(pMinX, pMaxY, exactCutZ); // 【新增】記錄該框的左上角
+            region.TopLeft = new XYZ(pMinX, pMaxY, exactCutZ);
 
             int slotCols = (int)((pMaxX - pMinX) / slotW);
             int slotRows = (int)((pMaxY - pMinY) / slotH);
 
             if (slotCols < 1 || slotRows < 1) return null;
 
-            // 【修改】嚴格貼齊左上角，不再置中留白
-            double startX = pMinX + slotW / 2.0;
-            double startY = pMaxY - slotH / 2.0;
+            double startX = pMinX;
+            double startY = pMaxY;
 
-            // 【核心排序邏輯】：由左至右 (欄 c)，由上而下排下去 (列 r)
+            // 【保留你的客製化寬度間距】由左至右，由上而下排下去
             for (int c = 0; c < slotCols; c++)
             {
                 for (int r = 0; r < slotRows; r++)
                 {
-                    double cx = startX + c * (slotW + 1);
-                    double cy = startY - r * slotH; // 由上往下 Y 遞減 (換行)
+                    double cx = startX + c * (slotW + 1); // 你的客製參數 +1
+                    double cy = startY - r * slotH;
                     region.Slots.Add(new XYZ(cx, cy, exactCutZ));
                 }
             }
             return region;
         }
 
-        private int MoveTagsToSafeRegions(Document doc, ViewPlan viewPlan, ElementMulticategoryFilter tagFilter, List<SafeRegion> safeRegions)
-        {
-            int movedCount = 0;
-            List<IndependentTag> existingTags = new FilteredElementCollector(doc, viewPlan.Id)
-                .WherePasses(tagFilter).OfClass(typeof(IndependentTag)).Cast<IndependentTag>().ToList();
-
-            // 風管標籤不移動
-            existingTags = existingTags.Where(x => x.Category.BuiltInCategory != BuiltInCategory.OST_DuctTags).ToList();
-
-            foreach (IndependentTag tag in existingTags)
-            {
-                if (tag.IsOrphaned) continue;
-
-                XYZ originalPos;
-                try { originalPos = tag.TagHeadPosition; } catch { continue; }
-
-                // 【修改】尋找「左上角距離最近」且「還未客滿」的空白區框
-                SafeRegion bestRegion = safeRegions
-                    .Where(r => !r.IsFull)
-                    .OrderBy(r => r.TopLeft.DistanceTo(originalPos))
-                    .FirstOrDefault();
-
-                if (bestRegion != null)
-                {
-                    XYZ newPos = bestRegion.Slots[bestRegion.NextSlotIndex++];
-                    if (tag.Name.Contains("MRT_電纜托盤編號標籤"))
-                    {
-                        newPos = new XYZ(newPos.X - 5.8, newPos.Y, newPos.Z);
-                    }
-                    try
-                    {
-                        // 1. 移動標籤到新位置並確保引線開啟、設為自由端點
-                        tag.HasLeader = true;
-                        tag.LeaderEndCondition = LeaderEndCondition.Free;
-                        tag.TagHeadPosition = newPos;
-
-                        // =========================================================
-                        // 【自動計算 90 度引線轉折點 (Elbow)】
-                        // =========================================================
-                        Reference taggedRef = tag.GetTaggedReferences().FirstOrDefault();
-                        if (taggedRef != null)
-                        {
-                            Element taggedElem = doc.GetElement(taggedRef.ElementId);
-                            Transform linkTransform = null;
-
-                            // 處理連結模型
-                            if (taggedRef.LinkedElementId != ElementId.InvalidElementId)
-                            {
-                                RevitLinkInstance linkInst = taggedElem as RevitLinkInstance;
-                                if (linkInst != null)
-                                {
-                                    taggedElem = linkInst.GetLinkDocument()?.GetElement(taggedRef.LinkedElementId);
-                                    linkTransform = linkInst.GetTotalTransform();
-                                }
-                            }
-
-                            // 判斷管線或電纜架是水平還是垂直走向
-                            bool isHorizontalPipe = true;
-                            if (taggedElem != null && taggedElem.Location is LocationCurve locCurve && locCurve.Curve != null)
-                            {
-                                XYZ p0 = locCurve.Curve.GetEndPoint(0);
-                                XYZ p1 = locCurve.Curve.GetEndPoint(1);
-                                if (linkTransform != null)
-                                {
-                                    p0 = linkTransform.OfPoint(p0);
-                                    p1 = linkTransform.OfPoint(p1);
-                                }
-                                XYZ dir = (p1 - p0).Normalize();
-                                isHorizontalPipe = Math.Abs(dir.X) >= Math.Abs(dir.Y);
-                            }
-
-                            // 取得引線附著在管線上的實際座標點
-                            XYZ endPt = tag.GetLeaderEnd(taggedRef);
-
-                            // 根據管線走向，計算保持 90 度的轉折點
-                            XYZ elbowPt;
-                            if (isHorizontalPipe)
-                            {
-                                // 管線為水平：轉折點 X 對齊管線，Y 對齊標籤
-                                elbowPt = new XYZ(endPt.X, newPos.Y, newPos.Z);
-                            }
-                            else
-                            {
-                                // 管線為垂直：轉折點 X 對齊標籤，Y 對齊管線
-                                elbowPt = new XYZ(newPos.X, endPt.Y, newPos.Z);
-                            }
-
-                            // 套用新的轉折點 (Revit 2022+ 適用)
-                            tag.SetLeaderElbow(taggedRef, elbowPt);
-                        }
-
-                        movedCount++;
-                    }
-                    catch { }
-                }
-            }
-            return movedCount;
-        }
-
         // =========================================================================
-        // 【隱藏畫線】
-        // =========================================================================
-        /*
-        private void DrawRectangleLines(Document doc, SketchPlane sketchPlane, double minX, double maxX, double minY, double maxY, double z)
-        {
-            try
-            {
-                XYZ p1 = new XYZ(minX, minY, z);
-                XYZ p2 = new XYZ(maxX, minY, z);
-                XYZ p3 = new XYZ(maxX, maxY, z);
-                XYZ p4 = new XYZ(minX, maxY, z);
-
-                doc.Create.NewModelCurve(Line.CreateBound(p1, p2), sketchPlane);
-                doc.Create.NewModelCurve(Line.CreateBound(p2, p3), sketchPlane);
-                doc.Create.NewModelCurve(Line.CreateBound(p3, p4), sketchPlane);
-                doc.Create.NewModelCurve(Line.CreateBound(p4, p1), sketchPlane);
-            }
-            catch { }
-        }
-        */
-
-        // =========================================================================
-        // 【自動模式】核心生成邏輯 (封裝原本的布林與洪水演算法)
+        // 【自動模式】核心生成邏輯
         // =========================================================================
         private List<int[]> GenerateAutoRectangles(Document doc, ViewPlan viewPlan, List<ProjectItem> availableProjects, ElementMulticategoryFilter multiCatFilter, double viewMinX, double viewMaxX, double viewMinY, double viewMaxY, double exactCutZ, double validZ_Min, double validZ_Max, double tagW, double tagH)
         {
@@ -658,35 +657,6 @@ namespace Sinotech.CSDSEM
             }
             catch { }
             return baseSolid;
-        }
-
-        private SketchPlane CreateSketchPlaneForZ(Document doc, double z)
-        {
-            Plane plane = Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 0, z));
-            return SketchPlane.Create(doc, plane);
-        }
-        /// <summary>
-        /// 測試畫線
-        /// </summary>
-        private void DrawBoundingBox(Document doc, ViewPlan viewPlan, IndependentTag tag)
-        {
-            try
-            {
-                BoundingBoxXYZ tagBbox = tag.get_BoundingBox(viewPlan);
-                Plane plane = Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 0, viewPlan.Origin.Z));
-                SketchPlane sketchPlane = SketchPlane.Create(doc, plane);
-                XYZ point1 = new XYZ(tagBbox.Max.X, tagBbox.Max.Y, viewPlan.Origin.Z);
-                XYZ point2 = new XYZ(tagBbox.Max.X, tagBbox.Min.Y, viewPlan.Origin.Z);
-                XYZ point3 = new XYZ(tagBbox.Min.X, tagBbox.Min.Y, viewPlan.Origin.Z);
-                XYZ point4 = new XYZ(tagBbox.Min.X, tagBbox.Max.Y, viewPlan.Origin.Z);
-                List<Curve> curves = new List<Curve>() { Line.CreateBound(point1, point2) , Line.CreateBound(point2, point3),
-                                                         Line.CreateBound(point3, point4), Line.CreateBound(point4, point1) };
-                foreach (Curve curve in curves)
-                {
-                    doc.Create.NewModelCurve(curve, sketchPlane);
-                }
-            }
-            catch { }
         }
     }
 }
