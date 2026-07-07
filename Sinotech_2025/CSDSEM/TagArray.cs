@@ -122,7 +122,7 @@ namespace Sinotech_2025.CSDSEM
         }
 
         // =========================================================================
-        // 【核心大腦】動態邊界分析與群組排版引擎
+        // 【核心大腦】動態邊界分析與三段式引線引擎
         // =========================================================================
         private int ProcessViewTags(Document doc, ViewPlan viewPlan, bool isAutoMode, ElementMulticategoryFilter multiCatFilter, ElementMulticategoryFilter tagFilter, List<ProjectItem> availableProjects, List<PickedBox> pickedBoxes)
         {
@@ -132,6 +132,15 @@ namespace Sinotech_2025.CSDSEM
                 .ToList();
 
             if (existingTags.Count == 0) return 0;
+
+            // 確保一開始所有標籤關閉引線，不受引線幾何干擾
+            Dictionary<ElementId, bool> origLeaderStates = new Dictionary<ElementId, bool>();
+            foreach (var tag in existingTags)
+            {
+                origLeaderStates[tag.Id] = tag.HasLeader;
+                try { tag.HasLeader = false; } catch { }
+            }
+            doc.Regenerate();
 
             double tagW = 1000.0 / 304.8;
             double tagH = 300.0 / 304.8;
@@ -154,7 +163,7 @@ namespace Sinotech_2025.CSDSEM
             double gapX = 30.0 / 304.8;
             double gapY = 30.0 / 304.8;
             double slotW = tagW + gapX;
-            double slotH = tagH + gapY + 0.3;
+            double slotH = tagH + gapY;
 
             double exactZMin = GetPlaneElevation(viewPlan, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
             double exactCutZ = viewPlan.GenLevel != null ? viewPlan.GenLevel.Elevation : exactZMin;
@@ -209,15 +218,9 @@ namespace Sinotech_2025.CSDSEM
                 }
             }
 
-            int movedCount = 0;
-
-            // =========================================================
-            // 【群組填入邏輯】：解決跳行問題，確保框選區依序填滿
-            // =========================================================
             Dictionary<SafeRegion, List<IndependentTag>> regionAssignments = new Dictionary<SafeRegion, List<IndependentTag>>();
             foreach (var r in safeRegions) regionAssignments[r] = new List<IndependentTag>();
 
-            // 步驟 A：初步分發標籤到最靠近的框選區
             foreach (IndependentTag tag in existingTags)
             {
                 if (tag.IsOrphaned) continue;
@@ -232,28 +235,55 @@ namespace Sinotech_2025.CSDSEM
             }
 
             List<IndependentTag> overflowTags = new List<IndependentTag>();
+            List<IndependentTag> movedTagsList = new List<IndependentTag>(); // 紀錄成功移動的標籤
 
-            // 步驟 B：在各個框選區內排序
+            // =========================================================
+            // 階段一：僅移動位置 (保持 HasLeader = false)
+            // =========================================================
             foreach (var kvp in regionAssignments)
             {
                 SafeRegion region = kvp.Key;
 
-                // 【防交叉演算法】：
-                // 1. 水管標籤優先於電纜架標籤
-                // 2. 以管線實際 Y 座標進行排序 (由上而下)
-                // 3. 以管線實際 X 座標進行排序 (由左至右)
+                // 防交叉演算法：水管優先，然後依 Y 高低排序
                 List<IndependentTag> tagsInRegion = kvp.Value
                     .OrderBy(t => t.Category.Id.Value == (long)BuiltInCategory.OST_PipeTags ? 0 : 1)
                     .ThenByDescending(t => GetTagLeaderEndSafe(doc, t).Y)
                     .ThenBy(t => GetTagLeaderEndSafe(doc, t).X)
                     .ToList();
 
+                // Bubble-Swap 優化
+                bool improved = true;
+                int maxPasses = tagsInRegion.Count + 1;
+                while (improved && maxPasses-- > 0)
+                {
+                    improved = false;
+                    for (int i = 0; i < tagsInRegion.Count - 1; i++)
+                    {
+                        if (i + 1 >= region.Slots.Count) break;
+                        XYZ slotA = region.Slots[i];
+                        XYZ slotB = region.Slots[i + 1];
+                        XYZ pipeA = GetTagLeaderEndSafe(doc, tagsInRegion[i]);
+                        XYZ pipeB = GetTagLeaderEndSafe(doc, tagsInRegion[i + 1]);
+
+                        int crossBefore = CountLeaderPairCrossings(slotA, pipeA, slotB, pipeB, tagW);
+                        int crossAfter = CountLeaderPairCrossings(slotA, pipeB, slotB, pipeA, tagW);
+
+                        if (crossAfter < crossBefore)
+                        {
+                            var tmp = tagsInRegion[i];
+                            tagsInRegion[i] = tagsInRegion[i + 1];
+                            tagsInRegion[i + 1] = tmp;
+                            improved = true;
+                        }
+                    }
+                }
+
                 foreach (var tag in tagsInRegion)
                 {
                     if (!region.IsFull)
                     {
-                        ApplyTagToSlot(doc, tag, region, exactCutZ, tagW);
-                        movedCount++;
+                        ApplyTagToSlotStage1(tag, region, exactCutZ);
+                        movedTagsList.Add(tag);
                     }
                     else
                     {
@@ -262,7 +292,6 @@ namespace Sinotech_2025.CSDSEM
                 }
             }
 
-            // 步驟 C：處理塞不下的溢出標籤，尋找下一個框
             foreach (var tag in overflowTags)
             {
                 XYZ pos;
@@ -271,15 +300,137 @@ namespace Sinotech_2025.CSDSEM
                 SafeRegion nextBestRegion = safeRegions.Where(r => !r.IsFull).OrderBy(r => r.TopLeft.DistanceTo(pos)).FirstOrDefault();
                 if (nextBestRegion != null)
                 {
-                    ApplyTagToSlot(doc, tag, nextBestRegion, exactCutZ, tagW);
-                    movedCount++;
+                    ApplyTagToSlotStage1(tag, nextBestRegion, exactCutZ);
+                    movedTagsList.Add(tag);
+                }
+                else
+                {
+                    try { tag.HasLeader = origLeaderStates[tag.Id]; } catch { }
                 }
             }
 
-            return movedCount;
+            // 更新模型鎖定座標
+            doc.Regenerate();
+
+            // =========================================================
+            // 階段二：開啟引線設定
+            // =========================================================
+            foreach (var tag in movedTagsList)
+            {
+                try
+                {
+                    tag.HasLeader = true;
+                    tag.LeaderEndCondition = LeaderEndCondition.Free;
+                }
+                catch { }
+            }
+
+            // 再次更新模型，讓 Revit 內部產生初步的引線幾何
+            doc.Regenerate();
+
+            // =========================================================
+            // 階段三：強制計算與覆寫 90 度 Elbow (頭尾避讓)
+            // =========================================================
+            foreach (var tag in movedTagsList)
+            {
+                try
+                {
+                    Reference taggedRef = tag.GetTaggedReferences().FirstOrDefault();
+                    if (taggedRef != null)
+                    {
+                        XYZ endPt = tag.GetLeaderEnd(taggedRef);
+                        XYZ headPos = tag.TagHeadPosition;
+
+                        double textLeft = headPos.X;
+                        // 還原客製化偏移量以利準確計算邊界
+                        if (tag.Name.Contains("管_尺寸+系統")) textLeft -= 5.8;
+
+                        double textRight = textLeft + tagW;
+                        double midX = (textLeft + textRight) / 2.0;
+
+                        double elbowGap = 10.0 / 304.8;
+                        double elbowX = endPt.X;
+
+                        // 頭尾避讓邏輯
+                        if (elbowX >= textLeft - elbowGap && elbowX <= textRight + elbowGap)
+                        {
+                            if (elbowX < midX)
+                                elbowX = textLeft - elbowGap;
+                            else
+                                elbowX = textRight + elbowGap;
+                        }
+
+                        XYZ elbowPt = new XYZ(elbowX, headPos.Y, exactCutZ);
+                        tag.SetLeaderElbow(taggedRef, elbowPt);
+                    }
+                }
+                catch { }
+            }
+
+            return movedTagsList.Count;
         }
 
-        // 取得真實的管線附著點做為防交叉排序依據
+        // =========================================================================
+        // 【第一階段】僅賦予座標
+        // =========================================================================
+        private void ApplyTagToSlotStage1(IndependentTag tag, SafeRegion region, double exactCutZ)
+        {
+            XYZ targetTopLeft = region.Slots[region.NextSlotIndex++];
+            XYZ newHeadPos = new XYZ(targetTopLeft.X, targetTopLeft.Y, exactCutZ);
+
+            if (tag.Name.Contains("管_尺寸+系統"))
+            {
+                newHeadPos = new XYZ(targetTopLeft.X + 5.8, targetTopLeft.Y, exactCutZ);
+            }
+
+            try
+            {
+                tag.TagHeadPosition = newHeadPos;
+            }
+            catch { }
+        }
+
+        // =========================================================================
+        // 【引線交叉計算輔助方法】
+        // =========================================================================
+        private int CountLeaderPairCrossings(XYZ slotA, XYZ pipeA, XYZ slotB, XYZ pipeB, double tagW)
+        {
+            int count = 0;
+            if (AxisAlignedSegsCross(
+                slotA.X, slotA.Y, pipeA.X, slotA.Y,
+                pipeB.X, slotB.Y, pipeB.X, pipeB.Y))
+                count++;
+            if (AxisAlignedSegsCross(
+                pipeA.X, slotA.Y, pipeA.X, pipeA.Y,
+                slotB.X, slotB.Y, pipeB.X, slotB.Y))
+                count++;
+            return count;
+        }
+
+        private bool AxisAlignedSegsCross(double ax1, double ay1, double ax2, double ay2,
+                                           double bx1, double by1, double bx2, double by2)
+        {
+            bool aHoriz = Math.Abs(ay2 - ay1) < 1e-6;
+            bool bHoriz = Math.Abs(by2 - by1) < 1e-6;
+            if (aHoriz == bHoriz) return false;
+
+            double hY, hXmin, hXmax, vX, vYmin, vYmax;
+            if (aHoriz)
+            {
+                hY = ay1; hXmin = Math.Min(ax1, ax2); hXmax = Math.Max(ax1, ax2);
+                vX = bx1; vYmin = Math.Min(by1, by2); vYmax = Math.Max(by1, by2);
+            }
+            else
+            {
+                hY = by1; hXmin = Math.Min(bx1, bx2); hXmax = Math.Max(bx1, bx2);
+                vX = ax1; vYmin = Math.Min(ay1, ay2); vYmax = Math.Max(ay1, ay2);
+            }
+
+            const double tol = 1e-6;
+            return vX > hXmin + tol && vX < hXmax - tol &&
+                   hY > vYmin + tol && hY < vYmax - tol;
+        }
+
         private XYZ GetTagLeaderEndSafe(Document doc, IndependentTag tag)
         {
             try
@@ -291,66 +442,7 @@ namespace Sinotech_2025.CSDSEM
                 }
             }
             catch { }
-            // 若因為手動設置為無引線，則 TagHeadPosition 即為管線位置
             try { return tag.TagHeadPosition; } catch { return XYZ.Zero; }
-        }
-
-        // =========================================================================
-        // 【移動並修正 引線頭尾錨點】核心函式
-        // =========================================================================
-        private void ApplyTagToSlot(Document doc, IndependentTag tag, SafeRegion region, double exactCutZ, double tagW)
-        {
-            XYZ targetTopLeft = region.Slots[region.NextSlotIndex++];
-
-            // 1. 移動標籤到格子左上角
-            XYZ newHeadPos = new XYZ(targetTopLeft.X, targetTopLeft.Y, exactCutZ);
-            if (tag.Name.Contains("管_尺寸+系統"))
-            {
-                newHeadPos = new XYZ(targetTopLeft.X + 5.8, targetTopLeft.Y, exactCutZ);
-            }
-            try
-            {
-                tag.TagHeadPosition = newHeadPos;
-
-                // 2. 以基準的方式排序後的標籤, 才開啟引線並設定自由端點
-                tag.HasLeader = true;
-                tag.LeaderEndCondition = LeaderEndCondition.Free;
-
-                Reference taggedRef = tag.GetTaggedReferences().FirstOrDefault();
-                if (taggedRef != null)
-                {
-                    // 取得真正附著在管線上的座標點
-                    XYZ endPt = tag.GetLeaderEnd(taggedRef);
-
-                    // =========================================================
-                    // 【智慧錨點】：引線只接在文字的頭或尾，不穿越文字
-                    // =========================================================
-                    double textLeft = newHeadPos.X;
-                    double textRight = newHeadPos.X + tagW;
-                    double midX = (textLeft + textRight) / 2.0;
-
-                    double elbowGap = 10.0 / 304.8; // 預留 10mm 安全間距避免貼太緊
-                    double elbowX = endPt.X;
-
-                    // 若管線附著點在文字上下方，強制將 Elbow 推到文字頭或尾
-                    if (elbowX >= textLeft - elbowGap && elbowX <= textRight + elbowGap)
-                    {
-                        if (elbowX < midX)
-                        {
-                            elbowX = textLeft - elbowGap; // 連接頭部 (左側)
-                        }
-                        else
-                        {
-                            elbowX = textRight + elbowGap; // 連接尾部 (右側)
-                        }
-                    }
-
-                    // 給它們90度的轉折：Y維持標籤高度，X強制移至管線或頭尾避讓區
-                    XYZ elbowPt = new XYZ(elbowX, newHeadPos.Y, exactCutZ);
-                    tag.SetLeaderElbow(taggedRef, elbowPt);
-                }
-            }
-            catch { }
         }
 
         // =========================================================================
@@ -359,30 +451,52 @@ namespace Sinotech_2025.CSDSEM
         public class SafeRegion
         {
             public XYZ TopLeft { get; set; }
+            public XYZ Center { get; set; }
+            public double BBoxMinX { get; set; }
+            public double BBoxMaxX { get; set; }
+            public double BBoxMinY { get; set; }
+            public double BBoxMaxY { get; set; }
+            public int SlotRows { get; set; }
+
             public List<XYZ> Slots { get; set; } = new List<XYZ>();
             public int NextSlotIndex { get; set; } = 0;
             public bool IsFull => NextSlotIndex >= Slots.Count;
+
+            public double NearestBBoxDistance(XYZ pt)
+            {
+                double cx = Math.Max(BBoxMinX, Math.Min(BBoxMaxX, pt.X));
+                double cy = Math.Max(BBoxMinY, Math.Min(BBoxMaxY, pt.Y));
+                double dx = pt.X - cx;
+                double dy = pt.Y - cy;
+                return Math.Sqrt(dx * dx + dy * dy);
+            }
         }
 
         private SafeRegion CreateSafeRegion(double pMinX, double pMaxX, double pMinY, double pMaxY, double exactCutZ, double slotW, double slotH)
         {
             SafeRegion region = new SafeRegion();
             region.TopLeft = new XYZ(pMinX, pMaxY, exactCutZ);
+            region.Center = new XYZ((pMinX + pMaxX) / 2.0, (pMinY + pMaxY) / 2.0, exactCutZ);
+            region.BBoxMinX = pMinX;
+            region.BBoxMaxX = pMaxX;
+            region.BBoxMinY = pMinY;
+            region.BBoxMaxY = pMaxY;
 
             int slotCols = (int)((pMaxX - pMinX) / slotW);
             int slotRows = (int)((pMaxY - pMinY) / slotH);
 
             if (slotCols < 1 || slotRows < 1) return null;
 
+            region.SlotRows = slotRows;
+
             double startX = pMinX;
             double startY = pMaxY;
 
-            // 【保留你的客製化寬度間距】由左至右，由上而下排下去
             for (int c = 0; c < slotCols; c++)
             {
                 for (int r = 0; r < slotRows; r++)
                 {
-                    double cx = startX + c * (slotW + 1); // 你的客製參數 +1
+                    double cx = startX + c * (slotW + 1);
                     double cy = startY - r * slotH;
                     region.Slots.Add(new XYZ(cx, cy, exactCutZ));
                 }
