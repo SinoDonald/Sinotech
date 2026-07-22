@@ -46,7 +46,7 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 
     <!-- ── PDF ── -->
-    <PackageReference Include="PdfPig" Version="0.1.14" />
+    <PackageReference Include="PdfPig" Version="0.1.15" />
 
     <!-- ── System — 已內建於 .NET 8 runtime，加 ExcludeAssets 避免 DLL 衝突 ── -->
     <PackageReference Include="System.Buffers" Version="4.6.1">
@@ -69,6 +69,7 @@
     <PackageReference Include="System.Runtime" Version="4.3.1">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
@@ -77,22 +78,22 @@
          原本 10.0.7 的組件版本號是 10.0.0.0，
          Revit 2025 載入時找不到對應版本 → FileLoadException。
          8.0.0 的組件版本號是 8.0.0.0，與執行環境相符。         -->
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.10" />
 
     <!-- ── 其餘套件維持原版本 ── -->
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-    <PackageReference Include="System.ComponentModel.Composition" Version="10.0.7" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="10.0.10" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-    <PackageReference Include="System.DirectoryServices" Version="10.0.7" />
-    <PackageReference Include="System.Formats.Asn1" Version="10.0.7" />
-    <PackageReference Include="System.Management" Version="10.0.7" />
+    <PackageReference Include="System.DirectoryServices" Version="10.0.10" />
+    <PackageReference Include="System.Formats.Asn1" Version="10.0.10" />
+    <PackageReference Include="System.Management" Version="10.0.10" />
     <PackageReference Include="System.Security.AccessControl" Version="6.0.1" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
     <PackageReference Include="System.Security.Cryptography.Encoding" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
     <PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
-    <PackageReference Include="System.Text.Json" Version="10.0.7" />
+    <PackageReference Include="System.Text.Json" Version="10.0.10" />
   </ItemGroup>
 
   <!-- ── Revit 2025 API 參考 ── -->
