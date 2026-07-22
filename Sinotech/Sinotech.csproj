@@ -221,6 +221,7 @@
     <Compile Include="CSDSEM\LinkSelectionForm.Designer.cs">
       <DependentUpon>LinkSelectionForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CSDSEM\MegedOpening.cs" />
     <Compile Include="CSDSEM\TagArray.cs" />
     <Compile Include="CSDSEM\ViewSelectionForm.cs">
       <SubType>Form</SubType>

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static Sinotech_2025.CSDSEM.MegedOpening;
 using static Sinotech_2025.CSDSEM.ProfessionalCodeForm;
 
 namespace Sinotech_2025.CSDSEM
@@ -233,6 +234,165 @@ namespace Sinotech_2025.CSDSEM
                                 catch (Autodesk.Revit.Exceptions.ArgumentNullException)
                                 {
 
+                                }
+                            }
+                        }
+
+                        // -------------------------------------------------------------------------
+                        // 【新增步驟】：在此處呼叫開口合併服務 (OpeningMergeService)
+                        // -------------------------------------------------------------------------
+                        // 初始化合併服務，傳入公共工程規範的淨間距閾值 (例如 300mm)
+                        OpeningMergeService mergeService = new OpeningMergeService(mergeThresholdMm: 300.0);
+                        // 初始化樓版開口合併服務 (設定地坪與RC板最大合併間距為 150mm)
+                        FloorOpeningMergeService floorMergeService = new FloorOpeningMergeService(maxMergeGapMm: 150.0);
+
+                        foreach (OpeningInfo openingInfo in openingInfoList)
+                        {
+                            var cableTrayCrushes = openingInfo.crushElemInfos
+                                .Where(x => x.type.Equals("CableTray") || x.type.Equals("CableTrayFitting"))
+                                .ToList();
+
+                            if (cableTrayCrushes.Any())
+                            {
+                                List<CableTrayOpeningCandidate> candidates = new List<CableTrayOpeningCandidate>();
+                                foreach (var crush in cableTrayCrushes)
+                                {
+                                    // 抓取原始電纜架寬度與高度
+                                    double width = crush.ductWight;  // 原始電纜架寬度 (Feet)
+                                    double height = crush.ductHeight; // 原始電纜架高度 (Feet)
+                                    XYZ center = crush.xyzs.FirstOrDefault() ?? XYZ.Zero;
+
+                                    candidates.Add(new CableTrayOpeningCandidate
+                                    {
+                                        CableTrayElement = crush.pipeOrDuct,
+                                        DocName = crush.docName,
+                                        PipeType = crush.pipeType,
+                                        OriginalWidthFeet = width,
+                                        OriginalHeightFeet = height,
+                                        IntersectionCenter = center,
+                                        Deviation = crush.deviation,
+                                        Axis = crush.axis,
+                                        PipeAngle = crush.pipeAngle,
+                                        WallThickness = crush.thickness
+                                    });
+                                }
+
+                                // 執行記憶體聚類合併
+                                List<MergedOpeningResult> mergedResults = mergeService.ProcessAndMergeCandidates(openingInfo.element, candidates);
+
+                                // 移除未合併的舊干涉紀錄
+                                openingInfo.crushElemInfos.RemoveAll(x => x.type.Equals("CableTray") || x.type.Equals("CableTrayFitting"));
+
+                                // 【修正核心】：精確對應 ductWight 與 ductHeight 賦值
+                                foreach (var merged in mergedResults)
+                                {
+                                    CrushElemInfo mergedCrush = new CrushElemInfo
+                                    {
+                                        docName = merged.DocName,
+                                        type = "CableTray",
+                                        hostType = openingInfo.type,
+                                        level = openingInfo.level,
+
+                                        // 關鍵：ductWight 為電纜架寬度，ductHeight 為合併後的總高度！
+                                        ductWight = merged.CableTrayWidthFeet,     // 寫回電纜架寬度 (Feet)
+                                        ductHeight = merged.FinalOpeningHeightFeet, // 寫回合併後開口總高度 (Feet)
+
+                                        thickness = merged.WallThickness,
+                                        xyzs = new List<XYZ> { merged.PlacementCenter },
+                                        deviation = merged.DeviationFeet,
+                                        axis = merged.Axis,
+                                        pipeAngle = merged.PipeAngle,
+                                        number = 0
+                                    };
+
+                                    openingInfo.crushElemInfos.Add(mergedCrush);
+                                }
+                            }
+                            // 只針對 Host 為樓版 (Floor) 的項目進行地坪+RC板合併處理
+                            if (openingInfo.type.Equals("Floor"))
+                            {
+                                var floorCrushes = openingInfo.crushElemInfos.ToList();
+                                if (floorCrushes.Any())
+                                {
+                                    List<FloorOpeningCandidate> candidates = new List<FloorOpeningCandidate>();
+
+                                    foreach (var crush in floorCrushes)
+                                    {
+                                        // 取得貫穿點交點與面幾何
+                                        XYZ center = crush.xyzs.FirstOrDefault() ?? XYZ.Zero;
+
+                                        // 計算貫穿進入點與離開點 Z (若有 2 個交點取 Z 軸極值)
+                                        double entryZ = center.Z;
+                                        double exitZ = center.Z;
+                                        if (crush.insXYZs != null && crush.insXYZs.Count >= 2)
+                                        {
+                                            entryZ = crush.insXYZs.Max(p => p.Z);
+                                            exitZ = crush.insXYZs.Min(p => p.Z);
+                                        }
+                                        else
+                                        {
+                                            // 若僅單點，以樓版厚度估算上下頂底 Z
+                                            entryZ = center.Z + (crush.thickness / 2.0);
+                                            exitZ = center.Z - (crush.thickness / 2.0);
+                                        }
+
+                                        candidates.Add(new FloorOpeningCandidate
+                                        {
+                                            PipeOrDuctElement = crush.pipeOrDuct,
+                                            HostFloorElement = openingInfo.element,
+                                            DocName = crush.docName,
+                                            ElementType = crush.type,
+                                            PipeType = crush.pipeType,
+                                            Level = crush.level,
+
+                                            PipeSizeFeet = crush.size,
+                                            PipeDiameterFeet = crush.diameter,
+                                            DuctWidthFeet = crush.ductWight,
+                                            DuctHeightFeet = crush.ductHeight,
+                                            InsulationThicknessFeet = crush.insulationThickness,
+
+                                            EntryZ = entryZ,
+                                            ExitZ = exitZ,
+                                            IntersectionCenter = center,
+                                            SingleFloorThicknessFeet = crush.thickness,
+
+                                            Axis = crush.axis,
+                                            PipeAngle = crush.pipeAngle,
+                                            Number = crush.number
+                                        });
+                                    }
+
+                                    // 執行多層樓版聚類合併
+                                    List<MergedFloorOpeningResult> mergedFloorResults = floorMergeService.ProcessAndMergeFloorOpenings(candidates);
+
+                                    // 清除原本重複的 CrushElemInfo
+                                    openingInfo.crushElemInfos.Clear();
+
+                                    // 將合併後的單一開口結果寫回 crushElemInfos
+                                    foreach (var merged in mergedFloorResults)
+                                    {
+                                        CrushElemInfo mergedCrush = new CrushElemInfo
+                                        {
+                                            docName = merged.DocName,
+                                            type = merged.ElementType,
+                                            hostType = "Floor",
+                                            level = merged.ReferenceLevel,
+
+                                            size = merged.PipeSizeFeet,
+                                            diameter = merged.SpecifiedDiameterFeet,
+                                            ductWight = merged.DuctWidthFeet,
+                                            ductHeight = merged.DuctHeightFeet,
+                                            thickness = merged.TotalThicknessFeet, // 關鍵：寫入合併後總厚度 (地坪+RC板)
+
+                                            xyzs = new List<XYZ> { merged.PlacementCenter },
+                                            deviation = merged.DeviationFeet,
+                                            axis = merged.Axis,
+                                            pipeAngle = merged.PipeAngle,
+                                            number = merged.Number
+                                        };
+
+                                        openingInfo.crushElemInfos.Add(mergedCrush);
+                                    }
                                 }
                             }
                         }
@@ -1392,15 +1552,36 @@ namespace Sinotech_2025.CSDSEM
                             }
                             else if (crushElemInfo.useFS.Equals("電纜架牆開口"))
                             {
+                                // 【關鍵修復】：確保寫入「電纜架高度」與「電纜架寬度」
                                 editPara = pipeOpen.LookupParameter("電纜架高度");
-                                editPara.Set(crushElemInfo.ductHeight);
+                                if (editPara != null && !editPara.IsReadOnly)
+                                {
+                                    editPara.Set(crushElemInfo.ductHeight); // 合併後的總高度
+                                }
+
                                 editPara = pipeOpen.LookupParameter("電纜架寬度");
-                                editPara.Set(crushElemInfo.ductWight);
+                                if (editPara != null && !editPara.IsReadOnly)
+                                {
+                                    editPara.Set(crushElemInfo.ductWight); // 原始電纜架寬度 (解決顯示為 0.0000 的問題)
+                                }
+
                                 editPara = pipeOpen.LookupParameter("牆厚度");
-                                editPara.Set(crushElemInfo.thickness);
+                                if (editPara != null && !editPara.IsReadOnly)
+                                {
+                                    editPara.Set(crushElemInfo.thickness);
+                                }
+
                                 editPara = pipeOpen.LookupParameter("矩形牆開口流水號");
-                                editPara.Set(crushElemInfo.number);
-                                ElementTransformUtils.RotateElement(doc, pipeOpen.Id, crushElemInfo.axis, crushElemInfo.pipeAngle * Math.PI / 180);
+                                if (editPara != null && !editPara.IsReadOnly)
+                                {
+                                    editPara.Set(crushElemInfo.number);
+                                }
+
+                                // 旋轉開口元件
+                                if (crushElemInfo.axis != null)
+                                {
+                                    ElementTransformUtils.RotateElement(doc, pipeOpen.Id, crushElemInfo.axis, crushElemInfo.pipeAngle * Math.PI / 180);
+                                }
                             }
                             else if (crushElemInfo.useFS.Equals("電纜架樓版開口"))
                             {
