@@ -70,6 +70,7 @@
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
@@ -78,7 +79,6 @@
          原本 10.0.7 的組件版本號是 10.0.0.0，
          Revit 2025 載入時找不到對應版本 → FileLoadException。
          8.0.0 的組件版本號是 8.0.0.0，與執行環境相符。         -->
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.10" />
 
     <!-- ── 其餘套件維持原版本 ── -->
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />

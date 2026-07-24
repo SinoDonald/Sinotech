@@ -257,33 +257,40 @@ namespace Sinotech.CSDSEM
                                 List<CableTrayOpeningCandidate> candidates = new List<CableTrayOpeningCandidate>();
                                 foreach (var crush in cableTrayCrushes)
                                 {
-                                    // 抓取原始電纜架寬度與高度
-                                    double width = crush.ductWight;  // 原始電纜架寬度 (Feet)
-                                    double height = crush.ductHeight; // 原始電纜架高度 (Feet)
                                     XYZ center = crush.xyzs.FirstOrDefault() ?? XYZ.Zero;
+
+                                    // 方向校正：確保旋轉軸 Axis 與角度方向正確
+                                    Line axis = crush.axis;
+                                    if (axis == null)
+                                    {
+                                        axis = Line.CreateBound(center, new XYZ(center.X, center.Y, center.Z + 10));
+                                    }
 
                                     candidates.Add(new CableTrayOpeningCandidate
                                     {
                                         CableTrayElement = crush.pipeOrDuct,
+                                        CableTrayId = crush.pipeOrDuct.Id,
                                         DocName = crush.docName,
+                                        HostDocName = openingInfo.docName,
+                                        HostElementId = openingInfo.element.Id,
                                         PipeType = crush.pipeType,
-                                        OriginalWidthFeet = width,
-                                        OriginalHeightFeet = height,
+                                        OriginalWidthFeet = crush.ductWight,   // 寬度
+                                        OriginalHeightFeet = crush.ductHeight, // 高度
                                         IntersectionCenter = center,
                                         Deviation = crush.deviation,
-                                        Axis = crush.axis,
+                                        Axis = axis,
                                         PipeAngle = crush.pipeAngle,
                                         WallThickness = crush.thickness
                                     });
                                 }
 
-                                // 執行記憶體聚類合併
+                                // 執行記憶體合併
                                 List<MergedOpeningResult> mergedResults = mergeService.ProcessAndMergeCandidates(openingInfo.element, candidates);
 
-                                // 移除未合併的舊干涉紀錄
+                                // 移除舊未合併干涉
                                 openingInfo.crushElemInfos.RemoveAll(x => x.type.Equals("CableTray") || x.type.Equals("CableTrayFitting"));
 
-                                // 【修正核心】：精確對應 ductWight 與 ductHeight 賦值
+                                // 寫回合併結果
                                 foreach (var merged in mergedResults)
                                 {
                                     CrushElemInfo mergedCrush = new CrushElemInfo
@@ -293,17 +300,22 @@ namespace Sinotech.CSDSEM
                                         hostType = openingInfo.type,
                                         level = openingInfo.level,
 
-                                        // 關鍵：ductWight 為電纜架寬度，ductHeight 為合併後的總高度！
-                                        ductWight = merged.CableTrayWidthFeet,     // 寫回電纜架寬度 (Feet)
-                                        ductHeight = merged.FinalOpeningHeightFeet, // 寫回合併後開口總高度 (Feet)
-
+                                        ductWight = merged.CableTrayWidthFeet,     // 電纜架寬度
+                                        ductHeight = merged.FinalOpeningHeightFeet, // 合併總高度
                                         thickness = merged.WallThickness,
+
                                         xyzs = new List<XYZ> { merged.PlacementCenter },
                                         deviation = merged.DeviationFeet,
                                         axis = merged.Axis,
                                         pipeAngle = merged.PipeAngle,
-                                        number = 0
+                                        number = 0,
+
+                                        // 關鍵修復：將產生好的最底層 Comment 存入 CrushElemInfo
+                                        useFS = openingInfo.type.Equals("Floor") ? "電纜架樓版開口" : "電纜架牆開口"
                                     };
+
+                                    // 將 Comment 暫存於 pipeOpens 備註標籤管道，確保後續 Transaction 讀取
+                                    mergedCrush.pipeOrDuct = candidates.First().CableTrayElement; // 保留 Element 引用
 
                                     openingInfo.crushElemInfos.Add(mergedCrush);
                                 }
@@ -1586,22 +1598,52 @@ namespace Sinotech.CSDSEM
                             else if (crushElemInfo.useFS.Equals("電纜架樓版開口"))
                             {
                                 editPara = pipeOpen.LookupParameter("電纜架高度");
-                                editPara.Set(crushElemInfo.ductHeight);
+                                if (editPara != null && !editPara.IsReadOnly)
+                                {
+                                    editPara.Set(crushElemInfo.ductHeight); // 合併後的總高度
+                                }
+
                                 editPara = pipeOpen.LookupParameter("電纜架寬度");
-                                editPara.Set(crushElemInfo.ductWight);
+                                if (editPara != null && !editPara.IsReadOnly)
+                                {
+                                    editPara.Set(crushElemInfo.ductWight); // 原始電纜架寬度 (解決顯示為 0.0000 的問題)
+                                }
+
                                 editPara = pipeOpen.LookupParameter("版厚度");
-                                editPara.Set(crushElemInfo.thickness);
+                                if (editPara != null && !editPara.IsReadOnly)
+                                {
+                                    editPara.Set(crushElemInfo.thickness);
+                                }
                                 editPara = pipeOpen.LookupParameter("矩形牆開口流水號");
-                                editPara.Set(crushElemInfo.number);
+                                if (editPara != null && !editPara.IsReadOnly)
+                                {
+                                    editPara.Set(crushElemInfo.number);
+                                }
                             }
+
                             editPara = pipeOpen.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM); // 偏移
-                            editPara.Set(crushElemInfo.deviation);
+                            if (editPara != null && !editPara.IsReadOnly)
+                            {
+                                editPara.Set(crushElemInfo.deviation);
+                            }
+
                             editPara = pipeOpen.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS); // 備註
-                            //editPara.Set(crushElemInfo.docName); // 連結的專案名稱
-                            editPara.Set(crushElemInfo.docName + "_" + crushElemInfo.pipeOrDuct.Id + "_" + openingInfo.docName + "_" + openingInfo.element.Id.ToString()); // 專案名稱+衝突的元件
-                            string floor = pipeOpen.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM).AsValueString();
-                            editPara = pipeOpen.LookupParameter("位置");
-                            editPara.Set(floor);
+                            if (editPara != null && !editPara.IsReadOnly)
+                            {
+                                string commentStr = $"{crushElemInfo.docName}_{crushElemInfo.pipeOrDuct.Id}_{openingInfo.docName}_{openingInfo.element.Id}";
+                                editPara.Set(commentStr); // 強制賦值備註
+                            }
+
+                            // 4. 寫入位置 (Location)
+                            if (pipeOpen.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM) is Parameter levelPara)
+                            {
+                                string floorName = levelPara.AsValueString();
+                                editPara = pipeOpen.LookupParameter("位置");
+                                if (editPara != null && !editPara.IsReadOnly)
+                                {
+                                    editPara.Set(floorName);
+                                }
+                            }
                             a++;
                         }
                         catch (Exception ex)
