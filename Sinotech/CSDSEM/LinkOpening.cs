@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions; // 引入正則表達式命名空間
+using System.Text.RegularExpressions;
 using static Sinotech.CSDSEM.MegedOpening;
 using static Sinotech.CSDSEM.ProfessionalCodeForm;
 
@@ -88,9 +88,6 @@ namespace Sinotech.CSDSEM
             Autodesk.Revit.ApplicationServices.Application app = uiapp.Application;
             Document doc = uidoc.Document;
 
-            // -------------------------------------------------------------------------
-            // 【修復的核心】：使用強健多重字元檔名剖析器取代原硬編碼 Split('-')
-            // -------------------------------------------------------------------------
             List<string> docTokens = ParseFileNameTokens(doc);
             int prjCount = docTokens.Count;
 
@@ -226,7 +223,8 @@ namespace Sinotech.CSDSEM
                             }
                         }
 
-                        OpeningMergeService mergeService = new OpeningMergeService(mergeThresholdMm: 300.0);
+                        // 新版 2D 牆面雙階段合併服務
+                        OpeningMergeService mergeService = new OpeningMergeService(mergeThresholdMm: 250.0);
                         FloorOpeningMergeService floorMergeService = new FloorOpeningMergeService(maxMergeGapMm: 150.0);
 
                         foreach (OpeningInfo openingInfo in openingInfoList)
@@ -261,6 +259,7 @@ namespace Sinotech.CSDSEM
                                     });
                                 }
 
+                                // 執行 2D 牆面雙階段合併 (解決圖1、圖2、圖3)
                                 List<MergedOpeningResult> mergedResults = mergeService.ProcessAndMergeCandidates(openingInfo.element, candidates);
                                 openingInfo.crushElemInfos.RemoveAll(x => x.type.Equals("CableTray") || x.type.Equals("CableTrayFitting"));
 
@@ -269,6 +268,7 @@ namespace Sinotech.CSDSEM
                                     CrushElemInfo mergedCrush = new CrushElemInfo
                                     {
                                         docName = merged.DocName,
+                                        pipeOrDuct = merged.LeaderElement, // 回填代表管道 Element
                                         type = "CableTray",
                                         hostType = openingInfo.type,
                                         level = openingInfo.level,
@@ -281,7 +281,6 @@ namespace Sinotech.CSDSEM
                                         pipeAngle = merged.PipeAngle,
                                         number = 0,
                                         useFS = openingInfo.type.Equals("Floor") ? "電纜架樓版開口" : "電纜架牆開口",
-                                        pipeOrDuct = candidates.First().CableTrayElement,
                                         comment = merged.GeneratedComment
                                     };
 
@@ -340,10 +339,10 @@ namespace Sinotech.CSDSEM
 
                                     foreach (var merged in mergedFloorResults)
                                     {
-                                        var refCandidate = candidates.First();
                                         CrushElemInfo mergedCrush = new CrushElemInfo
                                         {
                                             docName = merged.DocName,
+                                            pipeOrDuct = merged.LeaderElement, // 回填代表管道 Element
                                             type = merged.ElementType,
                                             hostType = "Floor",
                                             level = merged.ReferenceLevel,
@@ -357,8 +356,7 @@ namespace Sinotech.CSDSEM
                                             axis = merged.Axis,
                                             pipeAngle = merged.PipeAngle,
                                             number = merged.Number,
-                                            pipeOrDuct = refCandidate.PipeOrDuctElement,
-                                            comment = $"{merged.DocName}_{(refCandidate.PipeOrDuctElement != null ? refCandidate.PipeOrDuctElement.Id.ToString() : "0")}_{openingInfo.docName}_{openingInfo.element.Id}"
+                                            comment = $"{merged.DocName}_{(merged.LeaderElement != null ? merged.LeaderElement.Id.ToString() : "0")}_{openingInfo.docName}_{openingInfo.element.Id}"
                                         };
 
                                         openingInfo.crushElemInfos.Add(mergedCrush);
@@ -367,7 +365,7 @@ namespace Sinotech.CSDSEM
                             }
                         }
 
-                        // 自動開口
+                        // 自動開口 Transaction
                         TransactionGroup tranGrp1 = new TransactionGroup(doc, "自動開口");
                         tranGrp1.Start();
                         int amount = 0;
@@ -396,7 +394,6 @@ namespace Sinotech.CSDSEM
                             trans.Commit();
                         }
 
-                        // 旋轉修改開口參數
                         using (Transaction trans = new Transaction(doc, "旋轉修改開口參數"))
                         {
                             FailureHandlingOptions options = trans.GetFailureHandlingOptions();
@@ -411,7 +408,6 @@ namespace Sinotech.CSDSEM
                             trans.Commit();
                         }
 
-                        // 計算底部高程
                         using (Transaction trans = new Transaction(doc, "計算底部高程"))
                         {
                             trans.Start();
@@ -473,31 +469,21 @@ namespace Sinotech.CSDSEM
             return Result.Succeeded;
         }
 
-        /// <summary>
-        /// 【強健檔名剖析工具】：清除檔案系統非法字元並透過正則表達式拆分多重分隔符
-        /// </summary>
-        /// <param name="doc">Revit Document</param>
-        /// <returns>檔名簡碼 Token 清單</returns>
         private static List<string> ParseFileNameTokens(Document doc)
         {
             if (doc == null) return new List<string>();
-
-            // 1. 取得檔名主體 (優先取 PathName，備用取 Title)
             string rawPath = !string.IsNullOrEmpty(doc.PathName) ? doc.PathName : doc.Title;
             string rawFileName = Path.GetFileNameWithoutExtension(rawPath);
 
             if (string.IsNullOrWhiteSpace(rawFileName)) return new List<string>();
 
-            // 2. 移除作業系統非法的檔案字元
             char[] invalidChars = Path.GetInvalidFileNameChars();
             foreach (char invalidChar in invalidChars)
             {
                 rawFileName = rawFileName.Replace(invalidChar, ' ');
             }
 
-            // 3. 正則拆分常見分隔符：-, _, ., #, 空白
             string[] tokens = Regex.Split(rawFileName.Trim(), @"[\-_.\s#]+");
-
             return tokens.Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
         }
 
@@ -676,10 +662,7 @@ namespace Sinotech.CSDSEM
                 else
                 {
                     List<string> docTokens = ParseFileNameTokens(wallOrBeam.Document);
-                    if (docTokens.Count > prjCode)
-                    {
-                        openingInfo.docName = docTokens[prjCode];
-                    }
+                    if (docTokens.Count > prjCode) openingInfo.docName = docTokens[prjCode];
                 }
             }
             catch (Exception ex) { string error = ex.Message; }
@@ -846,19 +829,10 @@ namespace Sinotech.CSDSEM
                                 crushElemInfo.type = "CableTrayFitting";
                                 try
                                 {
-                                    // 1. 處理托盤高度
                                     diameterPara = interferenceElem.LookupParameter("托盤高度");
-                                    if (diameterPara != null)
-                                    {
-                                        crushElemInfo.ductHeight = diameterPara.AsDouble() + 50 / unit_conversion;
-                                    }
-                                    // 2. 處理托盤寬度 1
+                                    if (diameterPara != null) crushElemInfo.ductHeight = diameterPara.AsDouble() + 50 / unit_conversion;
                                     diameterPara = interferenceElem.LookupParameter("托盤寬度 1");
-                                    if (diameterPara != null)
-                                    {
-                                        crushElemInfo.ductWight = diameterPara.AsDouble();
-                                    }
-                                    // 3. 處理 thickness (同步確保「長度 1」參數也不是 null)
+                                    if (diameterPara != null) crushElemInfo.ductWight = diameterPara.AsDouble();
                                     Parameter lenPara = interferenceElem.LookupParameter("長度 1");
                                     crushElemInfo.thickness = thicknessPara != null ? thicknessPara.AsDouble() : (lenPara != null ? lenPara.AsDouble() : 0.0);
                                 }
