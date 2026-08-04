@@ -1,10 +1,10 @@
 ﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 using TextBox = System.Windows.Forms.TextBox;
@@ -36,7 +36,20 @@ namespace Sinotech_2025.CSDSEM
             InitializeComponent();
             this.prjCode = 1; // 專案代碼
             App sinotech_Button = new App();
-            this.filePath = Path.Combine(Directory.GetParent(sinotech_Button.addinAssmeblyPath).FullName, "專業代碼.txt");
+            try
+            {
+                this.filePath = Path.Combine(Directory.GetParent(sinotech_Button.addinAssmeblyPath).FullName, "專業代碼.txt");
+            }
+            catch
+            {
+                this.filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "專業代碼.txt");
+                // 檢查檔案是否存在
+                if (!File.Exists(this.filePath))
+                {
+                    // 建立檔案並立即關閉 FileStream，避免檔案被程式鎖定
+                    using (File.Create(this.filePath)) { }
+                }
+            }
             this.prjCount = prjCount;
             prjNameAndCodes = new List<PrjNameAndCode>();
             LoadProfessionalCode(); // 載入專業代碼
@@ -159,7 +172,7 @@ namespace Sinotech_2025.CSDSEM
                         try
                         {
                             string projectNameWithoutExtension = Path.GetFileNameWithoutExtension(projectName); // 移除副檔名
-                            string comment = projectNameWithoutExtension.Split('-')[prjCode];
+                            string comment = ParseFileNameByString(projectNameWithoutExtension)[prjCode];
                             professionalCode.comments.Add(comment);
                             removeProjectNames.Add(projectName);
 
@@ -182,6 +195,28 @@ namespace Sinotech_2025.CSDSEM
             {
                 TaskDialog.Show("Revit", "請先選擇連結專案");
             }
+        }
+
+        /// <summary>
+        /// 【強健檔名剖析工具】：清除檔案系統非法字元並透過正則表達式拆分多重分隔符
+        /// </summary>
+        /// <param name="doc">Revit Document</param>
+        /// <returns>檔名簡碼 Token 清單</returns>
+        private static List<string> ParseFileNameByString(string rawFileName)
+        {
+            if (string.IsNullOrWhiteSpace(rawFileName)) return new List<string>();
+
+            // 2. 移除作業系統非法的檔案字元
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char invalidChar in invalidChars)
+            {
+                rawFileName = rawFileName.Replace(invalidChar, ' ');
+            }
+
+            // 3. 正則拆分常見分隔符：-, _, ., #, 空白
+            string[] tokens = Regex.Split(rawFileName.Trim(), @"[\-_.\s#]+");
+
+            return tokens.Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
         }
         // 清除專業代碼
         private void deleteBtn_Click(object sender, EventArgs e)

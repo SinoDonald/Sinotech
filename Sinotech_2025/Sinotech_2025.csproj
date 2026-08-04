@@ -1,147 +1,66 @@
-<!-- Sinotech_2025.csproj  (net8.0-windows 修正版) -->
-<!--
-  主要修正說明：
-  1. System.Text.Encoding.CodePages 從 10.0.7 降至 8.0.0
-     → 10.0.x 的組件版本號為 10.0.0.0，但 Revit 2025 載入環境預期 8.x，
-       造成 FileLoadException。改用 8.0.0 可與執行環境對齊。
-  
-  2. 對「已內建於 .NET 8 runtime」的套件加上 ExcludeAssets="runtime"
-     → 避免 NuGet 把舊版 DLL 複製到輸出目錄並覆蓋 runtime 內建版本。
-       受影響套件：System.Memory, System.Buffers, System.Numerics.Vectors,
-       System.Runtime.CompilerServices.Unsafe, System.Text.Encoding.CodePages
-  
-  3. 同樣對純 .NET Framework shim 套件加上 ExcludeAssets="runtime"
-     → System.Runtime, System.IO, System.Text.RegularExpressions
-       這些在 .NET 8 已是 inbox 組件，複製出來反而衝突。
-  
-  4. 移除 CopyLocalLockFileAssemblies 或維持 true 皆可，
-     但搭配上述 ExcludeAssets 才不會把衝突 DLL 帶進輸出。
--->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <OutputType>Library</OutputType>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <PlatformTarget>x64</PlatformTarget>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <!-- 抑制 .NET 8 對舊版 shim 套件的警告 -->
-    <NoWarn>$(NoWarn);NU1701</NoWarn>
+
+    <!-- 關鍵設定 1：禁止 NuGet 將系統內建的 .NET 8 核心 DLL 複製到輸出目錄，防止版本衝突 -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+
+    <!-- 抑制舊套件相容性警告 -->
+    <NoWarn>$(NoWarn);NU1701;NETSDK1138</NoWarn>
   </PropertyGroup>
 
-  <!--<ItemGroup>
-    <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
-  </ItemGroup>-->
+  <!-- 關鍵設定 2：明確引用 .NET 8 原生 Desktop (WinForms/WPF) 框架 -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+  </ItemGroup>
 
   <ItemGroup>
-    <!-- ── EPPlus ── -->
-
-    <!-- ── Microsoft ── -->
+    <!-- ── 第三方工程套件 ── -->
     <PackageReference Include="EPPlus" Version="7.5.2" />
-    <PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0">
-      <!-- .NET 8 內建 HashCode，不需複製 DLL -->
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </PackageReference>
+    <PackageReference Include="PdfPig" Version="0.1.15" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 
-    <!-- ── PDF ── -->
-    <PackageReference Include="PdfPig" Version="0.1.15" />
-
-    <!-- ── System — 已內建於 .NET 8 runtime，加 ExcludeAssets 避免 DLL 衝突 ── -->
-    <PackageReference Include="System.Buffers" Version="4.6.1">
+    <!-- ── 系統套件：已內建於 .NET 8 runtime，強制 Exclude 避免將舊版 DLL 帶入輸出目錄 ── -->
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.10">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Memory" Version="4.6.3">
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Numerics.Vectors" Version="4.6.1">
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2">
+    <PackageReference Include="System.DirectoryServices" Version="10.0.10">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-
-    <!-- ── System — .NET Framework shim，.NET 8 已 inbox ── -->
-    <PackageReference Include="System.IO" Version="4.3.0">
+    <PackageReference Include="System.Management" Version="10.0.10">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Runtime" Version="4.3.1">
+    <PackageReference Include="System.Text.Json" Version="10.0.10">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
-    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1">
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </PackageReference>
-
-    <!-- ── 核心修正：System.Text.Encoding.CodePages 改用 8.0.0 ──
-         原本 10.0.7 的組件版本號是 10.0.0.0，
-         Revit 2025 載入時找不到對應版本 → FileLoadException。
-         8.0.0 的組件版本號是 8.0.0.0，與執行環境相符。         -->
-
-    <!-- ── 其餘套件維持原版本 ── -->
-    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-    <PackageReference Include="System.ComponentModel.Composition" Version="10.0.10" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-    <PackageReference Include="System.DirectoryServices" Version="10.0.10" />
-    <PackageReference Include="System.Formats.Asn1" Version="10.0.10" />
-    <PackageReference Include="System.Management" Version="10.0.10" />
-    <PackageReference Include="System.Security.AccessControl" Version="6.0.1" />
-    <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
-    <PackageReference Include="System.Security.Cryptography.Encoding" Version="4.3.0" />
-    <PackageReference Include="System.Security.Cryptography.Primitives" Version="4.3.0" />
-    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2" />
-    <PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
-    <PackageReference Include="System.Text.Json" Version="10.0.10" />
   </ItemGroup>
 
   <!-- ── Revit 2025 API 參考 ── -->
   <ItemGroup>
     <Reference Include="RevitAPI">
-      <HintPath>..\..\..\..\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="RevitAPIUI">
-      <HintPath>..\..\..\..\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
+      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
 
-  <!-- ── WinForms 設計工具設定（維持原樣）── -->
+  <!-- ── WinForms 設計工具表單編譯聲明 ── -->
   <ItemGroup>
-    <Compile Update="CreateModel\AutoPipeForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="CreateModel\ColNamesForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="CSDSEM\AutoNumberForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="CSDSEM\ChooseMultiViewPlansForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="CSDSEM\LinkSelectionForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="CSDSEM\ManualTagForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="CSDSEM\ProfessionalCodeForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="FamilyProtect\ChooseElems.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="Plotting\ChooseFSForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="Plotting\ChooseView.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="Plotting\CopyViewForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="Plotting\MoveViewForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
+    <Compile Update="CSDSEM\ProfessionalCodeForm.cs">
+      <SubType>Form</SubType>
     </Compile>
-    <Compile Update="SpeedTool\AutoJoinForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="SpeedTool\ParkOrRoomForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="SpeedTool\PipeEditForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="UpdateView\CreateDrawings.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="UpdateView\EditViewSheetNumberForm.cs"><SubType>Form</SubType></Compile>
-    <Compile Update="Verification\CrushReportForm.cs"><SubType>Form</SubType></Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="UpdateView\CreateDrawings.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
   </ItemGroup>
 </Project>

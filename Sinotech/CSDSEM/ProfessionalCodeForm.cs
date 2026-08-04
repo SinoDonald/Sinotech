@@ -1,11 +1,12 @@
 ﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 using TextBox = System.Windows.Forms.TextBox;
 
 namespace Sinotech.CSDSEM
@@ -27,7 +28,7 @@ namespace Sinotech.CSDSEM
         public class ProfessionalCode
         {
             public List<string> comments = new List<string>();
-            public string professionalCode { get; set;}
+            public string professionalCode { get; set; }
         }
         public bool trueOrFalse = false;
         public ProfessionalCodeForm(List<RevitLinkInstance> rvtLinkInsList, int prjCount)
@@ -35,7 +36,20 @@ namespace Sinotech.CSDSEM
             InitializeComponent();
             this.prjCode = 1; // 專案代碼
             App sinotech_Button = new App();
-            this.filePath = Path.Combine(Directory.GetParent(sinotech_Button.addinAssmeblyPath).FullName, "專業代碼.txt");
+            try
+            {
+                this.filePath = Path.Combine(Directory.GetParent(sinotech_Button.addinAssmeblyPath).FullName, "專業代碼.txt");
+            }
+            catch
+            {
+                this.filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "專業代碼.txt");
+                // 檢查檔案是否存在
+                if (!File.Exists(this.filePath))
+                {
+                    // 建立檔案並立即關閉 FileStream，避免檔案被程式鎖定
+                    using (File.Create(this.filePath)) { }
+                }
+            }
             this.prjCount = prjCount;
             prjNameAndCodes = new List<PrjNameAndCode>();
             LoadProfessionalCode(); // 載入專業代碼
@@ -79,7 +93,7 @@ namespace Sinotech.CSDSEM
                 }
                 using (StreamReader sr = new StreamReader(filePath))
                 {
-                    string line = sr.ReadLine(); 
+                    string line = sr.ReadLine();
                     while (line != null)
                     {
                         if (line != "")
@@ -95,7 +109,7 @@ namespace Sinotech.CSDSEM
             catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
 
             comboBox2.Items.Clear(); // 清空
-            for(int i = 0; i < prjCount; i++)
+            for (int i = 0; i < prjCount; i++)
             {
                 comboBox2.Items.Add(i);
             }
@@ -116,12 +130,12 @@ namespace Sinotech.CSDSEM
                 elevationOffset = Convert.ToDouble(elevOffsetTB.Text); // 高程偏移
                 // 寫入文字檔
                 List<string> professionalCodes = LoadProfessionalCode(); // 載入專業代碼
-                if(textBox1.Text != "") { professionalCodes.Add(textBox1.Text); }
+                if (textBox1.Text != "") { professionalCodes.Add(textBox1.Text); }
                 foreach (string professionalCode in professionalCodes.Distinct().OrderBy(x => x).ToList())
                 {
                     content += professionalCode + "\n";
                 }
-                if(content.Length > 0)
+                if (content.Length > 0)
                 {
                     content = content.Substring(0, content.Length - 1);
                 }
@@ -138,7 +152,7 @@ namespace Sinotech.CSDSEM
             if (checkedListBox1.CheckedItems.Count > 0)
             {
                 ProfessionalCode professionalCode = new ProfessionalCode();
-                if(comboBox1.Text.Equals("") && textBox1.Text.Equals(""))
+                if (comboBox1.Text.Equals("") && textBox1.Text.Equals(""))
                 {
                     TaskDialog.Show("Revit", "請輸入要替換的專業代碼");
                 }
@@ -158,7 +172,7 @@ namespace Sinotech.CSDSEM
                         try
                         {
                             string projectNameWithoutExtension = Path.GetFileNameWithoutExtension(projectName); // 移除副檔名
-                            string comment = projectNameWithoutExtension.Split('-')[prjCode];
+                            string comment = ParseFileNameByString(projectNameWithoutExtension)[prjCode];
                             professionalCode.comments.Add(comment);
                             removeProjectNames.Add(projectName);
 
@@ -168,9 +182,9 @@ namespace Sinotech.CSDSEM
                             prjNameAndCode.professionalCode = comment;
                             prjNameAndCodes.Add(prjNameAndCode);
                         }
-                        catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                     }
-                    foreach(string removeProjectName in removeProjectNames)
+                    foreach (string removeProjectName in removeProjectNames)
                     {
                         checkedListBox1.Items.Remove(removeProjectName);
                     }
@@ -181,6 +195,28 @@ namespace Sinotech.CSDSEM
             {
                 TaskDialog.Show("Revit", "請先選擇連結專案");
             }
+        }
+
+        /// <summary>
+        /// 【強健檔名剖析工具】：清除檔案系統非法字元並透過正則表達式拆分多重分隔符
+        /// </summary>
+        /// <param name="doc">Revit Document</param>
+        /// <returns>檔名簡碼 Token 清單</returns>
+        private static List<string> ParseFileNameByString(string rawFileName)
+        {
+            if (string.IsNullOrWhiteSpace(rawFileName)) return new List<string>();
+
+            // 2. 移除作業系統非法的檔案字元
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char invalidChar in invalidChars)
+            {
+                rawFileName = rawFileName.Replace(invalidChar, ' ');
+            }
+
+            // 3. 正則拆分常見分隔符：-, _, ., #, 空白
+            string[] tokens = Regex.Split(rawFileName.Trim(), @"[\-_.\s#]+");
+
+            return tokens.Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
         }
         // 清除專業代碼
         private void deleteBtn_Click(object sender, EventArgs e)

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions; // 引入正則表達式命名空間
 using static Sinotech_2025.CSDSEM.MegedOpening;
 using static Sinotech_2025.CSDSEM.ProfessionalCodeForm;
 
@@ -16,71 +17,69 @@ namespace Sinotech_2025.CSDSEM
     [Transaction(TransactionMode.Manual)]
     public class LinkOpening : IExternalCommand
     {
-        // 使用外掛前, 現有的Opening數量, 排除更新參數
         private List<ElementId> startOpenings = new List<ElementId>();
-        // 所有的原開口的座標點
         private List<XYZ> openingXYZs = new List<XYZ>();
-        // 新增的開口Id
         private List<int> newOpeningIds = new List<int>();
-        // 樑牆板資訊
+
         private class OpeningInfo
         {
-            public string docName = string.Empty; // 來自於哪個專案
-            public Element element { get; set; } // 收集樑牆資料
-            public string type { get; set; } // 品類
-            public double length { get; set; } // 長度
-            public double width { get; set; } // 寬度
-            public double height { get; set; } // 高度
-            public double thickness { get; set; } // 厚度
-            public double number { get; set; } // 編號
-            public double beamWallAngle { get; set; } // 樑牆旋轉的角度
-            public Solid solid = null; // 樑牆Solid
-            public Level level { get; set; } // 樓層
-            public List<CrushElemInfo> crushElemInfos = new List<CrushElemInfo>(); // 與該樑牆干涉管道的開口資訊
+            public string docName = string.Empty;
+            public Element element { get; set; }
+            public string type { get; set; }
+            public double length { get; set; }
+            public double width { get; set; }
+            public double height { get; set; }
+            public double thickness { get; set; }
+            public double number { get; set; }
+            public double beamWallAngle { get; set; }
+            public Solid solid = null;
+            public Level level { get; set; }
+            public List<CrushElemInfo> crushElemInfos = new List<CrushElemInfo>();
         }
-        // 干涉管資訊
+
         private class CrushElemInfo
         {
-            public string docName = string.Empty; // 來自於哪個專案
-            public Element pipeOrDuct = null; // BoundingBox, 干涉的管與風管
-            public Solid pipeOrDuctSolid = null; // 干涉的管與風管Solid
-            public string type = string.Empty; // 品類
-            public string pipeType = string.Empty; // 系統類型
-            public double insulationThickness { get; set; } // 絕緣體厚度
-            public string hostType = string.Empty; // 干涉的主體品類
-            public double size { get; set; } // 管直徑
-            public double diameter { get; set; } // 管直徑
-            public double ductWight { get; set; } // 風管寬度
-            public double ductHeight { get; set; } // 風管高度
-            public double bottomElevation { get; set; } // 底部高程
-            public double thickness { get; set; } // 開口厚度
-            public Level level { get; set; } // 參考樓層
-            public List<Face> insfaces = new List<Face>(); // 接觸到的兩個面
-            public List<XYZ> insXYZs = new List<XYZ>(); // 接觸到的兩個面的交集點
-            public List<XYZ> xyzs = new List<XYZ>(); // 元件擺放點
-            public Line axis { get; set; } // 軸心
-            public double pipeAngle { get; set; } // 管角度
-            public List<Element> pipeOpens = new List<Element>(); // 儲存所有新增開口
-            public string useFS = string.Empty; // 使用的族群
-            public double deviation { get; set; } // 偏移
-            public double number { get; set; } // 編號
-            public string comment { get; set; } = string.Empty; // 【修復】：儲存預先計算或合併後的備註內容
+            public string docName = string.Empty;
+            public Element pipeOrDuct = null;
+            public Solid pipeOrDuctSolid = null;
+            public string type = string.Empty;
+            public string pipeType = string.Empty;
+            public double insulationThickness { get; set; }
+            public string hostType = string.Empty;
+            public double size { get; set; }
+            public double diameter { get; set; }
+            public double ductWight { get; set; }
+            public double ductHeight { get; set; }
+            public double bottomElevation { get; set; }
+            public double thickness { get; set; }
+            public Level level { get; set; }
+            public List<Face> insfaces = new List<Face>();
+            public List<XYZ> insXYZs = new List<XYZ>();
+            public List<XYZ> xyzs = new List<XYZ>();
+            public Line axis { get; set; }
+            public double pipeAngle { get; set; }
+            public List<Element> pipeOpens = new List<Element>();
+            public string useFS = string.Empty;
+            public double deviation { get; set; }
+            public double number { get; set; }
+            public string comment { get; set; } = string.Empty;
         }
-        // Link Model 座標轉換
+
         private class ElementTransform
         {
             public List<Element> elements = new List<Element>();
             public Transform transform { get; set; }
         }
-        private static List<Level> docLevels = new List<Level>(); // Document內所有的Level
+
+        private static List<Level> docLevels = new List<Level>();
         List<LevelElevation> levelElevList = new List<LevelElevation>();
-        double prjNS = 0.0; // 專案基準點：N/S
-        double prjWE = 0.0; // 專案基準點：W/E
-        double prjElev = 0.0; // 專案基準點高程
-        double elevationOffset = 0.0; // 高程偏移
-        int prjCode = 0; // 專案代碼
-        public static double unit_conversion = 304.8; // 專案單位轉換
-        public static double meter_conversion = 0.3048; // 公尺單位轉換
+        double prjNS = 0.0;
+        double prjWE = 0.0;
+        double prjElev = 0.0;
+        double elevationOffset = 0.0;
+        int prjCode = 0;
+        public static double unit_conversion = 304.8;
+        public static double meter_conversion = 0.3048;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -88,40 +87,42 @@ namespace Sinotech_2025.CSDSEM
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Autodesk.Revit.ApplicationServices.Application app = uiapp.Application;
             Document doc = uidoc.Document;
-            int prjCount = Path.GetFileName(doc.PathName).Trim().Split('-').Count();
+
+            // -------------------------------------------------------------------------
+            // 【修復的核心】：使用強健多重字元檔名剖析器取代原硬編碼 Split('-')
+            // -------------------------------------------------------------------------
+            List<string> docTokens = ParseFileNameTokens(doc);
+            int prjCount = docTokens.Count;
 
             if (prjCount > 0)
             {
                 try
                 {
-                    // 找到當前專案的Level相關資訊
                     FindLevel findLevel = new FindLevel();
                     Tuple<List<LevelElevation>, LevelElevation, double> multiValue = findLevel.FindDocViewLevel(doc);
-                    this.levelElevList = multiValue.Item1; // 全部樓層
+                    this.levelElevList = multiValue.Item1;
 
                     List<BasePoint> allPrjLocations = new FilteredElementCollector(doc).OfClass(typeof(BasePoint)).WhereElementIsNotElementType().Cast<BasePoint>().ToList();
                     List<BasePoint> prjLocations = allPrjLocations.Where(x => x.get_Parameter(BuiltInParameter.BASEPOINT_ANGLETON_PARAM) != null).ToList();
                     BasePoint prjLocation = prjLocations.Where(x => x.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble() ==
                                             prjLocations.Max(y => y.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble())).FirstOrDefault();
-                    prjNS = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble() * meter_conversion; // 南北
-                    prjWE = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_EASTWEST_PARAM).AsDouble() * meter_conversion; // 東西
-                    prjElev = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_ELEVATION_PARAM).AsDouble() * meter_conversion; // 高程
+                    prjNS = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble() * meter_conversion;
+                    prjWE = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_EASTWEST_PARAM).AsDouble() * meter_conversion;
+                    prjElev = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_ELEVATION_PARAM).AsDouble() * meter_conversion;
                     try
                     {
                         string angleton = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_ANGLETON_PARAM).AsValueString();
-                        if (angleton != null) { double angle = -Convert.ToDouble(angleton.Remove(angleton.Length - 1)); } // 至正北的角度
+                        if (angleton != null) { double angle = -Convert.ToDouble(angleton.Remove(angleton.Length - 1)); }
                     }
                     catch (Exception) { }
 
-                    // 收集現有所有開口
-                    IList<ElementFilter> startOpeningFilters = new List<ElementFilter>(); // 清空過濾器
-                    startOpeningFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_PipeAccessory)); // 管道開口
-                    startOpeningFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_DuctAccessory)); // 風管開口
-                    startOpeningFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_CableTrayFitting)); // 電纜架開口
+                    IList<ElementFilter> startOpeningFilters = new List<ElementFilter>();
+                    startOpeningFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_PipeAccessory));
+                    startOpeningFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_DuctAccessory));
+                    startOpeningFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_CableTrayFitting));
                     LogicalOrFilter PDCFilter = new LogicalOrFilter(startOpeningFilters);
                     startOpenings = new FilteredElementCollector(doc).WherePasses(PDCFilter).WhereElementIsNotElementType().ToElementIds().ToList();
 
-                    // 所有的原開口的座標點
                     foreach (ElementId startOpening in startOpenings)
                     {
                         FamilyInstance opening = doc.GetElement(startOpening) as FamilyInstance;
@@ -129,21 +130,18 @@ namespace Sinotech_2025.CSDSEM
                         openingXYZs.Add(lp.Point);
                     }
 
-                    // 讀取所有Doucment的Level
                     docLevels = new FilteredElementCollector(doc).OfClass(typeof(Level)).WhereElementIsNotElementType().Cast<Level>().ToList();
-                    // 儲存擁有管道與風管的RevitLink
                     List<RevitLinkInstance> pipeDuctLinkDocs = new List<RevitLinkInstance>();
-                    // 儲存專案與Link的管、風管，Link的Element儲存轉換座標的Solid
-                    IList<ElementFilter> pipeDuctFilters = new List<ElementFilter>(); // 清空過濾器
-                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_PipeCurves)); // 管道
-                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_PipeFitting)); // 管道附件
-                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_DuctCurves)); // 風管
-                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_DuctAccessory)); // 風管附件
-                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_CableTray)); // 電纜架
-                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_CableTrayFitting)); // 電纜架附件
+
+                    IList<ElementFilter> pipeDuctFilters = new List<ElementFilter>();
+                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_PipeCurves));
+                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_PipeFitting));
+                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_DuctCurves));
+                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_DuctAccessory));
+                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_CableTray));
+                    pipeDuctFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_CableTrayFitting));
                     LogicalOrFilter pipeOrDuctFilter = new LogicalOrFilter(pipeDuctFilters);
 
-                    // 儲存使用中RevitLink擁有管道與風管的Document
                     IList<RevitLinkInstance> revitLinkInss = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).WhereElementIsNotElementType().Cast<RevitLinkInstance>().Where(x => x.GetLinkDocument() != null).ToList();
                     List<string> rvtLinkNames = revitLinkInss.Select(x => x.Name.Split(':')[0]).Distinct().ToList();
                     List<RevitLinkInstance> rvtLinkInsList = new List<RevitLinkInstance>();
@@ -152,36 +150,33 @@ namespace Sinotech_2025.CSDSEM
                         rvtLinkInsList.Add(revitLinkInss.Where(x => x.Name.Split(':')[0].Equals(rvtLinkName)).FirstOrDefault());
                     }
 
-                    // 輸入專業代碼
                     ProfessionalCodeForm professionalCodeForm = new ProfessionalCodeForm(rvtLinkInsList, prjCount);
                     professionalCodeForm.ShowDialog();
+
                     if (professionalCodeForm.trueOrFalse == true)
                     {
-                        elevationOffset = professionalCodeForm.elevationOffset / unit_conversion; // 高程偏移
+                        elevationOffset = professionalCodeForm.elevationOffset / unit_conversion;
                         List<RevitLinkInstance> chooseRevitLinks = rvtLinkInsList.Where(x => professionalCodeForm.prjNameAndCodes.Where(y => y.projectName.Equals(x.Name.Trim().Split(':')[0])).Count() > 0).ToList();
-                        // 移除相同名稱的專案
+
                         foreach (RevitLinkInstance rvtLinkIns in chooseRevitLinks)
                         {
                             IList<Element> pipeOrBeamList = new FilteredElementCollector(rvtLinkIns.GetLinkDocument()).WherePasses(pipeOrDuctFilter).WhereElementIsNotElementType().ToElements();
                             if (pipeOrBeamList.Count() > 0)
                             {
-                                try
-                                {
-                                    pipeDuctLinkDocs.Add(rvtLinkIns);
-                                }
+                                try { pipeDuctLinkDocs.Add(rvtLinkIns); }
                                 catch (Autodesk.Revit.Exceptions.ArgumentNullException) { }
                             }
                         }
 
-                        List<ProfessionalCode> combinePCodes = professionalCodeForm.combinePCodes; // 整合重複的專業代碼
-                        prjCode = professionalCodeForm.prjCode; // 專案代碼
+                        List<ProfessionalCode> combinePCodes = professionalCodeForm.combinePCodes;
+                        prjCode = professionalCodeForm.prjCode;
 
-                        DateTime timeStart = DateTime.Now; // 計時開始 取得目前時間
-                        List<OpeningInfo> openingInfoList = new List<OpeningInfo>(); // 儲存樑牆板資訊                
-                        IList<ElementFilter> elementFilters = new List<ElementFilter>(); // 儲存樑牆的RevitLink
-                        elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_Walls)); // 牆
-                        elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_StructuralFraming)); // 樑
-                        elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_Floors)); // 樓板
+                        DateTime timeStart = DateTime.Now;
+                        List<OpeningInfo> openingInfoList = new List<OpeningInfo>();
+                        IList<ElementFilter> elementFilters = new List<ElementFilter>();
+                        elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_Walls));
+                        elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_StructuralFraming));
+                        elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_Floors));
                         LogicalOrFilter wallBeamFilter = new LogicalOrFilter(elementFilters);
 
                         foreach (RevitLinkInstance rvtLinkIns in rvtLinkInsList)
@@ -231,9 +226,6 @@ namespace Sinotech_2025.CSDSEM
                             }
                         }
 
-                        // -------------------------------------------------------------------------
-                        // 【開口合併服務呼叫與修復】
-                        // -------------------------------------------------------------------------
                         OpeningMergeService mergeService = new OpeningMergeService(mergeThresholdMm: 300.0);
                         FloorOpeningMergeService floorMergeService = new FloorOpeningMergeService(maxMergeGapMm: 150.0);
 
@@ -290,7 +282,6 @@ namespace Sinotech_2025.CSDSEM
                                         number = 0,
                                         useFS = openingInfo.type.Equals("Floor") ? "電纜架樓版開口" : "電纜架牆開口",
                                         pipeOrDuct = candidates.First().CableTrayElement,
-                                        // 【關鍵修復】：將正確產生的 Comment 傳遞進 CrushElemInfo
                                         comment = merged.GeneratedComment
                                     };
 
@@ -367,7 +358,6 @@ namespace Sinotech_2025.CSDSEM
                                             pipeAngle = merged.PipeAngle,
                                             number = merged.Number,
                                             pipeOrDuct = refCandidate.PipeOrDuctElement,
-                                            // 【關鍵修復】：組成並保留樓版備註字串
                                             comment = $"{merged.DocName}_{(refCandidate.PipeOrDuctElement != null ? refCandidate.PipeOrDuctElement.Id.ToString() : "0")}_{openingInfo.docName}_{openingInfo.element.Id}"
                                         };
 
@@ -481,6 +471,34 @@ namespace Sinotech_2025.CSDSEM
             }
 
             return Result.Succeeded;
+        }
+
+        /// <summary>
+        /// 【強健檔名剖析工具】：清除檔案系統非法字元並透過正則表達式拆分多重分隔符
+        /// </summary>
+        /// <param name="doc">Revit Document</param>
+        /// <returns>檔名簡碼 Token 清單</returns>
+        private static List<string> ParseFileNameTokens(Document doc)
+        {
+            if (doc == null) return new List<string>();
+
+            // 1. 取得檔名主體 (優先取 PathName，備用取 Title)
+            string rawPath = !string.IsNullOrEmpty(doc.PathName) ? doc.PathName : doc.Title;
+            string rawFileName = Path.GetFileNameWithoutExtension(rawPath);
+
+            if (string.IsNullOrWhiteSpace(rawFileName)) return new List<string>();
+
+            // 2. 移除作業系統非法的檔案字元
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char invalidChar in invalidChars)
+            {
+                rawFileName = rawFileName.Replace(invalidChar, ' ');
+            }
+
+            // 3. 正則拆分常見分隔符：-, _, ., #, 空白
+            string[] tokens = Regex.Split(rawFileName.Trim(), @"[\-_.\s#]+");
+
+            return tokens.Where(t => !string.IsNullOrWhiteSpace(t)).ToList();
         }
 
         private Solid GetSymbolSolids(GeometryObject geomObj, RevitLinkInstance revitLink, Solid solid)
@@ -657,8 +675,11 @@ namespace Sinotech_2025.CSDSEM
                 }
                 else
                 {
-                    string[] docNames = wallOrBeam.Document.Title.Split('-');
-                    if (docNames.Length > 1) openingInfo.docName = docNames[prjCode];
+                    List<string> docTokens = ParseFileNameTokens(wallOrBeam.Document);
+                    if (docTokens.Count > prjCode)
+                    {
+                        openingInfo.docName = docTokens[prjCode];
+                    }
                 }
             }
             catch (Exception ex) { string error = ex.Message; }
@@ -705,8 +726,8 @@ namespace Sinotech_2025.CSDSEM
                         }
                         else
                         {
-                            string[] docName = interferenceElem.Document.Title.Split('-');
-                            crushElemInfo.docName = docName.Length > 1 ? docName[prjCode] : interferenceElem.Document.Title;
+                            List<string> docTokens = ParseFileNameTokens(interferenceElem.Document);
+                            crushElemInfo.docName = docTokens.Count > prjCode ? docTokens[prjCode] : interferenceElem.Document.Title;
                         }
                     }
                     catch (Exception ex) { string error = ex.Message; }
@@ -825,11 +846,21 @@ namespace Sinotech_2025.CSDSEM
                                 crushElemInfo.type = "CableTrayFitting";
                                 try
                                 {
+                                    // 1. 處理托盤高度
                                     diameterPara = interferenceElem.LookupParameter("托盤高度");
-                                    crushElemInfo.ductHeight = diameterPara.AsDouble() + 50 / unit_conversion;
+                                    if (diameterPara != null)
+                                    {
+                                        crushElemInfo.ductHeight = diameterPara.AsDouble() + 50 / unit_conversion;
+                                    }
+                                    // 2. 處理托盤寬度 1
                                     diameterPara = interferenceElem.LookupParameter("托盤寬度 1");
-                                    crushElemInfo.ductWight = diameterPara.AsDouble();
-                                    crushElemInfo.thickness = thicknessPara != null ? thicknessPara.AsDouble() : interferenceElem.LookupParameter("長度 1").AsDouble();
+                                    if (diameterPara != null)
+                                    {
+                                        crushElemInfo.ductWight = diameterPara.AsDouble();
+                                    }
+                                    // 3. 處理 thickness (同步確保「長度 1」參數也不是 null)
+                                    Parameter lenPara = interferenceElem.LookupParameter("長度 1");
+                                    crushElemInfo.thickness = thicknessPara != null ? thicknessPara.AsDouble() : (lenPara != null ? lenPara.AsDouble() : 0.0);
                                 }
                                 catch (Exception) { }
 
@@ -969,7 +1000,6 @@ namespace Sinotech_2025.CSDSEM
                                 crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10));
                                 crushElemInfo.pipeAngle = PointRotation(startPoint, endPoint);
 
-                                // 【修復】：未合併前的預設 Comment 產生
                                 if (crushElemInfo.pipeOrDuct != null && openingInfo.element != null)
                                 {
                                     crushElemInfo.comment = $"{crushElemInfo.docName}_{crushElemInfo.pipeOrDuct.Id}_{openingInfo.docName}_{openingInfo.element.Id}";
@@ -1041,7 +1071,6 @@ namespace Sinotech_2025.CSDSEM
 
                     if (crushElemInfo.xyzs.Count > 0)
                     {
-                        // 【修復】：預先產生 Comment
                         crushElemInfo.comment = $"{crushElemInfo.docName}_{interferenceElem.Id}_{openingInfo.docName}_{openingInfo.element.Id}";
                         openingInfo.crushElemInfos.Add(crushElemInfo);
                     }
@@ -1228,15 +1257,11 @@ namespace Sinotech_2025.CSDSEM
                                 editPara.Set(crushElemInfo.deviation);
                             }
 
-                            // -----------------------------------------------------------------
-                            // 【關鍵修復點】：精確寫入備註 (Comments)
-                            // -----------------------------------------------------------------
                             editPara = pipeOpen.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
                             if (editPara != null && !editPara.IsReadOnly)
                             {
                                 string finalComment = crushElemInfo.comment;
 
-                                // 防禦機制：若 comment 尚未被設置，自動安全組合
                                 if (string.IsNullOrEmpty(finalComment))
                                 {
                                     string pipeIdStr = crushElemInfo.pipeOrDuct != null ? crushElemInfo.pipeOrDuct.Id.ToString() : "0";
@@ -1244,7 +1269,7 @@ namespace Sinotech_2025.CSDSEM
                                     finalComment = $"{crushElemInfo.docName}_{pipeIdStr}_{openingInfo.docName}_{hostIdStr}";
                                 }
 
-                                editPara.Set(finalComment); // 強制賦值至備註
+                                editPara.Set(finalComment);
                             }
 
                             if (pipeOpen.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM) is Parameter levelPara)
@@ -1311,7 +1336,6 @@ namespace Sinotech_2025.CSDSEM
                         para?.Set(value);
                     }
 
-                    // 修改專業代碼
                     para = opening.LookupParameter("專業代碼");
                     string comment = opening.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString();
                     if (!string.IsNullOrEmpty(comment))
