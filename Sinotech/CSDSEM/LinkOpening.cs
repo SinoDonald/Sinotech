@@ -423,29 +423,37 @@ namespace Sinotech.CSDSEM
                             trans.Start();
                             foreach (int id in newOpeningIds)
                             {
-                                ElementId elemId = new ElementId(Convert.ToInt64(id.ToString()));
-                                FamilyInstance newOpening = doc.GetElement(elemId) as FamilyInstance;
-                                LocationPoint lp = newOpening.Location as LocationPoint;
-                                XYZ xyz = lp.Point;
-                                bool trueOrFalse = false;
-                                double xyzX = Math.Round(xyz.X, 8, MidpointRounding.AwayFromZero);
-                                double xyzY = Math.Round(xyz.Y, 8, MidpointRounding.AwayFromZero);
-                                double xyzZ = Math.Round(xyz.Z, 8, MidpointRounding.AwayFromZero);
-                                foreach (XYZ openingXYZ in openingXYZs)
+                                try
                                 {
-                                    if (Math.Round(openingXYZ.X, 8, MidpointRounding.AwayFromZero).Equals(xyzX) &&
-                                        Math.Round(openingXYZ.Y, 8, MidpointRounding.AwayFromZero).Equals(xyzY) &&
-                                        Math.Round(openingXYZ.Z, 8, MidpointRounding.AwayFromZero).Equals(xyzZ))
+                                    ElementId elemId = new ElementId(Convert.ToInt64(id.ToString()));
+                                    FamilyInstance newOpening = doc.GetElement(elemId) as FamilyInstance;
+                                    LocationPoint lp = newOpening.Location as LocationPoint;
+                                    XYZ xyz = lp.Point;
+                                    bool trueOrFalse = false;
+                                    double xyzX = Math.Round(xyz.X, 8, MidpointRounding.AwayFromZero);
+                                    double xyzY = Math.Round(xyz.Y, 8, MidpointRounding.AwayFromZero);
+                                    double xyzZ = Math.Round(xyz.Z, 8, MidpointRounding.AwayFromZero);
+                                    foreach (XYZ openingXYZ in openingXYZs)
                                     {
-                                        trueOrFalse = true;
-                                        break;
+                                        if (Math.Round(openingXYZ.X, 8, MidpointRounding.AwayFromZero).Equals(xyzX) &&
+                                            Math.Round(openingXYZ.Y, 8, MidpointRounding.AwayFromZero).Equals(xyzY) &&
+                                            Math.Round(openingXYZ.Z, 8, MidpointRounding.AwayFromZero).Equals(xyzZ))
+                                        {
+                                            trueOrFalse = true;
+                                            break;
+                                        }
+                                    }
+                                    if (trueOrFalse == true)
+                                    {
+                                        doc.Delete(elemId);
+                                        amount--;
+                                        deleteIds.Add(id);
                                     }
                                 }
-                                if (trueOrFalse == true)
+                                catch (Exception ex)
                                 {
-                                    doc.Delete(elemId);
                                     amount--;
-                                    deleteIds.Add(id);
+                                    string error = ex.Message + "\n" + ex.ToString();
                                 }
                             }
                             doc.Regenerate();
