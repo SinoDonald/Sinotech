@@ -223,7 +223,6 @@ namespace Sinotech_2025.CSDSEM
                             }
                         }
 
-                        // 新版 2D 牆面雙階段合併服務
                         OpeningMergeService mergeService = new OpeningMergeService(mergeThresholdMm: 250.0);
                         FloorOpeningMergeService floorMergeService = new FloorOpeningMergeService(maxMergeGapMm: 150.0);
 
@@ -259,7 +258,6 @@ namespace Sinotech_2025.CSDSEM
                                     });
                                 }
 
-                                // 執行 2D 牆面雙階段合併 (解決圖1、圖2、圖3)
                                 List<MergedOpeningResult> mergedResults = mergeService.ProcessAndMergeCandidates(openingInfo.element, candidates);
                                 openingInfo.crushElemInfos.RemoveAll(x => x.type.Equals("CableTray") || x.type.Equals("CableTrayFitting"));
 
@@ -268,7 +266,7 @@ namespace Sinotech_2025.CSDSEM
                                     CrushElemInfo mergedCrush = new CrushElemInfo
                                     {
                                         docName = merged.DocName,
-                                        pipeOrDuct = merged.LeaderElement, // 回填代表管道 Element
+                                        pipeOrDuct = merged.LeaderElement,
                                         type = "CableTray",
                                         hostType = openingInfo.type,
                                         level = openingInfo.level,
@@ -342,7 +340,7 @@ namespace Sinotech_2025.CSDSEM
                                         CrushElemInfo mergedCrush = new CrushElemInfo
                                         {
                                             docName = merged.DocName,
-                                            pipeOrDuct = merged.LeaderElement, // 回填代表管道 Element
+                                            pipeOrDuct = merged.LeaderElement,
                                             type = merged.ElementType,
                                             hostType = "Floor",
                                             level = merged.ReferenceLevel,
@@ -365,7 +363,6 @@ namespace Sinotech_2025.CSDSEM
                             }
                         }
 
-                        // 自動開口 Transaction
                         TransactionGroup tranGrp1 = new TransactionGroup(doc, "自動開口");
                         tranGrp1.Start();
                         int amount = 0;
@@ -450,7 +447,7 @@ namespace Sinotech_2025.CSDSEM
                                         deleteIds.Add(id);
                                     }
                                 }
-                                catch(Exception ex)
+                                catch (Exception ex)
                                 {
                                     amount--;
                                     string error = ex.Message + "\n" + ex.ToString();
@@ -919,7 +916,6 @@ namespace Sinotech_2025.CSDSEM
                 openingInfoList.Add(openingInfo);
             }
         }
-
         private void FindFaceIntersectLine(Solid solid, Curve curve, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform linkTransform)
         {
             XYZ startPoint = new XYZ();
@@ -960,23 +956,13 @@ namespace Sinotech_2025.CSDSEM
                                 }
                                 else
                                 {
+                                    // 核心修復：拔除舊有 CableTray 高度干涉換算，直接對齊電纜架中心點！
                                     crushElemInfo.xyzs.Add(insXYZ);
                                     double z = insXYZ.Z;
                                     if (crushElemInfo.level != null)
                                     {
                                         double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
                                         crushElemInfo.deviation = z - elevation;
-                                    }
-
-                                    if (crushElemInfo.type.Equals("CableTray"))
-                                    {
-                                        double openingHeight = 250 / 2;
-                                        string[] cableTrayPara = crushElemInfo.pipeOrDuct.LookupParameter("高度").AsValueString().Split(' ');
-                                        double cableTrayHeight = Convert.ToDouble(cableTrayPara[0]) / 2;
-                                        double deviation = openingHeight - (cableTrayHeight + 50);
-                                        double move = deviation / unit_conversion;
-                                        double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-                                        crushElemInfo.deviation = z - elevation + move;
                                     }
                                 }
                                 crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10));
@@ -996,7 +982,6 @@ namespace Sinotech_2025.CSDSEM
                 }
             }
         }
-
         private void FindSolidIntersection(Element interferenceElem, Solid solid, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform transform)
         {
             ICollection<ElementId> interferenceElems = new List<ElementId> { interferenceElem.Id };
