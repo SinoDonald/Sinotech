@@ -43,6 +43,7 @@ namespace Sinotech.CSDSEM
 
             public ElementId LowestCableTrayId { get; set; }
             public string GeneratedComment { get; set; }
+            public List<ElementId> IncludedCableTrayIds { get; set; } = new List<ElementId>();
         }
 
         private class ProjectedBox
@@ -55,15 +56,15 @@ namespace Sinotech.CSDSEM
         }
 
         /// <summary>
-        /// 雙階段精準合併服務 (完全對齊【正確1.jpg】50mm下緣懸空與 250mm 疊加算式)
+        /// 階層式電纜架開口合併服務 (含 ID 鎖定與平行高程判斷)
         /// </summary>
         public class OpeningMergeService
         {
             private readonly double _unitConversion = 304.8;
-            private readonly double _verticalCenterGapMaxMm = 250.1; // 上下中心距容許值 (250mm + 0.1mm 浮點誤差)
-            private readonly double _stackAddHeightMm = 250.0;       // 每多一管疊加 250mm
-            private readonly double _marginFeet = 100.0 / 304.8;     // 族群內部預設加高/加寬 100mm
-            private readonly double _clearanceFeet = 50.0 / 304.8;     // 底部懸空 50mm
+            private readonly double _verticalCenterGapMaxMm = 250.1;
+            private readonly double _stackAddHeightMm = 250.0;
+            private readonly double _marginFeet = 100.0 / 304.8;
+            private readonly double _clearanceFeet = 50.0 / 304.8;
 
             public OpeningMergeService(double mergeThresholdMm = 250.0)
             {
@@ -77,13 +78,13 @@ namespace Sinotech.CSDSEM
 
                 XYZ wallDirU = GetWallDirectionUnitVector(hostElement);
 
-                // 第一階段：上下排列合併
-                List<MergedOpeningResult> verticalMergedList = PerformVerticalMerge(hostElement, candidates, wallDirU);
+                // 第一階段：上下排列合併 (並記錄已合併的電纜架 ID)
+                var verticalMergedResults = PerformVerticalMerge(hostElement, candidates, wallDirU, out HashSet<ElementId> mergedCableTrayIds);
 
-                // 第二階段：左右碰觸合併
-                List<MergedOpeningResult> finalMergedList = PerformHorizontalBoundaryMerge(hostElement, verticalMergedList, wallDirU);
+                // 第二階段：左右邊界碰觸合併 (嚴格排除已被上下合併的 ID，並檢查高程平行)
+                var finalMergedResults = PerformHorizontalMergeWithIdExclusion(hostElement, candidates, verticalMergedResults, mergedCableTrayIds, wallDirU);
 
-                return finalMergedList;
+                return finalMergedResults;
             }
 
             private XYZ GetWallDirectionUnitVector(Element host)
@@ -97,8 +98,16 @@ namespace Sinotech.CSDSEM
                 return XYZ.BasisX;
             }
 
-            private List<MergedOpeningResult> PerformVerticalMerge(Element host, List<CableTrayOpeningCandidate> candidates, XYZ wallDirU)
+            /// <summary>
+            /// 第一階段：上下排列合併
+            /// </summary>
+            private List<MergedOpeningResult> PerformVerticalMerge(
+                Element host,
+                List<CableTrayOpeningCandidate> candidates,
+                XYZ wallDirU,
+                out HashSet<ElementId> mergedCableTrayIds)
             {
+                mergedCableTrayIds = new HashSet<ElementId>();
                 var results = new List<MergedOpeningResult>();
                 var widthGroups = candidates.GroupBy(c => Math.Round(c.OriginalWidthFeet * _unitConversion, 1));
 
@@ -122,14 +131,13 @@ namespace Sinotech.CSDSEM
                             var c1 = list[i];
                             var c2 = list[j];
 
-                            // 1. 判斷 Z 軸中心點距離
                             double distMm = Math.Abs(c1.IntersectionCenter.Z - c2.IntersectionCenter.Z) * _unitConversion;
 
-                            // 2. 判斷牆面 U 軸投影是否對齊 (左右不可偏移超過 100mm)
                             double u1 = (c1.IntersectionCenter.X * wallDirU.X) + (c1.IntersectionCenter.Y * wallDirU.Y);
                             double u2 = (c2.IntersectionCenter.X * wallDirU.X) + (c2.IntersectionCenter.Y * wallDirU.Y);
                             double shiftUMm = Math.Abs(u1 - u2) * _unitConversion;
 
+                            // 條件：中心距 <= 250mm 且水平垂直對齊
                             if (distMm <= _verticalCenterGapMaxMm && shiftUMm <= 100.0)
                             {
                                 Union(i, j);
@@ -147,7 +155,17 @@ namespace Sinotech.CSDSEM
 
                     foreach (var cluster in clusters.Values)
                     {
-                        results.Add(CalculateVerticalClusterGeometry(host, cluster));
+                        var merged = CalculateVerticalClusterGeometry(host, cluster);
+                        results.Add(merged);
+
+                        // 若成功進行了多管上下合併，將這些 ID 記錄下來
+                        if (cluster.Count > 1)
+                        {
+                            foreach (var item in cluster)
+                            {
+                                mergedCableTrayIds.Add(item.CableTrayId);
+                            }
+                        }
                     }
                 }
 
@@ -155,27 +173,19 @@ namespace Sinotech.CSDSEM
             }
 
             /// <summary>
-            /// 核心修復：精確計算開口中心點，使開口下緣精確比最底層電纜架底部低 50mm
+            /// 上下合併幾何計算 (採用您實測成功的 25mm 偏移高程算式)
             /// </summary>
             private MergedOpeningResult CalculateVerticalClusterGeometry(Element host, List<CableTrayOpeningCandidate> cluster)
             {
-                // 1. 抓取最底層電纜架 (Lowest Cable Tray)
                 var lowestCandidate = cluster.OrderBy(c => c.IntersectionCenter.Z).First();
                 int count = cluster.Count;
 
-                // 2. 最底層電纜架的實體下緣 Z 高程
                 double lowestTrayBottomZFeet = lowestCandidate.IntersectionCenter.Z - (lowestCandidate.OriginalHeightFeet / 2.0);
-
-                // 3. 開口實體（Void Box）的下緣 Z 高程 (需剛好比電纜架下緣低 50mm)
                 double openingBottomZFeet = lowestTrayBottomZFeet - _clearanceFeet;
 
-                // 4. 計算參數 '電纜架高度'：最底層原高 + (N - 1) * 250mm
                 double paramTrayHeightFeet = lowestCandidate.OriginalHeightFeet + ((count - 1) * _stackAddHeightMm / _unitConversion);
-
-                // 5. 總物理開口高度 = 參數電纜架高度 + 100mm (族群公式內部加算)
                 double totalPhysOpeningHeightFeet = paramTrayHeightFeet + _marginFeet;
 
-                // 6. 精確開口中心點 Z 坐標 (開口下緣 + 物理半高)
                 double centerZ = openingBottomZFeet + (totalPhysOpeningHeightFeet / 2.0);
                 double centerX = cluster.Average(c => c.IntersectionCenter.X);
                 double centerY = cluster.Average(c => c.IntersectionCenter.Y);
@@ -190,19 +200,32 @@ namespace Sinotech.CSDSEM
                     WallThickness = lowestCandidate.WallThickness,
                     CableTrayWidthFeet = lowestCandidate.OriginalWidthFeet,
                     FinalOpeningWidthFeet = lowestCandidate.OriginalWidthFeet,
-                    FinalOpeningHeightFeet = paramTrayHeightFeet, // 填入參數 "電纜架高度"
+                    FinalOpeningHeightFeet = paramTrayHeightFeet,
                     LowestCableTrayId = lowestCandidate.CableTrayId,
                     GeneratedComment = $"{lowestCandidate.DocName}_{lowestCandidate.CableTrayId}_{lowestCandidate.HostDocName}_{lowestCandidate.HostElementId}",
                     PlacementCenter = new XYZ(centerX, centerY, centerZ)
                 };
 
-                // 7. 隔絕 Link Model 樓層污染，直接利用 lowestCandidate 計算出的基準 Deviation 反推正確高程！
-                result.DeviationFeet = lowestCandidate.Deviation + (centerZ - lowestCandidate.IntersectionCenter.Z) + (25 / 304.8);
+                foreach (var item in cluster)
+                {
+                    result.IncludedCableTrayIds.Add(item.CableTrayId);
+                }
+
+                // 套用您實測 100% 正確的 Hardcode 算式！
+                result.DeviationFeet = lowestCandidate.Deviation + (centerZ - lowestCandidate.IntersectionCenter.Z) + (25.0 / 304.8);
 
                 return result;
             }
 
-            private List<MergedOpeningResult> PerformHorizontalBoundaryMerge(Element host, List<MergedOpeningResult> verticalResults, XYZ wallDirU)
+            /// <summary>
+            /// 第二階段：左右碰觸合併 (嚴格排除已上下合併 ID，並檢查高程平行)
+            /// </summary>
+            private List<MergedOpeningResult> PerformHorizontalMergeWithIdExclusion(
+                Element host,
+                List<CableTrayOpeningCandidate> originalCandidates,
+                List<MergedOpeningResult> verticalResults,
+                HashSet<ElementId> mergedCableTrayIds,
+                XYZ wallDirU)
             {
                 if (verticalResults.Count <= 1) return verticalResults;
 
@@ -239,13 +262,27 @@ namespace Sinotech.CSDSEM
                         var b1 = boxes[i];
                         var b2 = boxes[j];
 
-                        // 判斷 2D 包覆盒是否碰觸 (容許 1mm 誤差)
-                        bool isVerticalOverlap = !(b1.MaxZ < b2.MinZ - 0.003 || b2.MaxZ < b1.MinZ - 0.003);
-                        bool isHorizontalTouching = !(b1.MaxU < b2.MinU - 0.003 || b2.MaxU < b1.MinU - 0.003);
+                        // 【修復關鍵 1】：防範 image_e01d00.png！若其中一個是「單管」且其 ID 已被上下合併過，禁止左右合併
+                        bool b1HasMergedId = b1.Result.IncludedCableTrayIds.Any(id => mergedCableTrayIds.Contains(id));
+                        bool b2HasMergedId = b2.Result.IncludedCableTrayIds.Any(id => mergedCableTrayIds.Contains(id));
 
-                        if (isVerticalOverlap && isHorizontalTouching)
+                        // 只有當兩者都是「單管未合併過」，或是兩者都是「結構完全相同的雙排矩陣」時才允許左右合併
+                        if (b1HasMergedId != b2HasMergedId)
                         {
-                            Union(i, j);
+                            continue; // 一個有上下合併，另一個沒有，直接跳過不合併！
+                        }
+
+                        // 【修復關鍵 2】：防範 image_e01a19.png！檢查左右電纜架的高程 Z 是否平行 (高程差 <= 50mm)
+                        double zDiffMm = Math.Abs(b1.Result.PlacementCenter.Z - b2.Result.PlacementCenter.Z) * _unitConversion;
+                        bool isZParallel = zDiffMm <= 50.0;
+
+                        // 3. 水平 U 軸「碰觸」檢測 (邊界距離 <= 5mm)
+                        double gapUMm = (Math.Max(b1.MinU, b2.MinU) - Math.Min(b1.MaxU, b2.MaxU)) * _unitConversion;
+                        bool isHorizontalTouching = gapUMm <= 5.0;
+
+                        if (isZParallel && isHorizontalTouching)
+                        {
+                            Union(i, j); // 高程平行且邊界碰觸，才允許左右合併
                         }
                     }
                 }
@@ -303,7 +340,6 @@ namespace Sinotech.CSDSEM
                     PipeAngle = leader.PipeAngle,
                     WallThickness = leader.WallThickness,
 
-                    // 扣除族群內部餘裕還原為參數
                     CableTrayWidthFeet = totalPhysWidth - _marginFeet,
                     FinalOpeningWidthFeet = totalPhysWidth - _marginFeet,
                     FinalOpeningHeightFeet = totalPhysHeight - _marginFeet,
@@ -313,7 +349,7 @@ namespace Sinotech.CSDSEM
                     GeneratedComment = leader.GeneratedComment
                 };
 
-                // 隔絕 Link Model 樓層污染
+                // 套用您驗證正確的高程累加
                 mergedResult.DeviationFeet = leader.DeviationFeet + (centerZ - leader.PlacementCenter.Z);
 
                 return mergedResult;
@@ -534,8 +570,10 @@ namespace Sinotech.CSDSEM
                     result.TotalThicknessFeet = leader.SingleFloorThicknessFeet;
                     result.PlacementCenter = leader.IntersectionCenter;
 
-                    // 同理：這裡也採用 Deviation 累加法隔絕 Link Level
-                    result.DeviationFeet = leader.IntersectionCenter.Z - leader.Level.ProjectElevation;
+                    if (leader.Level != null)
+                    {
+                        result.DeviationFeet = leader.IntersectionCenter.Z - leader.Level.ProjectElevation;
+                    }
                     return result;
                 }
 
@@ -549,7 +587,11 @@ namespace Sinotech.CSDSEM
                 double centerY = cluster.Average(c => c.IntersectionCenter.Y);
 
                 result.PlacementCenter = new XYZ(centerX, centerY, centerZ);
-                result.DeviationFeet = centerZ - leader.Level.ProjectElevation;
+
+                if (leader.Level != null)
+                {
+                    result.DeviationFeet = centerZ - leader.Level.ProjectElevation;
+                }
 
                 return result;
             }
