@@ -226,6 +226,8 @@ namespace Sinotech_2025.CSDSEM
                         OpeningMergeService mergeService = new OpeningMergeService(mergeThresholdMm: 250.0);
                         FloorOpeningMergeService floorMergeService = new FloorOpeningMergeService(maxMergeGapMm: 150.0);
 
+                        List<FloorOpeningCandidate> globalFloorCandidates = new List<FloorOpeningCandidate>();
+
                         foreach (OpeningInfo openingInfo in openingInfoList)
                         {
                             var cableTrayCrushes = openingInfo.crushElemInfos
@@ -286,80 +288,106 @@ namespace Sinotech_2025.CSDSEM
                                 }
                             }
 
+                            // 將樓板交集點從各別的 OpeningInfo 抽出到 global 清單
                             if (openingInfo.type.Equals("Floor"))
                             {
                                 var floorCrushes = openingInfo.crushElemInfos.ToList();
-                                if (floorCrushes.Any())
+                                foreach (var crush in floorCrushes)
                                 {
-                                    List<FloorOpeningCandidate> candidates = new List<FloorOpeningCandidate>();
+                                    XYZ originalCenter = crush.xyzs.FirstOrDefault() ?? XYZ.Zero;
 
-                                    foreach (var crush in floorCrushes)
+                                    // 1. 取得樓板原生的相對於樓層高度偏移
+                                    double floorOffsetFeet = 0.0;
+                                    Parameter offsetParam = openingInfo.element.get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM);
+                                    if (offsetParam != null)
                                     {
-                                        XYZ center = crush.xyzs.FirstOrDefault() ?? XYZ.Zero;
-                                        double entryZ = center.Z;
-                                        double exitZ = center.Z;
-                                        if (crush.insXYZs != null && crush.insXYZs.Count >= 2)
-                                        {
-                                            entryZ = crush.insXYZs.Max(p => p.Z);
-                                            exitZ = crush.insXYZs.Min(p => p.Z);
-                                        }
-                                        else
-                                        {
-                                            entryZ = center.Z + (crush.thickness / 2.0);
-                                            exitZ = center.Z - (crush.thickness / 2.0);
-                                        }
-
-                                        candidates.Add(new FloorOpeningCandidate
-                                        {
-                                            PipeOrDuctElement = crush.pipeOrDuct,
-                                            HostFloorElement = openingInfo.element,
-                                            DocName = crush.docName,
-                                            ElementType = crush.type,
-                                            PipeType = crush.pipeType,
-                                            Level = crush.level,
-                                            PipeSizeFeet = crush.size,
-                                            PipeDiameterFeet = crush.diameter,
-                                            DuctWidthFeet = crush.ductWight,
-                                            DuctHeightFeet = crush.ductHeight,
-                                            InsulationThicknessFeet = crush.insulationThickness,
-                                            EntryZ = entryZ,
-                                            ExitZ = exitZ,
-                                            IntersectionCenter = center,
-                                            SingleFloorThicknessFeet = crush.thickness,
-                                            Axis = crush.axis,
-                                            PipeAngle = crush.pipeAngle,
-                                            Number = crush.number
-                                        });
+                                        floorOffsetFeet = offsetParam.AsDouble();
                                     }
 
-                                    List<MergedFloorOpeningResult> mergedFloorResults = floorMergeService.ProcessAndMergeFloorOpenings(candidates);
-                                    openingInfo.crushElemInfos.Clear();
+                                    double entryZ = 0.0;
+                                    double exitZ = 0.0;
 
-                                    foreach (var merged in mergedFloorResults)
+                                    if (crush.insXYZs != null && crush.insXYZs.Count >= 2)
                                     {
-                                        CrushElemInfo mergedCrush = new CrushElemInfo
-                                        {
-                                            docName = merged.DocName,
-                                            pipeOrDuct = merged.LeaderElement,
-                                            type = merged.ElementType,
-                                            hostType = "Floor",
-                                            level = merged.ReferenceLevel,
-                                            size = merged.PipeSizeFeet,
-                                            diameter = merged.SpecifiedDiameterFeet,
-                                            ductWight = merged.DuctWidthFeet,
-                                            ductHeight = merged.DuctHeightFeet,
-                                            thickness = merged.TotalThicknessFeet,
-                                            xyzs = new List<XYZ> { merged.PlacementCenter },
-                                            deviation = merged.DeviationFeet,
-                                            axis = merged.Axis,
-                                            pipeAngle = merged.PipeAngle,
-                                            number = merged.Number,
-                                            comment = $"{merged.DocName}_{(merged.LeaderElement != null ? merged.LeaderElement.Id.ToString() : "0")}_{openingInfo.docName}_{openingInfo.element.Id}"
-                                        };
-
-                                        openingInfo.crushElemInfos.Add(mergedCrush);
+                                        entryZ = crush.insXYZs.Max(p => p.Z);
+                                        exitZ = crush.insXYZs.Min(p => p.Z);
                                     }
+                                    else
+                                    {
+                                        // 當沒有實體交點 (如管配件) 時，以樓板的絕對高程推算上下界
+                                        double floorTopZ = 0.0;
+                                        if (openingInfo.level != null)
+                                        {
+                                            floorTopZ = openingInfo.level.ProjectElevation;
+                                        }
+
+                                        floorTopZ += floorOffsetFeet;
+                                        floorTopZ += elevationOffset; // 加上專案自訂補償
+
+                                        entryZ = floorTopZ;
+                                        exitZ = floorTopZ - openingInfo.thickness;
+                                    }
+
+                                    // 計算精確的幾何貫穿中心點
+                                    double trueCenterZ = (entryZ + exitZ) / 2.0;
+                                    XYZ preciseCenter = new XYZ(originalCenter.X, originalCenter.Y, trueCenterZ);
+
+                                    globalFloorCandidates.Add(new FloorOpeningCandidate
+                                    {
+                                        PipeOrDuctElement = crush.pipeOrDuct,
+                                        HostFloorElement = openingInfo.element,
+                                        DocName = crush.docName,
+                                        ElementType = crush.type,
+                                        PipeType = crush.pipeType,
+                                        Level = crush.level,
+                                        PipeSizeFeet = crush.size,
+                                        PipeDiameterFeet = crush.diameter,
+                                        DuctWidthFeet = crush.ductWight,
+                                        DuctHeightFeet = crush.ductHeight,
+                                        InsulationThicknessFeet = crush.insulationThickness,
+                                        EntryZ = entryZ,
+                                        ExitZ = exitZ,
+                                        IntersectionCenter = preciseCenter,
+                                        SingleFloorThicknessFeet = crush.thickness,
+                                        FloorHeightOffsetFeet = floorOffsetFeet, // 【關鍵傳遞】：保留原生 Offset 以供合併時定錨
+                                        Axis = crush.axis,
+                                        PipeAngle = crush.pipeAngle,
+                                        Number = crush.number
+                                    });
                                 }
+                                openingInfo.crushElemInfos.Clear();
+                            }
+                        }
+
+                        // 執行全域多樓層合併
+                        List<MergedFloorOpeningResult> mergedFloorResults = floorMergeService.ProcessAndMergeFloorOpenings(globalFloorCandidates);
+
+                        foreach (var merged in mergedFloorResults)
+                        {
+                            var targetOpeningInfo = openingInfoList.FirstOrDefault(o => o.element.Id == merged.LeaderFloorElement.Id);
+                            if (targetOpeningInfo != null)
+                            {
+                                CrushElemInfo mergedCrush = new CrushElemInfo
+                                {
+                                    docName = merged.DocName,
+                                    pipeOrDuct = merged.LeaderElement,
+                                    type = merged.ElementType,
+                                    hostType = "Floor",
+                                    level = merged.ReferenceLevel,
+                                    size = merged.PipeSizeFeet,
+                                    diameter = merged.SpecifiedDiameterFeet,
+                                    ductWight = merged.DuctWidthFeet,
+                                    ductHeight = merged.DuctHeightFeet,
+                                    thickness = merged.TotalThicknessFeet,
+                                    xyzs = new List<XYZ> { merged.PlacementCenter },
+                                    deviation = merged.DeviationFeet,
+                                    axis = merged.Axis,
+                                    pipeAngle = merged.PipeAngle,
+                                    number = merged.Number,
+                                    comment = $"{merged.DocName}_{(merged.LeaderElement != null ? merged.LeaderElement.Id.ToString() : "0")}_{targetOpeningInfo.docName}_{targetOpeningInfo.element.Id}"
+                                };
+
+                                targetOpeningInfo.crushElemInfos.Add(mergedCrush);
                             }
                         }
 
@@ -426,21 +454,11 @@ namespace Sinotech_2025.CSDSEM
                                     FamilyInstance newOpening = doc.GetElement(elemId) as FamilyInstance;
                                     LocationPoint lp = newOpening.Location as LocationPoint;
                                     XYZ xyz = lp.Point;
-                                    bool trueOrFalse = false;
-                                    double xyzX = Math.Round(xyz.X, 8, MidpointRounding.AwayFromZero);
-                                    double xyzY = Math.Round(xyz.Y, 8, MidpointRounding.AwayFromZero);
-                                    double xyzZ = Math.Round(xyz.Z, 8, MidpointRounding.AwayFromZero);
-                                    foreach (XYZ openingXYZ in openingXYZs)
-                                    {
-                                        if (Math.Round(openingXYZ.X, 8, MidpointRounding.AwayFromZero).Equals(xyzX) &&
-                                            Math.Round(openingXYZ.Y, 8, MidpointRounding.AwayFromZero).Equals(xyzY) &&
-                                            Math.Round(openingXYZ.Z, 8, MidpointRounding.AwayFromZero).Equals(xyzZ))
-                                        {
-                                            trueOrFalse = true;
-                                            break;
-                                        }
-                                    }
-                                    if (trueOrFalse == true)
+
+                                    // 【核心修復】：以容差 0.005 feet 取代 15行 Math.Round 複雜迴圈
+                                    bool isDuplicate = openingXYZs.Any(p => p.IsAlmostEqualTo(xyz, 0.005));
+
+                                    if (isDuplicate)
                                     {
                                         doc.Delete(elemId);
                                         amount--;
@@ -916,6 +934,7 @@ namespace Sinotech_2025.CSDSEM
                 openingInfoList.Add(openingInfo);
             }
         }
+
         private void FindFaceIntersectLine(Solid solid, Curve curve, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform linkTransform)
         {
             XYZ startPoint = new XYZ();
@@ -956,7 +975,6 @@ namespace Sinotech_2025.CSDSEM
                                 }
                                 else
                                 {
-                                    // 核心修復：拔除舊有 CableTray 高度干涉換算，直接對齊電纜架中心點！
                                     crushElemInfo.xyzs.Add(insXYZ);
                                     double z = insXYZ.Z;
                                     if (crushElemInfo.level != null)
@@ -982,6 +1000,7 @@ namespace Sinotech_2025.CSDSEM
                 }
             }
         }
+
         private void FindSolidIntersection(Element interferenceElem, Solid solid, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform transform)
         {
             ICollection<ElementId> interferenceElems = new List<ElementId> { interferenceElem.Id };
@@ -1107,6 +1126,7 @@ namespace Sinotech_2025.CSDSEM
             return radius;
         }
 
+        // 【重構重點】：使用原生 IsAlmostEqualTo 進行精準開口重複檢查
         private int PlaceOpening(Document doc, CrushElemInfo crushElemInfo, List<FamilySymbol> openFSList, int amount)
         {
             string useFS = string.Empty;
@@ -1127,26 +1147,13 @@ namespace Sinotech_2025.CSDSEM
 
             foreach (XYZ xyz in crushElemInfo.xyzs)
             {
-                FamilyInstance pipeOpen = null;
                 try
                 {
-                    bool trueOrFalse = false;
-                    double xyzX = Math.Round(xyz.X, 8, MidpointRounding.AwayFromZero);
-                    double xyzY = Math.Round(xyz.Y, 8, MidpointRounding.AwayFromZero);
-                    double xyzZ = Math.Round(xyz.Z, 8, MidpointRounding.AwayFromZero);
-                    foreach (XYZ openingXYZ in openingXYZs)
+                    bool isDuplicate = openingXYZs.Any(p => p.IsAlmostEqualTo(xyz, 0.005));
+
+                    if (!isDuplicate)
                     {
-                        if (Math.Round(openingXYZ.X, 8, MidpointRounding.AwayFromZero).Equals(xyzX) &&
-                            Math.Round(openingXYZ.Y, 8, MidpointRounding.AwayFromZero).Equals(xyzY) &&
-                            Math.Round(openingXYZ.Z, 8, MidpointRounding.AwayFromZero).Equals(xyzZ))
-                        {
-                            trueOrFalse = true;
-                            break;
-                        }
-                    }
-                    if (!trueOrFalse)
-                    {
-                        pipeOpen = doc.Create.NewFamilyInstance(xyz, openFS, crushElemInfo.level, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
+                        FamilyInstance pipeOpen = doc.Create.NewFamilyInstance(xyz, openFS, crushElemInfo.level, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
                         crushElemInfo.pipeOpens.Add(pipeOpen);
                         newOpeningIds.Add((int)pipeOpen.Id.Value);
                         amount++;

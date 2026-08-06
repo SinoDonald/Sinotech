@@ -7,6 +7,9 @@ namespace Sinotech.CSDSEM
 {
     public class MegedOpening
     {
+        // -------------------------------------------------------------
+        // 電纜架牆開口合併區塊
+        // -------------------------------------------------------------
         public class CableTrayOpeningCandidate
         {
             public Element CableTrayElement { get; set; }
@@ -55,9 +58,6 @@ namespace Sinotech.CSDSEM
             public double MaxZ { get; set; }
         }
 
-        /// <summary>
-        /// 階層式電纜架開口合併服務 (含 ID 鎖定與平行高程判斷)
-        /// </summary>
         public class OpeningMergeService
         {
             private readonly double _unitConversion = 304.8;
@@ -78,10 +78,7 @@ namespace Sinotech.CSDSEM
 
                 XYZ wallDirU = GetWallDirectionUnitVector(hostElement);
 
-                // 第一階段：上下排列合併 (並記錄已合併的電纜架 ID)
                 var verticalMergedResults = PerformVerticalMerge(hostElement, candidates, wallDirU, out HashSet<ElementId> mergedCableTrayIds);
-
-                // 第二階段：左右邊界碰觸合併 (嚴格排除已被上下合併的 ID，並檢查高程平行)
                 var finalMergedResults = PerformHorizontalMergeWithIdExclusion(hostElement, candidates, verticalMergedResults, mergedCableTrayIds, wallDirU);
 
                 return finalMergedResults;
@@ -98,9 +95,6 @@ namespace Sinotech.CSDSEM
                 return XYZ.BasisX;
             }
 
-            /// <summary>
-            /// 第一階段：上下排列合併
-            /// </summary>
             private List<MergedOpeningResult> PerformVerticalMerge(
                 Element host,
                 List<CableTrayOpeningCandidate> candidates,
@@ -137,7 +131,6 @@ namespace Sinotech.CSDSEM
                             double u2 = (c2.IntersectionCenter.X * wallDirU.X) + (c2.IntersectionCenter.Y * wallDirU.Y);
                             double shiftUMm = Math.Abs(u1 - u2) * _unitConversion;
 
-                            // 條件：中心距 <= 250mm 且水平垂直對齊
                             if (distMm <= _verticalCenterGapMaxMm && shiftUMm <= 100.0)
                             {
                                 Union(i, j);
@@ -158,7 +151,6 @@ namespace Sinotech.CSDSEM
                         var merged = CalculateVerticalClusterGeometry(host, cluster);
                         results.Add(merged);
 
-                        // 若成功進行了多管上下合併，將這些 ID 記錄下來
                         if (cluster.Count > 1)
                         {
                             foreach (var item in cluster)
@@ -172,9 +164,6 @@ namespace Sinotech.CSDSEM
                 return results;
             }
 
-            /// <summary>
-            /// 上下合併幾何計算 (採用您實測成功的 25mm 偏移高程算式)
-            /// </summary>
             private MergedOpeningResult CalculateVerticalClusterGeometry(Element host, List<CableTrayOpeningCandidate> cluster)
             {
                 var lowestCandidate = cluster.OrderBy(c => c.IntersectionCenter.Z).First();
@@ -211,15 +200,11 @@ namespace Sinotech.CSDSEM
                     result.IncludedCableTrayIds.Add(item.CableTrayId);
                 }
 
-                // 套用您實測 100% 正確的 Hardcode 算式！
                 result.DeviationFeet = lowestCandidate.Deviation + (centerZ - lowestCandidate.IntersectionCenter.Z) + (25.0 / 304.8);
 
                 return result;
             }
 
-            /// <summary>
-            /// 第二階段：左右碰觸合併 (嚴格排除已上下合併 ID，並檢查高程平行)
-            /// </summary>
             private List<MergedOpeningResult> PerformHorizontalMergeWithIdExclusion(
                 Element host,
                 List<CableTrayOpeningCandidate> originalCandidates,
@@ -262,27 +247,23 @@ namespace Sinotech.CSDSEM
                         var b1 = boxes[i];
                         var b2 = boxes[j];
 
-                        // 【修復關鍵 1】：防範 image_e01d00.png！若其中一個是「單管」且其 ID 已被上下合併過，禁止左右合併
                         bool b1HasMergedId = b1.Result.IncludedCableTrayIds.Any(id => mergedCableTrayIds.Contains(id));
                         bool b2HasMergedId = b2.Result.IncludedCableTrayIds.Any(id => mergedCableTrayIds.Contains(id));
 
-                        // 只有當兩者都是「單管未合併過」，或是兩者都是「結構完全相同的雙排矩陣」時才允許左右合併
                         if (b1HasMergedId != b2HasMergedId)
                         {
-                            continue; // 一個有上下合併，另一個沒有，直接跳過不合併！
+                            continue;
                         }
 
-                        // 【修復關鍵 2】：防範 image_e01a19.png！檢查左右電纜架的高程 Z 是否平行 (高程差 <= 50mm)
                         double zDiffMm = Math.Abs(b1.Result.PlacementCenter.Z - b2.Result.PlacementCenter.Z) * _unitConversion;
                         bool isZParallel = zDiffMm <= 50.0;
 
-                        // 3. 水平 U 軸「碰觸」檢測 (邊界距離 <= 5mm)
                         double gapUMm = (Math.Max(b1.MinU, b2.MinU) - Math.Min(b1.MaxU, b2.MaxU)) * _unitConversion;
                         bool isHorizontalTouching = gapUMm <= 5.0;
 
                         if (isZParallel && isHorizontalTouching)
                         {
-                            Union(i, j); // 高程平行且邊界碰觸，才允許左右合併
+                            Union(i, j);
                         }
                     }
                 }
@@ -349,14 +330,15 @@ namespace Sinotech.CSDSEM
                     GeneratedComment = leader.GeneratedComment
                 };
 
-                // 套用您驗證正確的高程累加
                 mergedResult.DeviationFeet = leader.DeviationFeet + (centerZ - leader.PlacementCenter.Z);
 
                 return mergedResult;
             }
         }
 
-        // --- 下方保留原有的 FloorOpeningCandidate, MergedFloorOpeningResult, FloorOpeningMergeService ---
+        // -------------------------------------------------------------
+        // 樓板開口合併區塊 (Top-Anchored 頂層定錨高程修復)
+        // -------------------------------------------------------------
         public class FloorOpeningCandidate
         {
             public Element PipeOrDuctElement { get; set; }
@@ -376,6 +358,7 @@ namespace Sinotech.CSDSEM
             public double ExitZ { get; set; }
             public XYZ IntersectionCenter { get; set; }
             public double SingleFloorThicknessFeet { get; set; }
+            public double FloorHeightOffsetFeet { get; set; } // 【新增】：保留原生樓板的高度偏移量
 
             public Line Axis { get; set; }
             public double PipeAngle { get; set; }
@@ -385,6 +368,7 @@ namespace Sinotech.CSDSEM
         public class MergedFloorOpeningResult
         {
             public Element LeaderElement { get; set; }
+            public Element LeaderFloorElement { get; set; }
             public string DocName { get; set; } = string.Empty;
             public string ElementType { get; set; } = string.Empty;
             public string PipeType { get; set; } = string.Empty;
@@ -472,6 +456,7 @@ namespace Sinotech.CSDSEM
             private readonly double _unitConversion = 304.8;
             private readonly double _maxMergeGapMm;
             private readonly double _horizontalShiftToleranceMm = 50.0;
+            private readonly double _maxFloorLevelSpanFeet = 3.28;
 
             public FloorOpeningMergeService(double maxMergeGapMm = 150.0)
             {
@@ -491,70 +476,117 @@ namespace Sinotech.CSDSEM
                 foreach (var pipeGroup in pipeGroups)
                 {
                     var sortedCandidates = pipeGroup.OrderBy(c => c.IntersectionCenter.Z).ToList();
-                    var currentCluster = new List<FloorOpeningCandidate>();
 
-                    for (int i = 0; i < sortedCandidates.Count; i++)
+                    List<List<FloorOpeningCandidate>> floorLevelClusters = SplitByFloorLevel(sortedCandidates);
+
+                    foreach (var levelCluster in floorLevelClusters)
                     {
-                        var current = sortedCandidates[i];
+                        var currentCluster = new List<FloorOpeningCandidate>();
 
-                        if (!currentCluster.Any())
+                        for (int i = 0; i < levelCluster.Count; i++)
                         {
-                            currentCluster.Add(current);
-                            continue;
+                            var current = levelCluster[i];
+
+                            if (!currentCluster.Any())
+                            {
+                                currentCluster.Add(current);
+                                continue;
+                            }
+
+                            var previous = currentCluster.Last();
+
+                            double prevTopZFeet = Math.Max(previous.EntryZ, previous.ExitZ);
+                            double currBottomZFeet = Math.Min(current.EntryZ, current.ExitZ);
+
+                            double gapMm = (currBottomZFeet - prevTopZFeet) * _unitConversion;
+
+                            double horizontalShiftMm = new XYZ(
+                                previous.IntersectionCenter.X - current.IntersectionCenter.X,
+                                previous.IntersectionCenter.Y - current.IntersectionCenter.Y,
+                                0).GetLength() * _unitConversion;
+
+                            bool isCloseGap = gapMm <= _maxMergeGapMm;
+                            bool isAligned = horizontalShiftMm <= _horizontalShiftToleranceMm;
+
+                            if (isCloseGap && isAligned)
+                            {
+                                currentCluster.Add(current);
+                            }
+                            else
+                            {
+                                results.Add(CalculateMergedFloorGeometry(currentCluster));
+                                currentCluster = new List<FloorOpeningCandidate> { current };
+                            }
                         }
 
-                        var previous = currentCluster.Last();
-
-                        double prevTopZFeet = Math.Max(previous.EntryZ, previous.ExitZ);
-                        double currBottomZFeet = Math.Min(current.EntryZ, current.ExitZ);
-
-                        double gapMm = (currBottomZFeet - prevTopZFeet) * _unitConversion;
-
-                        double horizontalShiftMm = new XYZ(
-                            previous.IntersectionCenter.X - current.IntersectionCenter.X,
-                            previous.IntersectionCenter.Y - current.IntersectionCenter.Y,
-                            0).GetLength() * _unitConversion;
-
-                        bool isCloseGap = gapMm <= _maxMergeGapMm;
-                        bool isAligned = horizontalShiftMm <= _horizontalShiftToleranceMm;
-
-                        if (isCloseGap && isAligned)
-                        {
-                            currentCluster.Add(current);
-                        }
-                        else
+                        if (currentCluster.Any())
                         {
                             results.Add(CalculateMergedFloorGeometry(currentCluster));
-                            currentCluster = new List<FloorOpeningCandidate> { current };
                         }
-                    }
-
-                    if (currentCluster.Any())
-                    {
-                        results.Add(CalculateMergedFloorGeometry(currentCluster));
                     }
                 }
 
                 return results;
             }
 
+            private List<List<FloorOpeningCandidate>> SplitByFloorLevel(List<FloorOpeningCandidate> sortedCandidates)
+            {
+                var floorClusters = new List<List<FloorOpeningCandidate>>();
+                var currentFloorCluster = new List<FloorOpeningCandidate>();
+
+                foreach (var candidate in sortedCandidates)
+                {
+                    if (!currentFloorCluster.Any())
+                    {
+                        currentFloorCluster.Add(candidate);
+                        continue;
+                    }
+
+                    var lastCandidate = currentFloorCluster.Last();
+                    double zSpanFeet = Math.Abs(candidate.IntersectionCenter.Z - lastCandidate.IntersectionCenter.Z);
+
+                    if (zSpanFeet > _maxFloorLevelSpanFeet)
+                    {
+                        floorClusters.Add(currentFloorCluster);
+                        currentFloorCluster = new List<FloorOpeningCandidate> { candidate };
+                    }
+                    else
+                    {
+                        currentFloorCluster.Add(candidate);
+                    }
+                }
+
+                if (currentFloorCluster.Any())
+                {
+                    floorClusters.Add(currentFloorCluster);
+                }
+
+                return floorClusters;
+            }
+
+            /// <summary>
+            /// 核心修復：以「最上方樓板」作為定錨點，100% 複製其 Offset 參數
+            /// </summary>
             private MergedFloorOpeningResult CalculateMergedFloorGeometry(List<FloorOpeningCandidate> cluster)
             {
-                var leader = cluster.OrderBy(c => c.IntersectionCenter.Z).First();
+                // 以最上層樓板 (例如地坪) 作為主導 Leader
+                var topCandidate = cluster.OrderByDescending(c => Math.Max(c.EntryZ, c.ExitZ)).First();
+
                 var result = new MergedFloorOpeningResult
                 {
-                    LeaderElement = leader.PipeOrDuctElement,
-                    DocName = leader.DocName ?? string.Empty,
-                    ElementType = leader.ElementType ?? string.Empty,
-                    PipeType = leader.PipeType ?? string.Empty,
-                    ReferenceLevel = leader.Level,
-                    PipeSizeFeet = leader.PipeSizeFeet,
-                    SpecifiedDiameterFeet = leader.PipeDiameterFeet,
-                    DuctWidthFeet = leader.DuctWidthFeet,
-                    DuctHeightFeet = leader.DuctHeightFeet,
-                    Axis = leader.Axis,
-                    PipeAngle = leader.PipeAngle,
-                    Number = leader.Number
+                    LeaderElement = topCandidate.PipeOrDuctElement,
+                    LeaderFloorElement = topCandidate.HostFloorElement, // 以最上方樓板為主
+                    DocName = topCandidate.DocName ?? string.Empty,
+                    ElementType = topCandidate.ElementType ?? string.Empty,
+                    PipeType = topCandidate.PipeType ?? string.Empty,
+                    ReferenceLevel = topCandidate.Level,
+                    PipeSizeFeet = topCandidate.PipeSizeFeet,
+                    SpecifiedDiameterFeet = topCandidate.PipeDiameterFeet,
+                    DuctWidthFeet = topCandidate.DuctWidthFeet,
+                    DuctHeightFeet = topCandidate.DuctHeightFeet,
+                    Axis = topCandidate.Axis,
+                    PipeAngle = topCandidate.PipeAngle,
+                    Number = topCandidate.Number
                 };
 
                 foreach (var candidate in cluster)
@@ -565,33 +597,19 @@ namespace Sinotech.CSDSEM
                     }
                 }
 
-                if (cluster.Count == 1)
-                {
-                    result.TotalThicknessFeet = leader.SingleFloorThicknessFeet;
-                    result.PlacementCenter = leader.IntersectionCenter;
-
-                    if (leader.Level != null)
-                    {
-                        result.DeviationFeet = leader.IntersectionCenter.Z - leader.Level.ProjectElevation;
-                    }
-                    return result;
-                }
-
+                // 總厚度 = 最頂端 - 最底端
                 double maxTopZ = cluster.Max(c => Math.Max(c.EntryZ, c.ExitZ));
                 double minBottomZ = cluster.Min(c => Math.Min(c.EntryZ, c.ExitZ));
-
                 result.TotalThicknessFeet = maxTopZ - minBottomZ;
 
-                double centerZ = (maxTopZ + minBottomZ) / 2.0;
                 double centerX = cluster.Average(c => c.IntersectionCenter.X);
                 double centerY = cluster.Average(c => c.IntersectionCenter.Y);
 
-                result.PlacementCenter = new XYZ(centerX, centerY, centerZ);
+                // 放置點 Z 座標強制對齊最頂部 (配合族群向下生長特性)
+                result.PlacementCenter = new XYZ(centerX, centerY, maxTopZ);
 
-                if (leader.Level != null)
-                {
-                    result.DeviationFeet = centerZ - leader.Level.ProjectElevation;
-                }
+                // 【核心對接】：距離樓層的高程 (Offset) 100% 複製最上方樓板的原生 Offset
+                result.DeviationFeet = topCandidate.FloorHeightOffsetFeet;
 
                 return result;
             }
