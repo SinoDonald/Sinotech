@@ -821,9 +821,9 @@ namespace Sinotech.CSDSEM
                                 {
                                     try
                                     {
-                                        crushElemInfo.ductHeight = interferenceElem.LookupParameter("風管高度").AsDouble();
-                                        crushElemInfo.ductWight = interferenceElem.LookupParameter("風管寬度").AsDouble();
-                                        crushElemInfo.thickness = thicknessPara != null ? thicknessPara.AsDouble() : interferenceElem.LookupParameter("風門長度").AsDouble();
+                                        crushElemInfo.ductHeight = GetFirstParameterValue(interferenceElem, "風管高度");
+                                        crushElemInfo.ductWight = GetFirstParameterValue(interferenceElem, "風管寬度");
+                                        crushElemInfo.thickness = thicknessPara != null ? thicknessPara.AsDouble() : GetFirstParameterValue(interferenceElem, "風門長度");
                                     }
                                     catch (Exception) { }
 
@@ -852,12 +852,15 @@ namespace Sinotech.CSDSEM
                                 crushElemInfo.type = "CableTrayFitting";
                                 try
                                 {
-                                    diameterPara = interferenceElem.LookupParameter("托盤高度");
-                                    if (diameterPara != null) crushElemInfo.ductHeight = diameterPara.AsDouble() + 50 / unit_conversion;
-                                    diameterPara = interferenceElem.LookupParameter("托盤寬度 1");
-                                    if (diameterPara != null) crushElemInfo.ductWight = diameterPara.AsDouble();
-                                    Parameter lenPara = interferenceElem.LookupParameter("長度 1");
-                                    crushElemInfo.thickness = thicknessPara != null ? thicknessPara.AsDouble() : (lenPara != null ? lenPara.AsDouble() : 0.0);
+                                    // 1. 取得托盤高度 (若有值則加上 50 / unit_conversion，若全為 null 則為 0)
+                                    double heightValue = GetFirstParameterValue(interferenceElem, "托盤高度");
+                                    crushElemInfo.ductHeight = heightValue > 0 ? heightValue + (50.0 / unit_conversion) : 0.0;
+
+                                    // 2. 取得托盤寬度 (若全為 null 則為 0)
+                                    crushElemInfo.ductWight = GetFirstParameterValue(interferenceElem, "托盤寬度");
+
+                                    // 3. 取得長度 (若全為 null 則為 0)
+                                    crushElemInfo.thickness = GetFirstParameterValue(interferenceElem, "長度");
                                 }
                                 catch (Exception) { }
 
@@ -934,6 +937,87 @@ namespace Sinotech.CSDSEM
                 openingInfoList.Add(openingInfo);
             }
         }
+        /// <summary>
+        /// 搜尋元件中名稱包含 keyword 的所有參數，回傳第一個有數值的 AsDouble()，若皆無則回傳 0.0
+        /// </summary>
+        private double GetFirstParameterValue(Element elem, string keyword)
+        {
+            // 收集所有名稱包含 keyword 的 Parameter
+            List<Parameter> matchingParams = elem.Parameters
+                .Cast<Parameter>()
+                .Where(p => p.Definition != null && p.Definition.Name.Contains(keyword))
+                .ToList();
+
+            // 找出第一個有值 (HasValue) 的參數
+            Parameter firstValidParam = matchingParams.FirstOrDefault(p => p.HasValue);
+
+            // 如果找到則取得其 Double 值，否則傳回 0.0
+            return firstValidParam != null ? firstValidParam.AsDouble() : 0.0;
+        }
+
+        private void FindSolidIntersection(Element interferenceElem, Solid solid, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform transform)
+        {
+            ICollection<ElementId> interferenceElems = new List<ElementId> { interferenceElem.Id };
+            if (!transform.AlmostEqual(Transform.CreateTranslation(new XYZ(0, 0, 0))))
+            {
+                solid = SolidUtils.CreateTransformed(solid, transform.Inverse);
+            }
+            IList<Element> elems = new FilteredElementCollector(interferenceElem.Document, interferenceElems).WherePasses(new ElementIntersectsSolidFilter(solid)).WhereElementIsNotElementType().ToList();
+            foreach (Element elem in elems)
+            {
+                try
+                {
+                    LocationPoint lp = elem.Location as LocationPoint;
+                    XYZ insXYZ = new XYZ();
+                    if (lp != null)
+                    {
+                        insXYZ = new XYZ((lp.Point.X + transform.Origin.X), (lp.Point.Y + transform.Origin.Y), (lp.Point.Z + transform.Origin.Z) + elevationOffset);
+                    }
+                    else
+                    {
+                        LocationCurve lc = elem.Location as LocationCurve;
+                        XYZ lp1 = lc.Curve.Tessellate()[0];
+                        XYZ lp2 = lc.Curve.Tessellate()[1];
+                        insXYZ = new XYZ((lp1.X + lp2.X) / 2 + transform.Origin.X, (lp1.Y + lp2.Y) / 2 + transform.Origin.Y, (lp1.Z + lp2.Z) / 2 + transform.Origin.Z + elevationOffset);
+                    }
+
+                    double z = insXYZ.Z;
+                    if (openingInfo.element is Floor)
+                    {
+                        crushElemInfo.xyzs.Add(insXYZ);
+                        double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                        crushElemInfo.deviation = z - elevation;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            LocationCurve lc = openingInfo.element.Location as LocationCurve;
+                            Line line = lc.Curve as Line;
+                            line.MakeUnbound();
+                            insXYZ = line.Project(insXYZ).XYZPoint;
+                            crushElemInfo.xyzs.Add(insXYZ);
+                        }
+                        catch (Exception) { }
+
+                        if (crushElemInfo.level != null)
+                        {
+                            double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                            crushElemInfo.deviation = z - elevation;
+                        }
+                    }
+                    crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10));
+                    crushElemInfo.pipeAngle = openingInfo.beamWallAngle - 90;
+
+                    if (crushElemInfo.xyzs.Count > 0)
+                    {
+                        crushElemInfo.comment = $"{crushElemInfo.docName}_{interferenceElem.Id}_{openingInfo.docName}_{openingInfo.element.Id}";
+                        openingInfo.crushElemInfos.Add(crushElemInfo);
+                    }
+                }
+                catch (Exception) { }
+            }
+        }
 
         private void FindFaceIntersectLine(Solid solid, Curve curve, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform linkTransform)
         {
@@ -998,70 +1082,6 @@ namespace Sinotech.CSDSEM
                     }
                     catch (NullReferenceException) { }
                 }
-            }
-        }
-
-        private void FindSolidIntersection(Element interferenceElem, Solid solid, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform transform)
-        {
-            ICollection<ElementId> interferenceElems = new List<ElementId> { interferenceElem.Id };
-            if (!transform.AlmostEqual(Transform.CreateTranslation(new XYZ(0, 0, 0))))
-            {
-                solid = SolidUtils.CreateTransformed(solid, transform.Inverse);
-            }
-            IList<Element> elems = new FilteredElementCollector(interferenceElem.Document, interferenceElems).WherePasses(new ElementIntersectsSolidFilter(solid)).WhereElementIsNotElementType().ToList();
-            foreach (Element elem in elems)
-            {
-                try
-                {
-                    LocationPoint lp = elem.Location as LocationPoint;
-                    XYZ insXYZ = new XYZ();
-                    if (lp != null)
-                    {
-                        insXYZ = new XYZ((lp.Point.X + transform.Origin.X), (lp.Point.Y + transform.Origin.Y), (lp.Point.Z + transform.Origin.Z) + elevationOffset);
-                    }
-                    else
-                    {
-                        LocationCurve lc = elem.Location as LocationCurve;
-                        XYZ lp1 = lc.Curve.Tessellate()[0];
-                        XYZ lp2 = lc.Curve.Tessellate()[1];
-                        insXYZ = new XYZ((lp1.X + lp2.X) / 2 + transform.Origin.X, (lp1.Y + lp2.Y) / 2 + transform.Origin.Y, (lp1.Z + lp2.Z) / 2 + transform.Origin.Z + elevationOffset);
-                    }
-
-                    double z = insXYZ.Z;
-                    if (openingInfo.element is Floor)
-                    {
-                        crushElemInfo.xyzs.Add(insXYZ);
-                        double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-                        crushElemInfo.deviation = z - elevation;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            LocationCurve lc = openingInfo.element.Location as LocationCurve;
-                            Line line = lc.Curve as Line;
-                            line.MakeUnbound();
-                            insXYZ = line.Project(insXYZ).XYZPoint;
-                            crushElemInfo.xyzs.Add(insXYZ);
-                        }
-                        catch (Exception) { }
-
-                        if (crushElemInfo.level != null)
-                        {
-                            double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-                            crushElemInfo.deviation = z - elevation;
-                        }
-                    }
-                    crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10));
-                    crushElemInfo.pipeAngle = openingInfo.beamWallAngle - 90;
-
-                    if (crushElemInfo.xyzs.Count > 0)
-                    {
-                        crushElemInfo.comment = $"{crushElemInfo.docName}_{interferenceElem.Id}_{openingInfo.docName}_{openingInfo.element.Id}";
-                        openingInfo.crushElemInfos.Add(crushElemInfo);
-                    }
-                }
-                catch (Exception) { }
             }
         }
 
