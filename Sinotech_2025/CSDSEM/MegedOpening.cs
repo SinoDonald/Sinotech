@@ -7,9 +7,6 @@ namespace Sinotech_2025.CSDSEM
 {
     public class MegedOpening
     {
-        // -------------------------------------------------------------
-        // 電纜架牆開口合併區塊
-        // -------------------------------------------------------------
         public class CableTrayOpeningCandidate
         {
             public Element CableTrayElement { get; set; }
@@ -336,9 +333,6 @@ namespace Sinotech_2025.CSDSEM
             }
         }
 
-        // -------------------------------------------------------------
-        // 樓板開口合併區塊 (Top-Anchored 頂層定錨高程修復)
-        // -------------------------------------------------------------
         public class FloorOpeningCandidate
         {
             public Element PipeOrDuctElement { get; set; }
@@ -358,7 +352,7 @@ namespace Sinotech_2025.CSDSEM
             public double ExitZ { get; set; }
             public XYZ IntersectionCenter { get; set; }
             public double SingleFloorThicknessFeet { get; set; }
-            public double FloorHeightOffsetFeet { get; set; } // 【新增】：保留原生樓板的高度偏移量
+            public double FloorHeightOffsetFeet { get; set; }
 
             public Line Axis { get; set; }
             public double PipeAngle { get; set; }
@@ -565,17 +559,16 @@ namespace Sinotech_2025.CSDSEM
             }
 
             /// <summary>
-            /// 核心修復：以「最上方樓板」作為定錨點，100% 複製其 Offset 參數
+            /// 頂層定錨高程修復：100% 複製最上方樓板的 Offset 參數
             /// </summary>
             private MergedFloorOpeningResult CalculateMergedFloorGeometry(List<FloorOpeningCandidate> cluster)
             {
-                // 以最上層樓板 (例如地坪) 作為主導 Leader
                 var topCandidate = cluster.OrderByDescending(c => Math.Max(c.EntryZ, c.ExitZ)).First();
 
                 var result = new MergedFloorOpeningResult
                 {
                     LeaderElement = topCandidate.PipeOrDuctElement,
-                    LeaderFloorElement = topCandidate.HostFloorElement, // 以最上方樓板為主
+                    LeaderFloorElement = topCandidate.HostFloorElement,
                     DocName = topCandidate.DocName ?? string.Empty,
                     ElementType = topCandidate.ElementType ?? string.Empty,
                     PipeType = topCandidate.PipeType ?? string.Empty,
@@ -597,18 +590,17 @@ namespace Sinotech_2025.CSDSEM
                     }
                 }
 
-                // 總厚度 = 最頂端 - 最底端
                 double maxTopZ = cluster.Max(c => Math.Max(c.EntryZ, c.ExitZ));
                 double minBottomZ = cluster.Min(c => Math.Min(c.EntryZ, c.ExitZ));
+
                 result.TotalThicknessFeet = maxTopZ - minBottomZ;
 
                 double centerX = cluster.Average(c => c.IntersectionCenter.X);
                 double centerY = cluster.Average(c => c.IntersectionCenter.Y);
 
-                // 放置點 Z 座標強制對齊最頂部 (配合族群向下生長特性)
                 result.PlacementCenter = new XYZ(centerX, centerY, maxTopZ);
 
-                // 【核心對接】：距離樓層的高程 (Offset) 100% 複製最上方樓板的原生 Offset
+                // 複製頂層樓板原生的 Offset 參數
                 result.DeviationFeet = topCandidate.FloorHeightOffsetFeet;
 
                 return result;

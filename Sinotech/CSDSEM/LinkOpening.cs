@@ -21,6 +21,30 @@ namespace Sinotech.CSDSEM
         private List<XYZ> openingXYZs = new List<XYZ>();
         private List<int> newOpeningIds = new List<int>();
 
+        /// <summary>
+        /// 跨 Document 識別 Element 的唯一安全 Key (防範 Link Model Id 重複)
+        /// </summary>
+        private class UniqueElementKey : IEquatable<UniqueElementKey>
+        {
+            public string DocTitle { get; }
+            public ElementId Id { get; }
+
+            public UniqueElementKey(Element elem)
+            {
+                DocTitle = elem?.Document?.Title ?? string.Empty;
+                Id = elem?.Id ?? ElementId.InvalidElementId;
+            }
+
+            public bool Equals(UniqueElementKey other)
+            {
+                if (other is null) return false;
+                return string.Equals(DocTitle, other.DocTitle, StringComparison.OrdinalIgnoreCase) && Id == other.Id;
+            }
+
+            public override bool Equals(object obj) => Equals(obj as UniqueElementKey);
+            public override int GetHashCode() => (DocTitle.GetHashCode() * 397) ^ Id.GetHashCode();
+        }
+
         private class OpeningInfo
         {
             public string docName = string.Empty;
@@ -169,6 +193,12 @@ namespace Sinotech.CSDSEM
                         prjCode = professionalCodeForm.prjCode;
 
                         DateTime timeStart = DateTime.Now;
+
+                        // -------------------------------------------------------------------------
+                        // 【核心功能 1 & 2】：檢索所有「落水頭」族群及其 Connectors 連結之管道
+                        // -------------------------------------------------------------------------
+                        HashSet<UniqueElementKey> floorDrainPipeKeys = CollectFloorDrainConnectedPipes(doc, pipeDuctLinkDocs);
+
                         List<OpeningInfo> openingInfoList = new List<OpeningInfo>();
                         IList<ElementFilter> elementFilters = new List<ElementFilter>();
                         elementFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_Walls));
@@ -288,15 +318,22 @@ namespace Sinotech.CSDSEM
                                 }
                             }
 
-                            // 將樓板交集點從各別的 OpeningInfo 抽出到 global 清單
+                            // 處理樓板交集點
                             if (openingInfo.type.Equals("Floor"))
                             {
                                 var floorCrushes = openingInfo.crushElemInfos.ToList();
                                 foreach (var crush in floorCrushes)
                                 {
+                                    // -------------------------------------------------------------
+                                    // 【核心功能 3】：當管道與落水頭連結時，排除不進行樓板開口！
+                                    // -------------------------------------------------------------
+                                    if (crush.pipeOrDuct != null && floorDrainPipeKeys.Contains(new UniqueElementKey(crush.pipeOrDuct)))
+                                    {
+                                        continue; // 跳過落水頭連通管，不生成樓版開口！
+                                    }
+
                                     XYZ originalCenter = crush.xyzs.FirstOrDefault() ?? XYZ.Zero;
 
-                                    // 1. 取得樓板原生的相對於樓層高度偏移
                                     double floorOffsetFeet = 0.0;
                                     Parameter offsetParam = openingInfo.element.get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM);
                                     if (offsetParam != null)
@@ -314,7 +351,6 @@ namespace Sinotech.CSDSEM
                                     }
                                     else
                                     {
-                                        // 當沒有實體交點 (如管配件) 時，以樓板的絕對高程推算上下界
                                         double floorTopZ = 0.0;
                                         if (openingInfo.level != null)
                                         {
@@ -322,13 +358,12 @@ namespace Sinotech.CSDSEM
                                         }
 
                                         floorTopZ += floorOffsetFeet;
-                                        floorTopZ += elevationOffset; // 加上專案自訂補償
+                                        floorTopZ += elevationOffset;
 
                                         entryZ = floorTopZ;
                                         exitZ = floorTopZ - openingInfo.thickness;
                                     }
 
-                                    // 計算精確的幾何貫穿中心點
                                     double trueCenterZ = (entryZ + exitZ) / 2.0;
                                     XYZ preciseCenter = new XYZ(originalCenter.X, originalCenter.Y, trueCenterZ);
 
@@ -349,7 +384,7 @@ namespace Sinotech.CSDSEM
                                         ExitZ = exitZ,
                                         IntersectionCenter = preciseCenter,
                                         SingleFloorThicknessFeet = crush.thickness,
-                                        FloorHeightOffsetFeet = floorOffsetFeet, // 【關鍵傳遞】：保留原生 Offset 以供合併時定錨
+                                        FloorHeightOffsetFeet = floorOffsetFeet,
                                         Axis = crush.axis,
                                         PipeAngle = crush.pipeAngle,
                                         Number = crush.number
@@ -455,7 +490,6 @@ namespace Sinotech.CSDSEM
                                     LocationPoint lp = newOpening.Location as LocationPoint;
                                     XYZ xyz = lp.Point;
 
-                                    // 【核心修復】：以容差 0.005 feet 取代 15行 Math.Round 複雜迴圈
                                     bool isDuplicate = openingXYZs.Any(p => p.IsAlmostEqualTo(xyz, 0.005));
 
                                     if (isDuplicate)
@@ -490,6 +524,124 @@ namespace Sinotech.CSDSEM
             }
 
             return Result.Succeeded;
+        }
+
+        /// <summary>
+        /// 【核心服務】：搜尋所有專案（含 Link）中名稱含 "落水頭" 的族群，並經由 MEP Connector 追蹤所有連結管道
+        /// </summary>
+        private HashSet<UniqueElementKey> CollectFloorDrainConnectedPipes(Document hostDoc, List<RevitLinkInstance> pipeDuctLinkDocs)
+        {
+            var connectedPipeKeys = new HashSet<UniqueElementKey>();
+
+            // 1. 建立需要搜尋的所有 Document 清單 (含本機 Model 與連結 Models)
+            var docsToSearch = new List<Document> { hostDoc };
+            foreach (var link in pipeDuctLinkDocs)
+            {
+                var linkDoc = link.GetLinkDocument();
+                if (linkDoc != null && !docsToSearch.Any(d => d.Title.Equals(linkDoc.Title)))
+                {
+                    docsToSearch.Add(linkDoc);
+                }
+            }
+
+            // 2. 遍歷每個 Document 尋找落水頭並追蹤 Connectors
+            foreach (var targetDoc in docsToSearch)
+            {
+                try
+                {
+                    // 收集該模型中所有 FamilyInstance (衛浴設備/機械設備)
+                    IList<ElementFilter> drainCategories = new List<ElementFilter>
+                    {
+                        new ElementCategoryFilter(BuiltInCategory.OST_PlumbingFixtures),
+                        new ElementCategoryFilter(BuiltInCategory.OST_MechanicalEquipment)
+                    };
+                    LogicalOrFilter drainFilter = new LogicalOrFilter(drainCategories);
+
+                    var familyInstances = new FilteredElementCollector(targetDoc)
+                        .WherePasses(drainFilter)
+                        .WhereElementIsNotElementType()
+                        .Cast<FamilyInstance>()
+                        .ToList();
+
+                    // 篩選出 Family.Name 或 Symbol.Name 包含 "落水頭" 的物件
+                    var floorDrains = familyInstances.Where(fi =>
+                        (fi.Symbol?.Family?.Name != null && fi.Symbol.Family.Name.Contains("落水頭")) ||
+                        (fi.Symbol?.Name != null && fi.Symbol.Name.Contains("落水頭"))
+                    ).ToList();
+
+                    foreach (var drain in floorDrains)
+                    {
+                        // 讀取 MEP ConnectorManager
+                        ConnectorManager connMgr = drain.MEPModel?.ConnectorManager;
+                        if (connMgr == null) continue;
+
+                        foreach (Connector conn in connMgr.Connectors)
+                        {
+                            if (conn == null || !conn.IsConnected) continue;
+
+                            // 存取連結至此 Connector 的其他元件
+                            foreach (Connector refConn in conn.AllRefs)
+                            {
+                                if (refConn == null || refConn.Owner == null) continue;
+
+                                Element ownerElem = refConn.Owner;
+
+                                // 若為管道 (Pipe, Duct, CableTray) 或管配件，加入白名單
+                                if (ownerElem is Pipe || ownerElem is Duct || ownerElem is CableTray || ownerElem is FamilyInstance)
+                                {
+                                    connectedPipeKeys.Add(new UniqueElementKey(ownerElem));
+
+                                    // 進一步追蹤第二階管線 (如落水頭 -> 垂直立管 -> 橫支管)
+                                    TraverseNextConnectors(ownerElem, connectedPipeKeys);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 紀錄警示並持續處理其他 Document
+                    string err = targetDoc.Title + ": " + ex.Message;
+                }
+            }
+
+            return connectedPipeKeys;
+        }
+
+        /// <summary>
+        /// 廣度搜尋（BFS）：沿著 MEP 管道 Connector 網路向外追蹤一階延伸管道
+        /// </summary>
+        private void TraverseNextConnectors(Element elem, HashSet<UniqueElementKey> keySet)
+        {
+            ConnectorManager mgr = null;
+            if (elem is MEPCurve mepCurve)
+            {
+                mgr = mepCurve.ConnectorManager;
+            }
+            else if (elem is FamilyInstance fi && fi.MEPModel != null)
+            {
+                mgr = fi.MEPModel.ConnectorManager;
+            }
+
+            if (mgr == null) return;
+
+            foreach (Connector conn in mgr.Connectors)
+            {
+                if (conn == null || !conn.IsConnected) continue;
+
+                foreach (Connector refConn in conn.AllRefs)
+                {
+                    if (refConn == null || refConn.Owner == null) continue;
+
+                    Element nextElem = refConn.Owner;
+                    var key = new UniqueElementKey(nextElem);
+
+                    if (!keySet.Contains(key) && (nextElem is Pipe || nextElem is Duct || nextElem is CableTray))
+                    {
+                        keySet.Add(key);
+                    }
+                }
+            }
         }
 
         private static List<string> ParseFileNameTokens(Document doc)
@@ -852,14 +1004,9 @@ namespace Sinotech.CSDSEM
                                 crushElemInfo.type = "CableTrayFitting";
                                 try
                                 {
-                                    // 1. 取得托盤高度 (若有值則加上 50 / unit_conversion，若全為 null 則為 0)
                                     double heightValue = GetFirstParameterValue(interferenceElem, "托盤高度");
                                     crushElemInfo.ductHeight = heightValue > 0 ? heightValue + (50.0 / unit_conversion) : 0.0;
-
-                                    // 2. 取得托盤寬度 (若全為 null 則為 0)
                                     crushElemInfo.ductWight = GetFirstParameterValue(interferenceElem, "托盤寬度");
-
-                                    // 3. 取得長度 (若全為 null 則為 0)
                                     crushElemInfo.thickness = GetFirstParameterValue(interferenceElem, "長度");
                                 }
                                 catch (Exception) { }
@@ -937,86 +1084,16 @@ namespace Sinotech.CSDSEM
                 openingInfoList.Add(openingInfo);
             }
         }
-        /// <summary>
-        /// 搜尋元件中名稱包含 keyword 的所有參數，回傳第一個有數值的 AsDouble()，若皆無則回傳 0.0
-        /// </summary>
+
         private double GetFirstParameterValue(Element elem, string keyword)
         {
-            // 收集所有名稱包含 keyword 的 Parameter
             List<Parameter> matchingParams = elem.Parameters
                 .Cast<Parameter>()
                 .Where(p => p.Definition != null && p.Definition.Name.Contains(keyword))
                 .ToList();
 
-            // 找出第一個有值 (HasValue) 的參數
             Parameter firstValidParam = matchingParams.FirstOrDefault(p => p.HasValue);
-
-            // 如果找到則取得其 Double 值，否則傳回 0.0
             return firstValidParam != null ? firstValidParam.AsDouble() : 0.0;
-        }
-
-        private void FindSolidIntersection(Element interferenceElem, Solid solid, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform transform)
-        {
-            ICollection<ElementId> interferenceElems = new List<ElementId> { interferenceElem.Id };
-            if (!transform.AlmostEqual(Transform.CreateTranslation(new XYZ(0, 0, 0))))
-            {
-                solid = SolidUtils.CreateTransformed(solid, transform.Inverse);
-            }
-            IList<Element> elems = new FilteredElementCollector(interferenceElem.Document, interferenceElems).WherePasses(new ElementIntersectsSolidFilter(solid)).WhereElementIsNotElementType().ToList();
-            foreach (Element elem in elems)
-            {
-                try
-                {
-                    LocationPoint lp = elem.Location as LocationPoint;
-                    XYZ insXYZ = new XYZ();
-                    if (lp != null)
-                    {
-                        insXYZ = new XYZ((lp.Point.X + transform.Origin.X), (lp.Point.Y + transform.Origin.Y), (lp.Point.Z + transform.Origin.Z) + elevationOffset);
-                    }
-                    else
-                    {
-                        LocationCurve lc = elem.Location as LocationCurve;
-                        XYZ lp1 = lc.Curve.Tessellate()[0];
-                        XYZ lp2 = lc.Curve.Tessellate()[1];
-                        insXYZ = new XYZ((lp1.X + lp2.X) / 2 + transform.Origin.X, (lp1.Y + lp2.Y) / 2 + transform.Origin.Y, (lp1.Z + lp2.Z) / 2 + transform.Origin.Z + elevationOffset);
-                    }
-
-                    double z = insXYZ.Z;
-                    if (openingInfo.element is Floor)
-                    {
-                        crushElemInfo.xyzs.Add(insXYZ);
-                        double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-                        crushElemInfo.deviation = z - elevation;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            LocationCurve lc = openingInfo.element.Location as LocationCurve;
-                            Line line = lc.Curve as Line;
-                            line.MakeUnbound();
-                            insXYZ = line.Project(insXYZ).XYZPoint;
-                            crushElemInfo.xyzs.Add(insXYZ);
-                        }
-                        catch (Exception) { }
-
-                        if (crushElemInfo.level != null)
-                        {
-                            double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-                            crushElemInfo.deviation = z - elevation;
-                        }
-                    }
-                    crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10));
-                    crushElemInfo.pipeAngle = openingInfo.beamWallAngle - 90;
-
-                    if (crushElemInfo.xyzs.Count > 0)
-                    {
-                        crushElemInfo.comment = $"{crushElemInfo.docName}_{interferenceElem.Id}_{openingInfo.docName}_{openingInfo.element.Id}";
-                        openingInfo.crushElemInfos.Add(crushElemInfo);
-                    }
-                }
-                catch (Exception) { }
-            }
         }
 
         private void FindFaceIntersectLine(Solid solid, Curve curve, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform linkTransform)
@@ -1085,6 +1162,70 @@ namespace Sinotech.CSDSEM
             }
         }
 
+        private void FindSolidIntersection(Element interferenceElem, Solid solid, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform transform)
+        {
+            ICollection<ElementId> interferenceElems = new List<ElementId> { interferenceElem.Id };
+            if (!transform.AlmostEqual(Transform.CreateTranslation(new XYZ(0, 0, 0))))
+            {
+                solid = SolidUtils.CreateTransformed(solid, transform.Inverse);
+            }
+            IList<Element> elems = new FilteredElementCollector(interferenceElem.Document, interferenceElems).WherePasses(new ElementIntersectsSolidFilter(solid)).WhereElementIsNotElementType().ToList();
+            foreach (Element elem in elems)
+            {
+                try
+                {
+                    LocationPoint lp = elem.Location as LocationPoint;
+                    XYZ insXYZ = new XYZ();
+                    if (lp != null)
+                    {
+                        insXYZ = new XYZ((lp.Point.X + transform.Origin.X), (lp.Point.Y + transform.Origin.Y), (lp.Point.Z + transform.Origin.Z) + elevationOffset);
+                    }
+                    else
+                    {
+                        LocationCurve lc = elem.Location as LocationCurve;
+                        XYZ lp1 = lc.Curve.Tessellate()[0];
+                        XYZ lp2 = lc.Curve.Tessellate()[1];
+                        insXYZ = new XYZ((lp1.X + lp2.X) / 2 + transform.Origin.X, (lp1.Y + lp2.Y) / 2 + transform.Origin.Y, (lp1.Z + lp2.Z) / 2 + transform.Origin.Z + elevationOffset);
+                    }
+
+                    double z = insXYZ.Z;
+                    if (openingInfo.element is Floor)
+                    {
+                        crushElemInfo.xyzs.Add(insXYZ);
+                        double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                        crushElemInfo.deviation = z - elevation;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            LocationCurve lc = openingInfo.element.Location as LocationCurve;
+                            Line line = lc.Curve as Line;
+                            line.MakeUnbound();
+                            insXYZ = line.Project(insXYZ).XYZPoint;
+                            crushElemInfo.xyzs.Add(insXYZ);
+                        }
+                        catch (Exception) { }
+
+                        if (crushElemInfo.level != null)
+                        {
+                            double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                            crushElemInfo.deviation = z - elevation;
+                        }
+                    }
+                    crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10));
+                    crushElemInfo.pipeAngle = openingInfo.beamWallAngle - 90;
+
+                    if (crushElemInfo.xyzs.Count > 0)
+                    {
+                        crushElemInfo.comment = $"{crushElemInfo.docName}_{interferenceElem.Id}_{openingInfo.docName}_{openingInfo.element.Id}";
+                        openingInfo.crushElemInfos.Add(crushElemInfo);
+                    }
+                }
+                catch (Exception) { }
+            }
+        }
+
         private List<FamilySymbol> FindFS(Document doc)
         {
             IList<FamilySymbol> familySymbols = new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).Cast<FamilySymbol>().ToList();
@@ -1146,7 +1287,6 @@ namespace Sinotech.CSDSEM
             return radius;
         }
 
-        // 【重構重點】：使用原生 IsAlmostEqualTo 進行精準開口重複檢查
         private int PlaceOpening(Document doc, CrushElemInfo crushElemInfo, List<FamilySymbol> openFSList, int amount)
         {
             string useFS = string.Empty;
