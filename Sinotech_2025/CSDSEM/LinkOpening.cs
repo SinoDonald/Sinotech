@@ -1007,7 +1007,7 @@ namespace Sinotech_2025.CSDSEM
                                     double heightValue = GetFirstParameterValue(interferenceElem, "托盤高度");
                                     crushElemInfo.ductHeight = heightValue > 0 ? heightValue + (50.0 / unit_conversion) : 0.0;
                                     crushElemInfo.ductWight = GetFirstParameterValue(interferenceElem, "托盤寬度");
-                                    crushElemInfo.thickness = GetFirstParameterValue(interferenceElem, "長度");
+                                    crushElemInfo.thickness = thicknessPara != null ? thicknessPara.AsDouble() : GetFirstParameterValue(interferenceElem, "長度");
                                 }
                                 catch (Exception) { }
 
