@@ -1468,6 +1468,7 @@ namespace Sinotech.CSDSEM
                         string value = "0";
                         para = opening.LookupParameter("矩形開口底部高程") ?? opening.LookupParameter("圓形套管底部高程");
                         para?.Set(value);
+                        //para = opening.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM); para?.Set(1 / unit_conversion); // 「距離樓層的高程」, 待確認是否要調高讓平面圖可見
                     }
 
                     para = opening.LookupParameter("專業代碼");
