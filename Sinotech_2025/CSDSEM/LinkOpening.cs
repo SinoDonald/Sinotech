@@ -82,6 +82,10 @@ namespace Sinotech_2025.CSDSEM
             public List<XYZ> xyzs = new List<XYZ>();
             public Line axis { get; set; }
             public double pipeAngle { get; set; }
+            /// <summary>垂直貫穿牆(由上而下)時，用來將開口從水平「扶正」為垂直的額外旋轉軸；水平貫穿時維持 null，不套用。</summary>
+            public Line tipAxis { get; set; } = null;
+            /// <summary>搭配 tipAxis 使用的扶正角度(度)；水平貫穿時為 0，不套用。</summary>
+            public double tipAngle { get; set; } = 0;
             public List<Element> pipeOpens = new List<Element>();
             public string useFS = string.Empty;
             public double deviation { get; set; }
@@ -1096,16 +1100,27 @@ namespace Sinotech_2025.CSDSEM
             return firstValidParam != null ? firstValidParam.AsDouble() : 0.0;
         }
 
+        /// <summary>
+        /// 記錄管道/風管/電纜架與牆(樑/樓板)實體單一面的交點，供後續配對「真正對向的兩面」使用。
+        /// </summary>
+        private class FaceTouch
+        {
+            public Face TouchFace { get; set; }
+            public XYZ Point { get; set; }
+            public XYZ Normal { get; set; }
+        }
+
         private void FindFaceIntersectLine(Solid solid, Curve curve, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform linkTransform)
         {
-            XYZ startPoint = new XYZ();
-            XYZ endPoint = new XYZ();
-            int i = 1;
+            // 【Bug 1】先蒐集管道與 solid 所有面的交點，不再用 solid.Faces 列舉順序的奇偶數配對。
+            // 原本的奇偶配對只要「先後」摸到兩個面（可能是牆端頭封面、轉角面等非對向面）就會配成一組，
+            // 導致管道其實沒有真正貫穿牆的兩面，也會被判定為已穿越而生成開口。
+            List<FaceTouch> touches = new List<FaceTouch>();
+
             foreach (Face face in solid.Faces)
             {
                 IntersectionResultArray intersectionR = new IntersectionResultArray();
                 SetComparisonResult comparisonR = face.Intersect(curve, out intersectionR);
-                XYZ intersectionResult = null;
 
                 if (SetComparisonResult.Disjoint != comparisonR)
                 {
@@ -1113,53 +1128,118 @@ namespace Sinotech_2025.CSDSEM
                     {
                         if (intersectionR != null && !intersectionR.IsEmpty)
                         {
-                            int mod = i % 2;
-                            crushElemInfo.insfaces.Add(face);
-                            intersectionResult = new XYZ((intersectionR.get_Item(0).XYZPoint.X), (intersectionR.get_Item(0).XYZPoint.Y), (intersectionR.get_Item(0).XYZPoint.Z) + elevationOffset);
-                            crushElemInfo.insXYZs.Add(intersectionResult);
+                            IntersectionResult ir = intersectionR.get_Item(0);
+                            XYZ point = new XYZ(ir.XYZPoint.X, ir.XYZPoint.Y, ir.XYZPoint.Z + elevationOffset);
+                            XYZ normal = null;
+                            try { normal = face.ComputeNormal(ir.UVPoint); }
+                            catch (Exception) { normal = null; }
 
-                            if (mod == 1)
-                            {
-                                startPoint = intersectionResult;
-                            }
-                            else if (mod == 0)
-                            {
-                                endPoint = intersectionResult;
-                                XYZ insXYZ = new XYZ((startPoint.X + endPoint.X) / 2, (startPoint.Y + endPoint.Y) / 2, (startPoint.Z + endPoint.Z) / 2);
-
-                                if (openingInfo.element is Floor)
-                                {
-                                    crushElemInfo.xyzs.Add(endPoint);
-                                    double z = endPoint.Z;
-                                    double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-                                    crushElemInfo.deviation = z - elevation;
-                                }
-                                else
-                                {
-                                    crushElemInfo.xyzs.Add(insXYZ);
-                                    double z = insXYZ.Z;
-                                    if (crushElemInfo.level != null)
-                                    {
-                                        double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
-                                        crushElemInfo.deviation = z - elevation;
-                                    }
-                                }
-                                crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10));
-                                crushElemInfo.pipeAngle = PointRotation(startPoint, endPoint);
-
-                                if (crushElemInfo.pipeOrDuct != null && openingInfo.element != null)
-                                {
-                                    crushElemInfo.comment = $"{crushElemInfo.docName}_{crushElemInfo.pipeOrDuct.Id}_{openingInfo.docName}_{openingInfo.element.Id}";
-                                }
-
-                                openingInfo.crushElemInfos.Add(crushElemInfo);
-                            }
-                            i++;
+                            touches.Add(new FaceTouch { TouchFace = face, Point = point, Normal = normal });
                         }
                     }
                     catch (NullReferenceException) { }
                 }
             }
+
+            // 從所有交點中，找出「面法向量互為反向」(dot 接近 -1，代表兩個面真正相對) 的一組，
+            // 這一組才代表管道真正從實體的一面貫穿到另一面。
+            XYZ startPoint = null;
+            XYZ endPoint = null;
+            Face startFace = null;
+            Face endFace = null;
+            double bestDot = 1.0;
+
+            for (int a = 0; a < touches.Count; a++)
+            {
+                for (int b = a + 1; b < touches.Count; b++)
+                {
+                    if (touches[a].Normal == null || touches[b].Normal == null) continue;
+
+                    double dot = touches[a].Normal.DotProduct(touches[b].Normal);
+                    if (dot < -0.9 && dot < bestDot) // 兩面法向量夾角需接近 180 度，容許約 25 度誤差
+                    {
+                        bestDot = dot;
+                        startPoint = touches[a].Point;
+                        endPoint = touches[b].Point;
+                        startFace = touches[a].TouchFace;
+                        endFace = touches[b].TouchFace;
+                    }
+                }
+            }
+
+            // 找不到真正對向的兩面交點，代表管道並未真正貫穿(可能只是埋入/接觸牆內)，不生成開口候選。
+            if (startPoint == null || endPoint == null)
+            {
+                return;
+            }
+
+            crushElemInfo.insfaces.Add(startFace);
+            crushElemInfo.insfaces.Add(endFace);
+            crushElemInfo.insXYZs.Add(startPoint);
+            crushElemInfo.insXYZs.Add(endPoint);
+
+            XYZ insXYZ = new XYZ((startPoint.X + endPoint.X) / 2, (startPoint.Y + endPoint.Y) / 2, (startPoint.Z + endPoint.Z) / 2);
+
+            if (openingInfo.element is Floor)
+            {
+                crushElemInfo.xyzs.Add(endPoint);
+                double z = endPoint.Z;
+                double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                crushElemInfo.deviation = z - elevation;
+            }
+            else
+            {
+                crushElemInfo.xyzs.Add(insXYZ);
+                double z = insXYZ.Z;
+                if (crushElemInfo.level != null)
+                {
+                    double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                    crushElemInfo.deviation = z - elevation;
+                }
+            }
+            crushElemInfo.axis = Line.CreateBound(insXYZ, new XYZ(insXYZ.X, insXYZ.Y, insXYZ.Z + 10));
+
+            // 【Bug 2】原本 PointRotation 只取 X、Y 分量算角度 (Math.Atan2(Dy, Dx))。
+            // 當真正對向的兩面是水平面時(例如牆的上下端封面、樓板頂底面)，代表管道是「由上而下」貫穿，
+            // 這種情況下起訖點的 X、Y 幾乎相同，Dx、Dy 趨近於 0，Atan2(~0, ~0) 會得到不穩定、
+            // 甚至恆為 0 的角度，導致開口永遠以「水平」的預設角度生成，而非依管道實際貫穿方向旋轉。
+            // 這裡只在偵測到這種「垂直貫穿」的情況時，改用本檔案 FindSolidIntersection 已經採用的
+            // 同一套備援角度公式 (openingInfo.beamWallAngle - 90)；其餘正常水平貫穿的情況，
+            // 角度計算方式與原本完全相同，不影響既有開口的尺寸、位置與旋轉角度。
+            double dx = endPoint.X - startPoint.X;
+            double dy = endPoint.Y - startPoint.Y;
+            bool isVerticalPenetration = Math.Abs(dx) < 0.01 && Math.Abs(dy) < 0.01; // 0.01 呎 ≈ 3mm
+
+            crushElemInfo.pipeAngle = isVerticalPenetration
+                ? openingInfo.beamWallAngle - 90
+                : PointRotation(startPoint, endPoint);
+
+            // 【垂直貫穿的「扶正」旋轉】
+            // 牆開口族群 (圓形水管牆開口/矩形風管牆開口/電纜架牆開口) 的管件本體，預設是「躺平」的：
+            // 沿著垂直於牆面的水平方向延伸，靠上面 pipeAngle 的 Z 軸旋轉去對齊管道在平面上的走向。
+            // 這對「水平貫穿牆」的管道是對的，但對「由上而下貫穿」的管道，管件必須被「扶正」成垂直，
+            // 光靠繞 Z 軸(垂直軸)旋轉永遠做不到——繞垂直軸旋轉只能改變管件在水平面上的朝向，
+            // 無法讓它站起來。因此這裡額外計算一個「扶正」旋轉：
+            // 先用 pipeAngle 把管件對齊到垂直於牆面的水平方向 (與現有邏輯相同)，
+            // 再繞著「牆本身的走向」這條水平軸線旋轉 90 度，把管件從水平扶正為垂直，
+            // 效果如同樓版開口一樣由上而下生成。矩形斷面(矩形風管牆開口/電纜架牆開口)扶正後
+            // 寬高軸的朝向請實際生成後在模型中覆核一次；圓形斷面因對稱、不受影響。
+            if (isVerticalPenetration)
+            {
+                crushElemInfo.thickness = Math.Abs(endPoint.Z - startPoint.Z);
+
+                double bearingRad = openingInfo.beamWallAngle * Math.PI / 180.0;
+                XYZ bearingDir = new XYZ(Math.Cos(bearingRad), Math.Sin(bearingRad), 0);
+                crushElemInfo.tipAxis = Line.CreateBound(insXYZ, insXYZ + bearingDir.Multiply(10));
+                crushElemInfo.tipAngle = 90.0;
+            }
+
+            if (crushElemInfo.pipeOrDuct != null && openingInfo.element != null)
+            {
+                crushElemInfo.comment = $"{crushElemInfo.docName}_{crushElemInfo.pipeOrDuct.Id}_{openingInfo.docName}_{openingInfo.element.Id}";
+            }
+
+            openingInfo.crushElemInfos.Add(crushElemInfo);
         }
 
         private void FindSolidIntersection(Element interferenceElem, Solid solid, OpeningInfo openingInfo, CrushElemInfo crushElemInfo, Transform transform)
@@ -1324,6 +1404,23 @@ namespace Sinotech_2025.CSDSEM
             return amount;
         }
 
+        /// <summary>
+        /// 套用開口的旋轉：先維持原本繞垂直軸(crushElemInfo.axis)對齊管道平面走向的旋轉，
+        /// 若管道是「由上而下」貫穿(crushElemInfo.tipAxis 有值)，再額外把開口從水平扶正為垂直。
+        /// 水平貫穿的既有案例 tipAxis 為 null，行為與修改前完全相同。
+        /// </summary>
+        private void ApplyOpeningRotation(Document doc, Element pipeOpen, CrushElemInfo crushElemInfo)
+        {
+            if (crushElemInfo.axis != null)
+            {
+                ElementTransformUtils.RotateElement(doc, pipeOpen.Id, crushElemInfo.axis, crushElemInfo.pipeAngle * Math.PI / 180);
+            }
+            if (crushElemInfo.tipAxis != null && crushElemInfo.tipAngle != 0)
+            {
+                ElementTransformUtils.RotateElement(doc, pipeOpen.Id, crushElemInfo.tipAxis, crushElemInfo.tipAngle * Math.PI / 180);
+            }
+        }
+
         private void RotateEditOpening(Document doc, List<OpeningInfo> openingInfoList)
         {
             foreach (OpeningInfo openingInfo in openingInfoList)
@@ -1341,7 +1438,7 @@ namespace Sinotech_2025.CSDSEM
                                 editPara = pipeOpen.LookupParameter("指定圓形套管直徑"); editPara?.Set(crushElemInfo.diameter);
                                 editPara = pipeOpen.LookupParameter("牆厚度"); editPara?.Set(crushElemInfo.thickness);
                                 editPara = pipeOpen.LookupParameter("圓形牆開口流水號"); editPara?.Set(crushElemInfo.number);
-                                if (crushElemInfo.axis != null) ElementTransformUtils.RotateElement(doc, pipeOpen.Id, crushElemInfo.axis, crushElemInfo.pipeAngle * Math.PI / 180);
+                                ApplyOpeningRotation(doc, pipeOpen, crushElemInfo);
                             }
                             else if (crushElemInfo.useFS.Equals("圓形水管樓版開口"))
                             {
@@ -1356,7 +1453,7 @@ namespace Sinotech_2025.CSDSEM
                                 editPara = pipeOpen.LookupParameter("風管寬度"); editPara?.Set(crushElemInfo.ductWight);
                                 editPara = pipeOpen.LookupParameter("牆厚度"); editPara?.Set(crushElemInfo.thickness);
                                 editPara = pipeOpen.LookupParameter("矩形牆開口流水號"); editPara?.Set(crushElemInfo.number);
-                                if (crushElemInfo.axis != null) ElementTransformUtils.RotateElement(doc, pipeOpen.Id, crushElemInfo.axis, crushElemInfo.pipeAngle * Math.PI / 180);
+                                ApplyOpeningRotation(doc, pipeOpen, crushElemInfo);
                             }
                             else if (crushElemInfo.useFS.Equals("矩形風管樓版開口"))
                             {
@@ -1372,10 +1469,7 @@ namespace Sinotech_2025.CSDSEM
                                 editPara = pipeOpen.LookupParameter("牆厚度"); if (editPara != null && !editPara.IsReadOnly) editPara.Set(crushElemInfo.thickness);
                                 editPara = pipeOpen.LookupParameter("矩形牆開口流水號"); if (editPara != null && !editPara.IsReadOnly) editPara.Set(crushElemInfo.number);
 
-                                if (crushElemInfo.axis != null)
-                                {
-                                    ElementTransformUtils.RotateElement(doc, pipeOpen.Id, crushElemInfo.axis, crushElemInfo.pipeAngle * Math.PI / 180);
-                                }
+                                ApplyOpeningRotation(doc, pipeOpen, crushElemInfo);
                             }
                             else if (crushElemInfo.useFS.Equals("電纜架樓版開口"))
                             {
