@@ -209,6 +209,7 @@
     <Compile Include="CSDSEM\AutoNumberForm.Designer.cs">
       <DependentUpon>AutoNumberForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CSDSEM\AutoOpeningTag.cs" />
     <Compile Include="CSDSEM\ChooseMultiViewPlansForm.cs">
       <SubType>Form</SubType>
     </Compile>

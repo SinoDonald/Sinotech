@@ -21,19 +21,26 @@ namespace Sinotech_2025.UpdateView
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
 
-            ExcelReader excelReader = new ExcelReader();
-            PdfReader pdfReader = new PdfReader();
-            List<DrawingSign> drawingDatas = excelReader.GetDrawingSigns();
-            // 比對檔名, 將PDF的日期資料寫入至data
-            foreach (DrawingSign drawingData in drawingDatas)
+            try
             {
-                string pdf_path = Path.Combine(Path.GetDirectoryName(excelReader.FilePath), $@"pdf\{drawingData.FileName}.pdf");
-                drawingData.SignDates = pdfReader.ExtractDateText(pdf_path);
+                ExcelReader excelReader = new ExcelReader();
+                if (!String.IsNullOrEmpty(excelReader.FilePath))
+                {
+                    PdfReader pdfReader = new PdfReader();
+                    List<DrawingSign> drawingDatas = excelReader.GetDrawingSigns();
+                    // 比對檔名, 將PDF的日期資料寫入至data
+                    foreach (DrawingSign drawingData in drawingDatas)
+                    {
+                        string pdf_path = Path.Combine(Path.GetDirectoryName(excelReader.FilePath), $@"pdf\{drawingData.FileName}.pdf");
+                        drawingData.SignDates = pdfReader.ExtractDateText(pdf_path);
+                    }
+
+                    SignMyName(doc, drawingDatas); // 將Excel資料寫入圖框
+
+                    TaskDialog.Show("Revit", "更新完成");
+                }
             }
-
-            SignMyName(doc, drawingDatas); // 將Excel資料寫入圖框
-
-            TaskDialog.Show("Revit", "更新完成");
+            catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
 
             return Result.Succeeded;
         }
