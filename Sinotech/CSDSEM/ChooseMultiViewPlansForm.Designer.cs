@@ -195,6 +195,7 @@
             this.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4);
+            this.MinimumSize = new System.Drawing.Size(410, 435);
             this.Name = "ChooseMultiViewPlansForm";
             this.Text = "請選擇要編輯的視圖";
             this.ResumeLayout(false);

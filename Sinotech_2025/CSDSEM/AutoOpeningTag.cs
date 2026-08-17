@@ -9,7 +9,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 
-namespace Sinotech.CSDSEM
+namespace Sinotech_2025.CSDSEM
 {
     /// <summary>
     /// 自動開口與套管標籤建立外部命令
