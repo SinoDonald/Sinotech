@@ -22,7 +22,7 @@ namespace Sinotech_2025.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace Sinotech_2025.Properties {
         ///   傳回這個類別使用的快取的 ResourceManager 執行個體。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Sinotech_2025.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace Sinotech_2025.Properties {
         ///   使用這個強類型資源類別的資源查閱。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap PCCES {
+        public static System.Drawing.Bitmap PCCES {
             get {
                 object obj = ResourceManager.GetObject("PCCES", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -73,7 +73,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 元件解鎖 {
+        public static System.Drawing.Bitmap 元件解鎖 {
             get {
                 object obj = ResourceManager.GetObject("元件解鎖", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -83,7 +83,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 元件鎖定 {
+        public static System.Drawing.Bitmap 元件鎖定 {
             get {
                 object obj = ResourceManager.GetObject("元件鎖定", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -93,7 +93,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 圖紙匯出 {
+        public static System.Drawing.Bitmap 圖紙匯出 {
             get {
                 object obj = ResourceManager.GetObject("圖紙匯出", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -103,7 +103,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 圖紙更新 {
+        public static System.Drawing.Bitmap 圖紙更新 {
             get {
                 object obj = ResourceManager.GetObject("圖紙更新", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -113,7 +113,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 干涉報告 {
+        public static System.Drawing.Bitmap 干涉報告 {
             get {
                 object obj = ResourceManager.GetObject("干涉報告", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -123,7 +123,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 手動標籤 {
+        public static System.Drawing.Bitmap 手動標籤 {
             get {
                 object obj = ResourceManager.GetObject("手動標籤", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -133,7 +133,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 手動編號 {
+        public static System.Drawing.Bitmap 手動編號 {
             get {
                 object obj = ResourceManager.GetObject("手動編號", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -143,7 +143,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 更新Excel {
+        public static System.Drawing.Bitmap 更新Excel {
             get {
                 object obj = ResourceManager.GetObject("更新Excel", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -153,7 +153,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 更新圖號 {
+        public static System.Drawing.Bitmap 更新圖號 {
             get {
                 object obj = ResourceManager.GetObject("更新圖號", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -163,7 +163,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 更新比例尺 {
+        public static System.Drawing.Bitmap 更新比例尺 {
             get {
                 object obj = ResourceManager.GetObject("更新比例尺", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -173,7 +173,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 標籤排序 {
+        public static System.Drawing.Bitmap 標籤排序 {
             get {
                 object obj = ResourceManager.GetObject("標籤排序", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -183,7 +183,17 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 自動升版 {
+        public static System.Drawing.Bitmap 管道標籤 {
+            get {
+                object obj = ResourceManager.GetObject("管道標籤", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
+        public static System.Drawing.Bitmap 自動升版 {
             get {
                 object obj = ResourceManager.GetObject("自動升版", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -193,7 +203,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 自動接合 {
+        public static System.Drawing.Bitmap 自動接合 {
             get {
                 object obj = ResourceManager.GetObject("自動接合", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -203,17 +213,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 自動標籤 {
-            get {
-                object obj = ResourceManager.GetObject("自動標籤", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
-        /// </summary>
-        internal static System.Drawing.Bitmap 自動簽圖 {
+        public static System.Drawing.Bitmap 自動簽圖 {
             get {
                 object obj = ResourceManager.GetObject("自動簽圖", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -223,7 +223,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 自動編號 {
+        public static System.Drawing.Bitmap 自動編號 {
             get {
                 object obj = ResourceManager.GetObject("自動編號", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -233,7 +233,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 自動翻柱 {
+        public static System.Drawing.Bitmap 自動翻柱 {
             get {
                 object obj = ResourceManager.GetObject("自動翻柱", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -243,7 +243,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 自動開口 {
+        public static System.Drawing.Bitmap 自動開口 {
             get {
                 object obj = ResourceManager.GetObject("自動開口", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -253,7 +253,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 規範詳圖 {
+        public static System.Drawing.Bitmap 規範詳圖 {
             get {
                 object obj = ResourceManager.GetObject("規範詳圖", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -263,7 +263,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 視圖搬移 {
+        public static System.Drawing.Bitmap 視圖搬移 {
             get {
                 object obj = ResourceManager.GetObject("視圖搬移", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -273,7 +273,7 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 視圖複製 {
+        public static System.Drawing.Bitmap 視圖複製 {
             get {
                 object obj = ResourceManager.GetObject("視圖複製", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -283,7 +283,17 @@ namespace Sinotech_2025.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap 雲形線編號 {
+        public static System.Drawing.Bitmap 開口標籤 {
+            get {
+                object obj = ResourceManager.GetObject("開口標籤", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
+        public static System.Drawing.Bitmap 雲形線編號 {
             get {
                 object obj = ResourceManager.GetObject("雲形線編號", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));

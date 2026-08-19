@@ -82,8 +82,8 @@ namespace Sinotech
                 panel_list = application.GetRibbonPanels("中興自動化");
                 foreach (RibbonPanel rp in panel_list) { if (rp.Name == "CSD") { ribbonPanel = rp; } }
             }
-            PushButton autoPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeTag", "自動標籤", addinAssmeblyPath, "Sinotech.CSDSEM.AutoPipeTag")) as PushButton;
-            autoPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.自動標籤);
+            PushButton autoPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeTag", "管道標籤", addinAssmeblyPath, "Sinotech.CSDSEM.AutoPipeTag")) as PushButton;
+            autoPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.管道標籤);
             PushButton tagArrayBtn = ribbonPanel.AddItem(new PushButtonData("TagArray", "標籤排序", addinAssmeblyPath, "Sinotech.CSDSEM.TagArray")) as PushButton;
             tagArrayBtn.LargeImage = convertFromBitmap(Properties.Resources.標籤排序);
 
@@ -101,8 +101,8 @@ namespace Sinotech
             autoNumberBtn.LargeImage = convertFromBitmap(Properties.Resources.自動編號);
             //PushButton manualPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("ManualPipeTag", "手動編號", addinAssmeblyPath, "Sinotech.CSDSEM.ManualPipeTag")) as PushButton;
             //manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動編號);
-            PushButton autoOpeningTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoOpeningTag", "標籤排序", addinAssmeblyPath, "Sinotech.CSDSEM.AutoOpeningTag")) as PushButton;
-            autoOpeningTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動編號);
+            PushButton autoOpeningTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoOpeningTag", "開口標籤", addinAssmeblyPath, "Sinotech.CSDSEM.AutoOpeningTag")) as PushButton;
+            autoOpeningTagBtn.LargeImage = convertFromBitmap(Properties.Resources.開口標籤);
             PushButton PCCESBtn = ribbonPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", addinAssmeblyPath, "Sinotech.CSDSEM.OutPutPCCES")) as PushButton;
             PCCESBtn.LargeImage = convertFromBitmap(Properties.Resources.PCCES);
 

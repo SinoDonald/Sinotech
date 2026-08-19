@@ -223,6 +223,7 @@
       <DependentUpon>LinkSelectionForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CSDSEM\MegedOpening.cs" />
+    <Compile Include="CSDSEM\OpeningTagArray.cs" />
     <Compile Include="CSDSEM\TagArray.cs" />
     <Compile Include="CSDSEM\ViewSelectionForm.cs">
       <SubType>Form</SubType>
@@ -501,6 +502,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="pic\標籤排序.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\開口標籤.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\管道標籤.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

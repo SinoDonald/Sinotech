@@ -89,9 +89,9 @@ namespace Sinotech_2025.CSDSEM
             pipeDuctCableTrayFilters.Add(pipeOrFittingFilter);
             pipeDuctCableTrayFilters.Add(ductOrOpeningFilter);
             pipeDuctCableTrayFilters.Add(cableTrayOrOpeningFilter);
-            List<RevitLinkInstance> rvtInss = new FilteredElementCollector(doc, doc.ActiveView.Id).OfClass(typeof(RevitLinkInstance)).WhereElementIsNotElementType().Cast<RevitLinkInstance>().ToList();
+            List<RevitLinkInstance> rvtInss = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).WhereElementIsNotElementType().Cast<RevitLinkInstance>().Where(x => x.GetLinkDocument() != null).ToList();
             List<RevitLinkPipeType> revitPipeTypeList = new List<RevitLinkPipeType>();
-            using (Transaction trans = new Transaction(doc, "自動標籤"))
+            using (Transaction trans = new Transaction(doc, "自動編號"))
             {
                 trans.Start();
                 
