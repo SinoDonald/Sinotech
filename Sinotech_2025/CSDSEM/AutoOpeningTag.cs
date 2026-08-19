@@ -218,7 +218,7 @@ namespace Sinotech_2025.CSDSEM
                             doc,
                             view.Id,
                             elemRef,
-                            true,
+                            false,
                             TagMode.TM_ADDBY_CATEGORY,
                             TagOrientation.Horizontal,
                             centerPoint

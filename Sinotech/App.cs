@@ -103,6 +103,8 @@ namespace Sinotech
             //manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動編號);
             PushButton autoOpeningTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoOpeningTag", "開口標籤", addinAssmeblyPath, "Sinotech.CSDSEM.AutoOpeningTag")) as PushButton;
             autoOpeningTagBtn.LargeImage = convertFromBitmap(Properties.Resources.開口標籤);
+            PushButton openingTagArrayBtn = ribbonPanel.AddItem(new PushButtonData("OpeningTagArrayBtn", "標籤排序", addinAssmeblyPath, "Sinotech.CSDSEM.OpeningTagArray")) as PushButton;
+            openingTagArrayBtn.LargeImage = convertFromBitmap(Properties.Resources.標籤排序);
             PushButton PCCESBtn = ribbonPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", addinAssmeblyPath, "Sinotech.CSDSEM.OutPutPCCES")) as PushButton;
             PCCESBtn.LargeImage = convertFromBitmap(Properties.Resources.PCCES);
 
