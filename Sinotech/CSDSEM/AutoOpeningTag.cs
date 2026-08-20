@@ -1,19 +1,19 @@
-﻿using System;
+﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
 using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 
 namespace Sinotech.CSDSEM
 {
     /// <summary>
-    /// 自動開口與套管標籤建立外部命令
-    /// 包含品類專屬標籤自動匹配、防重複標註與全域多視圖累加統計
+    /// 自動開口與套管標籤建立外部命令 (極速與高強健性商用版)
+    /// 特性：全背景零視圖切換、全域快取、VG 可見性預檢、防幽靈標籤與全域累加統計
     /// </summary>
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
@@ -68,8 +68,11 @@ namespace Sinotech.CSDSEM
                             return Result.Cancelled;
                         }
 
-                        // 執行全視圖批次標籤作業
-                        TaggingSessionResult sessionResult = ExecuteBatchOpeningTagging(uidoc, doc, selectedViews);
+                        TransactionGroup tranGrp1 = new TransactionGroup(doc, "自動開口標籤");
+                        tranGrp1.Start();
+                        // 執行全視圖極速批次標籤作業 (含健壯防護)
+                        TaggingSessionResult sessionResult = ExecuteFastBatchOpeningTagging(doc, selectedViews);
+                        tranGrp1.Assimilate();
 
                         // 呈現報告與匯出
                         DisplayCompletionDialog(sessionResult);
@@ -87,57 +90,40 @@ namespace Sinotech.CSDSEM
 
         #endregion
 
-        #region Core Batch Processing Logic
+        #region Core Fast Batch Processing Logic
 
         /// <summary>
-        /// 批次處理所有選定視圖的開口標籤放置作業
+        /// 批次處理開口標籤放置 (全背景處理，零視圖切換)
         /// </summary>
-        private TaggingSessionResult ExecuteBatchOpeningTagging(UIDocument uidoc, Document doc, List<ViewPlan> targetViews)
+        private TaggingSessionResult ExecuteFastBatchOpeningTagging(Document doc, List<ViewPlan> targetViews)
         {
             TaggingSessionResult sessionResult = new TaggingSessionResult
             {
                 StartTime = DateTime.Now
             };
 
-            // 1. 預先建立各宿主品類專屬的標籤族群型別字典 (Category -> FamilySymbol)
-            Dictionary<BuiltInCategory, FamilySymbol> tagSymbolMap = BuildCategoryTagSymbolMap(doc);
+            // 1. 預先建立並激活各品類的標籤族群型別
+            Dictionary<BuiltInCategory, FamilySymbol> tagSymbolMap = BuildAndActivateCategoryTagSymbolMap(doc);
+
+            // 2. 預先快取主模型中所有開口幾何與中心資訊 (O(N) 降低至常數級運算)
+            List<OpeningCacheItem> globalOpeningCache = PreCacheHostOpenings(doc);
 
             using (ProgressForm progressForm = new ProgressForm("自動開口標籤作業中", targetViews.Count))
             {
                 progressForm.Show();
 
-                // 依據 PrimaryViewId 分組處理，降低視圖切換之重繪負擔
-                var groupedByPrimaryView = targetViews
-                    .GroupBy(v => v.GetPrimaryViewId() != ElementId.InvalidElementId ? v.GetPrimaryViewId() : v.Id)
-                    .ToList();
-
-                foreach (var viewGroup in groupedByPrimaryView)
+                // 循序在背景處理各視圖 (不切換 ActiveView)
+                foreach (ViewPlan currentPlan in targetViews)
                 {
-                    ElementId parentId = viewGroup.Key;
-                    if (doc.GetElement(parentId) is ViewPlan parentView)
+                    progressForm.UpdateProgress(currentPlan.Name);
+                    System.Windows.Forms.Application.DoEvents();
+
+                    List<ElementId> tagsInThisView = TagOpeningsInSingleViewFast(doc, currentPlan, tagSymbolMap, globalOpeningCache);
+
+                    if (tagsInThisView.Count > 0)
                     {
-                        try
-                        {
-                            uidoc.RequestViewChange(parentView);
-                            System.Windows.Forms.Application.DoEvents();
-                        }
-                        catch { /* 忽略視圖切換限制 */ }
-                    }
-
-                    foreach (ViewPlan currentPlan in viewGroup)
-                    {
-                        progressForm.UpdateProgress(currentPlan.Name);
-                        System.Windows.Forms.Application.DoEvents();
-
-                        // 處理單一視圖
-                        List<ElementId> tagsInThisView = TagOpeningsInSingleView(doc, currentPlan, tagSymbolMap);
-
-                        // 累計各視圖成果
-                        if (tagsInThisView.Count > 0)
-                        {
-                            sessionResult.CreatedTagIds.AddRange(tagsInThisView);
-                            sessionResult.ViewTagSummary[currentPlan.Name] = tagsInThisView.Count;
-                        }
+                        sessionResult.CreatedTagIds.AddRange(tagsInThisView);
+                        sessionResult.ViewTagSummary[currentPlan.Name] = tagsInThisView.Count;
                     }
                 }
 
@@ -149,84 +135,90 @@ namespace Sinotech.CSDSEM
         }
 
         /// <summary>
-        /// 針對單一視圖執行開口與套管標籤建立
+        /// 單一視圖極速標註實作 (加入可見性防護)
         /// </summary>
-        private List<ElementId> TagOpeningsInSingleView(Document doc, ViewPlan view, Dictionary<BuiltInCategory, FamilySymbol> tagSymbolMap)
+        private List<ElementId> TagOpeningsInSingleViewFast(
+            Document doc,
+            ViewPlan view,
+            Dictionary<BuiltInCategory, FamilySymbol> tagSymbolMap,
+            List<OpeningCacheItem> openingCache)
         {
             List<ElementId> createdInCurrentView = new List<ElementId>();
 
-            // 1. 計算該視圖的 Z 軸與 CropBox 平面範圍
-            if (!CalculateViewBoundingLimits(view, out double minX, out double maxX, out double minY, out double maxY, out double validZMin, out double validZMax))
+            // 1. 快速提取視圖範圍與 CropBox
+            if (!CalculateViewBoundingLimits(view, out double validZMin, out double validZMax, out BoundingBoxXYZ cropBox, out Transform invCropTransform))
             {
                 return createdInCurrentView;
             }
 
-            // 2. 取得該視圖中目前已經標記過的 Host ElementId 集合
+            // 2. 取得該視圖既有標籤 Host ID (O(1) 防重複標註)
             HashSet<ElementId> existingTaggedIds = GetExistingTaggedHostIds(doc, view);
 
-            // 3. 收集主模型中屬於此視圖高度範圍內的開口/套管/配件元件
-            List<Element> hostOpenings = GetCandidateOpeningElements(doc, validZMin, validZMax);
-            if (hostOpenings == null || hostOpenings.Count == 0)
-            {
-                return createdInCurrentView;
-            }
+            // 3. 預檢各 Category 在該視圖中的 Visibility 狀態，避免產生幽靈標籤
+            Dictionary<BuiltInCategory, bool> categoryVisibilityMap = GetCategoryVisibilityMap(view, tagSymbolMap.Keys);
 
-            // 4. 開啟 Transaction 進行標籤建立
+            // 4. 開啟視圖級 Transaction 並掛載靜默警告處理
             using (Transaction trans = new Transaction(doc, $"自動開口標籤 - {view.Name}"))
             {
+                FailureHandlingOptions failureOptions = trans.GetFailureHandlingOptions();
+                failureOptions.SetFailuresPreprocessor(new SilentFailurePreprocessor());
+                trans.SetFailureHandlingOptions(failureOptions);
+
                 trans.Start();
 
-                foreach (Element openingElem in hostOpenings)
+                foreach (OpeningCacheItem item in openingCache)
                 {
-                    if (existingTaggedIds.Contains(openingElem.Id))
+                    // 高度範圍快篩 (Z 軸數值檢核)
+                    if (item.CenterPoint.Z < validZMin || item.CenterPoint.Z > validZMax)
                     {
                         continue;
                     }
 
-                    XYZ centerPoint = CalculateElementCenter(openingElem);
-                    if (centerPoint == null)
+                    // 防重複標註
+                    if (existingTaggedIds.Contains(item.Id))
                     {
                         continue;
                     }
 
-                    if (!IsPointInsideViewCrop(centerPoint, view))
+                    // 可見性防護：若該視圖關閉了該品類的可見性，則不標註
+                    if (categoryVisibilityMap.TryGetValue(item.Category, out bool isVisible) && !isVisible)
                     {
                         continue;
                     }
 
-                    // 判斷該元件所屬品類
-                    BuiltInCategory hostCategory = GetElementBuiltInCategory(openingElem);
-
-                    // 取得對應品類的專屬標籤族群型別
-                    FamilySymbol targetTagSymbol = null;
-                    if (tagSymbolMap.TryGetValue(hostCategory, out FamilySymbol mappedSymbol))
+                    // 裁切框檢核 (透過反轉矩陣計算 View 局部座標)
+                    if (view.CropBoxActive && cropBox != null)
                     {
-                        targetTagSymbol = mappedSymbol;
+                        XYZ localPt = invCropTransform.OfPoint(item.CenterPoint);
+                        const double tol = 1e-4;
+                        if (localPt.X < cropBox.Min.X - tol || localPt.X > cropBox.Max.X + tol ||
+                            localPt.Y < cropBox.Min.Y - tol || localPt.Y > cropBox.Max.Y + tol)
+                        {
+                            continue;
+                        }
                     }
 
-                    // 確保 Symbol 已被 Activate
-                    if (targetTagSymbol != null && !targetTagSymbol.IsActive)
-                    {
-                        targetTagSymbol.Activate();
-                        doc.Regenerate();
-                    }
+                    // 取得品類匹配的標籤型別
+                    tagSymbolMap.TryGetValue(item.Category, out FamilySymbol targetTagSymbol);
 
                     try
                     {
-                        Reference elemRef = new Reference(openingElem);
+                        Reference elemRef = new Reference(item.ElementInstance);
+
+                        // 開口標籤放置於中心點
                         IndependentTag tag = IndependentTag.Create(
                             doc,
                             view.Id,
                             elemRef,
-                            false,
+                            false, // 開口套管預設無引線，精準落於幾何中心
                             TagMode.TM_ADDBY_CATEGORY,
                             TagOrientation.Horizontal,
-                            centerPoint
+                            item.CenterPoint
                         );
 
                         if (tag != null)
                         {
-                            // 【關鍵修復】：確保傳入的 TypeId 與新建立標籤的 Category 完全相容
+                            // 安全型別替換
                             if (targetTagSymbol != null && tag.GetTypeId() != targetTagSymbol.Id)
                             {
                                 if (tag.IsSchemaCompatible(targetTagSymbol))
@@ -235,13 +227,16 @@ namespace Sinotech.CSDSEM
                                 }
                             }
 
+                            // 確保標籤頭部位置鎖定在開口中心
+                            tag.TagHeadPosition = item.CenterPoint;
+
                             createdInCurrentView.Add(tag.Id);
-                            existingTaggedIds.Add(openingElem.Id);
+                            existingTaggedIds.Add(item.Id);
                         }
                     }
                     catch (Autodesk.Revit.Exceptions.ArgumentException)
                     {
-                        // 略過不可貼附或幾何無效之元件
+                        // 略過少數不可標註之退化圖元
                     }
                 }
 
@@ -253,55 +248,23 @@ namespace Sinotech.CSDSEM
 
         #endregion
 
-        #region Tag Symbol Category Mapping
+        #region Pre-Caching & Visibility Guards
 
         /// <summary>
-        /// 預先構建宿主品類與標籤族群型別的映射字典
+        /// 開口元件快取結構 (值型別最佳化記憶體與快取命中率)
         /// </summary>
-        private Dictionary<BuiltInCategory, FamilySymbol> BuildCategoryTagSymbolMap(Document doc)
+        private struct OpeningCacheItem
         {
-            Dictionary<BuiltInCategory, FamilySymbol> map = new Dictionary<BuiltInCategory, FamilySymbol>();
-
-            // 1. PipeAccessory -> OST_PipeAccessoryTags
-            FamilySymbol pipeAccTag = GetTagSymbol(doc, BuiltInCategory.OST_PipeAccessoryTags, "開口標籤")
-                                   ?? GetTagSymbol(doc, BuiltInCategory.OST_PipeAccessoryTags, null);
-            if (pipeAccTag != null) map[BuiltInCategory.OST_PipeAccessory] = pipeAccTag;
-
-            // 2. DuctAccessory -> OST_DuctAccessoryTags
-            FamilySymbol ductAccTag = GetTagSymbol(doc, BuiltInCategory.OST_DuctAccessoryTags, "開口標籤")
-                                   ?? GetTagSymbol(doc, BuiltInCategory.OST_DuctAccessoryTags, null);
-            if (ductAccTag != null) map[BuiltInCategory.OST_DuctAccessory] = ductAccTag;
-
-            // 3. CableTrayFitting -> OST_CableTrayFittingTags
-            FamilySymbol trayFitTag = GetTagSymbol(doc, BuiltInCategory.OST_CableTrayFittingTags, "開口標籤")
-                                   ?? GetTagSymbol(doc, BuiltInCategory.OST_CableTrayFittingTags, null);
-            if (trayFitTag != null) map[BuiltInCategory.OST_CableTrayFitting] = trayFitTag;
-
-            // 4. GenericModel -> OST_GenericModelTags
-            FamilySymbol genericTag = GetTagSymbol(doc, BuiltInCategory.OST_GenericModelTags, "開口標籤")
-                                   ?? GetTagSymbol(doc, BuiltInCategory.OST_GenericModelTags, null);
-            if (genericTag != null) map[BuiltInCategory.OST_GenericModel] = genericTag;
-
-            return map;
+            public ElementId Id;
+            public Element ElementInstance;
+            public BuiltInCategory Category;
+            public XYZ CenterPoint;
         }
 
         /// <summary>
-        /// 安全取得 Element 的 BuiltInCategory
+        /// 一次性全域快取主模型開口，杜絕多視圖重複掃描
         /// </summary>
-        private BuiltInCategory GetElementBuiltInCategory(Element elem)
-        {
-            if (elem.Category != null)
-            {
-                return (BuiltInCategory)elem.Category.Id.Value;
-            }
-            return BuiltInCategory.INVALID;
-        }
-
-        #endregion
-
-        #region Geometry & Bounds Calculation
-
-        private List<Element> GetCandidateOpeningElements(Document doc, double validZMin, double validZMax)
+        private List<OpeningCacheItem> PreCacheHostOpenings(Document doc)
         {
             List<ElementFilter> categoryFilters = new List<ElementFilter>
             {
@@ -317,19 +280,127 @@ namespace Sinotech.CSDSEM
                 .WherePasses(orFilter)
                 .WhereElementIsNotElementType();
 
-            List<Element> result = new List<Element>();
+            List<OpeningCacheItem> cacheList = new List<OpeningCacheItem>(2048);
+
             foreach (Element elem in collector)
             {
                 XYZ center = CalculateElementCenter(elem);
                 if (center == null) continue;
 
-                if (center.Z >= validZMin && center.Z <= validZMax)
+                BuiltInCategory bic = elem.Category != null ? (BuiltInCategory)elem.Category.Id.Value : BuiltInCategory.INVALID;
+
+                cacheList.Add(new OpeningCacheItem
                 {
-                    result.Add(elem);
+                    Id = elem.Id,
+                    ElementInstance = elem,
+                    Category = bic,
+                    CenterPoint = center
+                });
+            }
+
+            return cacheList;
+        }
+
+        /// <summary>
+        /// 預先建立並激活標籤型別
+        /// </summary>
+        private Dictionary<BuiltInCategory, FamilySymbol> BuildAndActivateCategoryTagSymbolMap(Document doc)
+        {
+            Dictionary<BuiltInCategory, FamilySymbol> map = new Dictionary<BuiltInCategory, FamilySymbol>();
+
+            FamilySymbol pipeAccTag = GetTagSymbol(doc, BuiltInCategory.OST_PipeAccessoryTags, "開口標籤")
+                                   ?? GetTagSymbol(doc, BuiltInCategory.OST_PipeAccessoryTags, null);
+            FamilySymbol ductAccTag = GetTagSymbol(doc, BuiltInCategory.OST_DuctAccessoryTags, "開口標籤")
+                                   ?? GetTagSymbol(doc, BuiltInCategory.OST_DuctAccessoryTags, null);
+            FamilySymbol trayFitTag = GetTagSymbol(doc, BuiltInCategory.OST_CableTrayFittingTags, "開口標籤")
+                                   ?? GetTagSymbol(doc, BuiltInCategory.OST_CableTrayFittingTags, null);
+            FamilySymbol genericTag = GetTagSymbol(doc, BuiltInCategory.OST_GenericModelTags, "開口標籤")
+                                   ?? GetTagSymbol(doc, BuiltInCategory.OST_GenericModelTags, null);
+
+            List<FamilySymbol> symbolsToActivate = new List<FamilySymbol> { pipeAccTag, ductAccTag, trayFitTag, genericTag };
+
+            using (Transaction t = new Transaction(doc, "預先激活標籤族群"))
+            {
+                t.Start();
+                bool needRegen = false;
+                foreach (var sym in symbolsToActivate)
+                {
+                    if (sym != null && !sym.IsActive)
+                    {
+                        sym.Activate();
+                        needRegen = true;
+                    }
+                }
+                if (needRegen) doc.Regenerate();
+                t.Commit();
+            }
+
+            if (pipeAccTag != null) map[BuiltInCategory.OST_PipeAccessory] = pipeAccTag;
+            if (ductAccTag != null) map[BuiltInCategory.OST_DuctAccessory] = ductAccTag;
+            if (trayFitTag != null) map[BuiltInCategory.OST_CableTrayFitting] = trayFitTag;
+            if (genericTag != null) map[BuiltInCategory.OST_GenericModel] = genericTag;
+
+            return map;
+        }
+
+        /// <summary>
+        /// 檢查指定品類在視圖中的 Visibility 狀態 (防止產生幽靈標籤)
+        /// </summary>
+        private Dictionary<BuiltInCategory, bool> GetCategoryVisibilityMap(ViewPlan view, IEnumerable<BuiltInCategory> categories)
+        {
+            Dictionary<BuiltInCategory, bool> visibilityMap = new Dictionary<BuiltInCategory, bool>();
+            Document doc = view.Document;
+
+            foreach (var bic in categories)
+            {
+                try
+                {
+                    Category cat = Category.GetCategory(doc, bic);
+                    if (cat != null)
+                    {
+                        bool isHidden = view.GetCategoryHidden(cat.Id);
+                        visibilityMap[bic] = !isHidden;
+                    }
+                    else
+                    {
+                        visibilityMap[bic] = true;
+                    }
+                }
+                catch
+                {
+                    visibilityMap[bic] = true;
                 }
             }
 
-            return result;
+            return visibilityMap;
+        }
+
+        private bool CalculateViewBoundingLimits(
+            ViewPlan view,
+            out double validZMin,
+            out double validZMax,
+            out BoundingBoxXYZ cropBox,
+            out Transform invCropTransform)
+        {
+            cropBox = null;
+            invCropTransform = null;
+
+            double exactZMax = GetPlaneElevation(view, PlanViewPlane.TopClipPlane, 1000.0, -1000.0);
+            double exactZMin = GetPlaneElevation(view, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
+
+            validZMin = exactZMin - 0.5;
+            validZMax = exactZMax + 0.5;
+
+            if (view.CropBoxActive)
+            {
+                cropBox = view.CropBox;
+                if (cropBox != null)
+                {
+                    invCropTransform = cropBox.Transform.Inverse;
+                }
+            }
+
+            return true;
         }
 
         private HashSet<ElementId> GetExistingTaggedHostIds(Document doc, ViewPlan view)
@@ -375,57 +446,6 @@ namespace Sinotech.CSDSEM
             }
 
             return null;
-        }
-
-        private bool IsPointInsideViewCrop(XYZ point, ViewPlan view)
-        {
-            if (!view.CropBoxActive) return true;
-
-            BoundingBoxXYZ cb = view.CropBox;
-            if (cb == null) return true;
-
-            const double tolerance = 1e-4;
-            Transform invTransform = cb.Transform.Inverse;
-            XYZ localPt = invTransform.OfPoint(point);
-
-            return (localPt.X >= cb.Min.X - tolerance && localPt.X <= cb.Max.X + tolerance &&
-                    localPt.Y >= cb.Min.Y - tolerance && localPt.Y <= cb.Max.Y + tolerance);
-        }
-
-        private bool CalculateViewBoundingLimits(ViewPlan view, out double minX, out double maxX, out double minY, out double maxY, out double validZMin, out double validZMax)
-        {
-            minX = minY = double.MinValue / 2;
-            maxX = maxY = double.MaxValue / 2;
-
-            double exactZMax = GetPlaneElevation(view, PlanViewPlane.TopClipPlane, 1000.0, -1000.0);
-            double exactZMin = GetPlaneElevation(view, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
-
-            validZMin = exactZMin - 0.5;
-            validZMax = exactZMax + 0.5;
-
-            BoundingBoxXYZ cb = view.CropBox;
-            if (cb == null) return false;
-
-            Transform ct = cb.Transform;
-            if (view.CropBoxActive)
-            {
-                minX = minY = double.MaxValue;
-                maxX = maxY = double.MinValue;
-
-                foreach (double lx in new[] { cb.Min.X, cb.Max.X })
-                {
-                    foreach (double ly in new[] { cb.Min.Y, cb.Max.Y })
-                    {
-                        XYZ wp = ct.OfPoint(new XYZ(lx, ly, 0));
-                        if (wp.X < minX) minX = wp.X;
-                        if (wp.Y < minY) minY = wp.Y;
-                        if (wp.X > maxX) maxX = wp.X;
-                        if (wp.Y > maxY) maxY = wp.Y;
-                    }
-                }
-            }
-
-            return true;
         }
 
         private double GetPlaneElevation(ViewPlan view, PlanViewPlane plane, double defaultHigh, double defaultLow)
@@ -594,13 +614,26 @@ namespace Sinotech.CSDSEM
         #endregion
     }
 
-    #region Supporting Extension & Models
+    #region Failure Processor & Extensions
+
+    public class SilentFailurePreprocessor : IFailuresPreprocessor
+    {
+        public FailureProcessingResult PreprocessFailures(FailuresAccessor failuresAccessor)
+        {
+            var failureMessages = failuresAccessor.GetFailureMessages();
+            foreach (var msg in failureMessages)
+            {
+                if (msg.GetSeverity() == FailureSeverity.Warning)
+                {
+                    failuresAccessor.DeleteWarning(msg);
+                }
+            }
+            return FailureProcessingResult.Continue;
+        }
+    }
 
     public static class TagExtensions
     {
-        /// <summary>
-        /// 判斷標籤與目標族群符號是否屬於相同 Category 架構 (避免 ChangeTypeId 拋出 ArgumentException)
-        /// </summary>
         public static bool IsSchemaCompatible(this IndependentTag tag, FamilySymbol targetSymbol)
         {
             if (tag == null || targetSymbol == null) return false;
