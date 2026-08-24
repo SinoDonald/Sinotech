@@ -209,6 +209,9 @@
     <Compile Include="CSDSEM\AutoNumberForm.Designer.cs">
       <DependentUpon>AutoNumberForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CSDSEM\AutoNumberSettingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="CSDSEM\AutoOpeningTag.cs" />
     <Compile Include="CSDSEM\ChooseMultiViewPlansForm.cs">
       <SubType>Form</SubType>
@@ -223,6 +226,7 @@
       <DependentUpon>LinkSelectionForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CSDSEM\MegedOpening.cs" />
+    <Compile Include="CSDSEM\NumberingConfig.cs" />
     <Compile Include="CSDSEM\OpeningTagArray.cs" />
     <Compile Include="CSDSEM\TagArray.cs" />
     <Compile Include="CSDSEM\ViewSelectionForm.cs">

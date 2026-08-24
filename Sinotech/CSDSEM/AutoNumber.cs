@@ -49,180 +49,188 @@ namespace Sinotech.CSDSEM
         private static List<Level> docLevels = new List<Level>(); // Document內所有的Level
         private List<ErrorId> errorIds = new List<ErrorId>(); // 無法編號的開口元件
 
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             UIApplication uiapp = commandData.Application;
             UIDocument uidoc = uiapp.ActiveUIDocument;
-            Autodesk.Revit.ApplicationServices.Application app = uiapp.Application;
             Document doc = uidoc.Document;
 
-            DateTime timeStart = DateTime.Now; // 計時開始 取得目前時間
+            DateTime timeStart = DateTime.Now;
 
-            // 讀取所有Doucment的Level
+            // 1. 取得所有 Revit 連結
+            List<RevitLinkInstance> rvtInss = new FilteredElementCollector(doc)
+                .OfClass(typeof(RevitLinkInstance))
+                .WhereElementIsNotElementType()
+                .Cast<RevitLinkInstance>()
+                .Where(x => x.GetLinkDocument() != null)
+                .ToList();
+
+            // 2. 叫出設定視窗讓使用者指派欄位與排序順序
+            NumberingExecutionSettings settings;
+            using (var form = new AutoNumberSettingForm(rvtInss))
+            {
+                if (form.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                {
+                    return Result.Cancelled;
+                }
+                settings = form.ResultSettings;
+            }
+
+            // 讀取所有 Document 的 Level
             docLevels = new FilteredElementCollector(doc).OfClass(typeof(Level)).WhereElementIsNotElementType().Cast<Level>().ToList();
 
             // 讀取並儲存專案中所有開口
-            IList<ElementFilter> accessortyOpeningFilter = new List<ElementFilter>();
-            ElementCategoryFilter pipeAccessoryFilter = new ElementCategoryFilter(BuiltInCategory.OST_PipeAccessory); // 套管
-            ElementCategoryFilter ductOpeningFilter = new ElementCategoryFilter(BuiltInCategory.OST_DuctAccessory); // 風管開口
-            ElementCategoryFilter cableTrayOpeningFilter = new ElementCategoryFilter(BuiltInCategory.OST_CableTrayFitting); // 電纜架開口
-            accessortyOpeningFilter.Add(pipeAccessoryFilter);
-            accessortyOpeningFilter.Add(ductOpeningFilter);
-            accessortyOpeningFilter.Add(cableTrayOpeningFilter);
+            IList<ElementFilter> accessortyOpeningFilter = new List<ElementFilter>
+        {
+            new ElementCategoryFilter(BuiltInCategory.OST_PipeAccessory),
+            new ElementCategoryFilter(BuiltInCategory.OST_DuctAccessory),
+            new ElementCategoryFilter(BuiltInCategory.OST_CableTrayFitting)
+        };
             LogicalOrFilter openLogicalOrFilter = new LogicalOrFilter(accessortyOpeningFilter);
-            List<FamilyInstance> openingList = new FilteredElementCollector(doc).WherePasses(openLogicalOrFilter).WhereElementIsNotElementType().Cast<FamilyInstance>().ToList();
-            // 將openingList資料儲存為OpeningInfo, 稍後執行排序
+            List<FamilyInstance> openingList = new FilteredElementCollector(doc)
+                .WherePasses(openLogicalOrFilter)
+                .WhereElementIsNotElementType()
+                .Cast<FamilyInstance>()
+                .ToList();
+
             openingInfoList = SaveOpeningInfo(doc, openingList);
 
-            // 依專案讀取並儲存管道, 順序：1. 套管(管道)、2. 開口(風管、風管附件、電纜架)
-            // 儲存專案與Link的管、風管，Link的Element儲存轉換座標的Solid
-            List<ElementFilter> pipeDuctCableTrayFilters = new List<ElementFilter>(); // 清空過濾器  
-            ElementCategoryFilter pipeFilter = new ElementCategoryFilter(BuiltInCategory.OST_PipeCurves); // 管道
-            ElementCategoryFilter pipeFittingFilter = new ElementCategoryFilter(BuiltInCategory.OST_PipeFitting); // 管道附件
-            ElementCategoryFilter ductFilter = new ElementCategoryFilter(BuiltInCategory.OST_DuctCurves); // 風管
-            ElementCategoryFilter ductAccessoryFilter = new ElementCategoryFilter(BuiltInCategory.OST_DuctAccessory); // 風管附件
-            ElementCategoryFilter cableTrayFilter = new ElementCategoryFilter(BuiltInCategory.OST_CableTray); // 電纜架
-            ElementCategoryFilter cableTrayFittingFilter = new ElementCategoryFilter(BuiltInCategory.OST_CableTrayFitting); // 電纜架附件
+            // MEP 篩選器構建
+            ElementCategoryFilter pipeFilter = new ElementCategoryFilter(BuiltInCategory.OST_PipeCurves);
+            ElementCategoryFilter pipeFittingFilter = new ElementCategoryFilter(BuiltInCategory.OST_PipeFitting);
+            ElementCategoryFilter ductFilter = new ElementCategoryFilter(BuiltInCategory.OST_DuctCurves);
+            ElementCategoryFilter ductAccessoryFilter = new ElementCategoryFilter(BuiltInCategory.OST_DuctAccessory);
+            ElementCategoryFilter cableTrayFilter = new ElementCategoryFilter(BuiltInCategory.OST_CableTray);
+            ElementCategoryFilter cableTrayFittingFilter = new ElementCategoryFilter(BuiltInCategory.OST_CableTrayFitting);
+
             LogicalOrFilter pipeOrFittingFilter = new LogicalOrFilter(pipeFilter, pipeFittingFilter);
             LogicalOrFilter ductOrOpeningFilter = new LogicalOrFilter(ductFilter, ductAccessoryFilter);
             LogicalOrFilter cableTrayOrOpeningFilter = new LogicalOrFilter(cableTrayFilter, cableTrayFittingFilter);
-            pipeDuctCableTrayFilters.Add(pipeOrFittingFilter);
-            pipeDuctCableTrayFilters.Add(ductOrOpeningFilter);
-            pipeDuctCableTrayFilters.Add(cableTrayOrOpeningFilter);
-            List<RevitLinkInstance> rvtInss = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).WhereElementIsNotElementType().Cast<RevitLinkInstance>().Where(x => x.GetLinkDocument() != null).ToList();
-            List<RevitLinkPipeType> revitPipeTypeList = new List<RevitLinkPipeType>();
+
             using (Transaction trans = new Transaction(doc, "自動編號"))
             {
                 trans.Start();
-                
-                List<string> casingProjectNames = new List<string>() { "AP", "WS", "DS", "FP" }; // 套管
-                List<string> openingProjectNames = new List<string>() { "AD", "EP", "EE" }; // 開口
 
                 foreach (Level docLevel in docLevels)
                 {
-                    // 查詢該樓層的套管
+                    // 一、套管編號處理 (依使用者排序順序 OrderedCasingCodes)
                     List<OpeningInfo> levelOpeningList = openingInfoList.Where(x => x.level.Id.Equals(docLevel.Id)).ToList();
-                    int sn = 1;
-                    foreach(string casingProjectName in casingProjectNames)
+                    int snCasing = 1;
+
+                    foreach (string casingCode in settings.OrderedCasingCodes)
                     {
-                        RevitLinkInstance rvtIns = rvtInss.Where(x => x.Name.Contains(casingProjectName)).FirstOrDefault();
-                        if(rvtIns != null)
+                        if (!settings.CodeToLinkMap.TryGetValue(casingCode, out RevitLinkInstance rvtIns)) continue;
+                        Document linkDoc = rvtIns.GetLinkDocument();
+                        if (linkDoc == null) continue;
+
+                        List<Element> pipeElems = new FilteredElementCollector(linkDoc).WherePasses(pipeOrFittingFilter).WhereElementIsNotElementType().ToList();
+                        if (pipeElems.Count > 0)
                         {
-                            // 一、管道篩選
-                            List<Element> elems = new FilteredElementCollector(rvtIns.GetLinkDocument()).WherePasses(pipeDuctCableTrayFilters[0]).WhereElementIsNotElementType().ToList();
-                            if (elems.Count > 0)
+                            List<PipingSystem> pipingSystems = new FilteredElementCollector(linkDoc).OfCategory(BuiltInCategory.OST_PipingSystem).WhereElementIsNotElementType().Cast<PipingSystem>().ToList();
+                            foreach (PipingSystem pipingSystem in pipingSystems)
                             {
-                                RevitLinkPipeType revitPipeType = new RevitLinkPipeType();
-                                //revitPipeType.revitLinkInstance = rvtIns;
-                                revitPipeType.type = "Pipe";
-                                List<PipingSystem> pipingSystems = new FilteredElementCollector(rvtIns.GetLinkDocument()).OfCategory(BuiltInCategory.OST_PipingSystem).WhereElementIsNotElementType().Cast<PipingSystem>().ToList();
-                                foreach (PipingSystem pipingSystem in pipingSystems)
+                                List<Element> pipeAndFittings = new List<Element>();
+                                foreach (Element elem in pipingSystem.PipingNetwork) { pipeAndFittings.Add(elem); }
+                                List<PipeData> pipeDataList = PipeAndConnector(pipeAndFittings);
+                                List<PipeData> pipeDataSort = PipeSort(pipeDataList);
+                                snCasing = CrushSearch(pipeDataSort, levelOpeningList, snCasing);
+                            }
+
+                            // 處理未干涉但屬於該代碼的其餘開口
+                            List<OpeningInfo> otherList = levelOpeningList.Where(x => x.opening.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString()?.Split('_')[0] == casingCode).ToList();
+                            foreach (OpeningInfo other in otherList)
+                            {
+                                try
                                 {
-                                    // 儲存各管道系統, 並排序完成
-                                    List<Element> pipeAndFittings = new List<Element>();
-                                    foreach (Element elem in pipingSystem.PipingNetwork) { pipeAndFittings.Add(elem); }                                    
-                                    List<PipeData> pipeDataList = PipeAndConnector(pipeAndFittings); // 查詢並儲存各管道與彎頭的連結對象                                    
-                                    List<PipeData> pipeDataSort = PipeSort(pipeDataList); // 管道排序                                    
-                                    sn = CrushSearch(pipeDataSort, levelOpeningList, sn); // 依管道順序干涉查詢, 將開口編號
-                                }
-                                // 剩餘還沒編號的該連接專案開口
-                                List<OpeningInfo> otherList = levelOpeningList.Where(x => x.opening.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsString().Split('_')[0] == casingProjectName).ToList();
-                                foreach(OpeningInfo other in otherList)
-                                {
-                                    ErrorId errorId = new ErrorId();
-                                    FamilyInstance opening = other.opening;
-                                    try
+                                    Parameter para = other.opening.LookupParameter("圓形牆開口流水號");
+                                    if (para != null)
                                     {
-                                        Parameter para = null;
-                                        para = opening.LookupParameter("圓形牆開口流水號");
-                                        para.Set(sn);
-                                        sn++;
-                                    }
-                                    catch (Exception ex) 
-                                    {
-                                        string error = ex.Message + "\n" + ex.ToString();
-                                        errorId.errorMessge = ex.Message;
-                                        if (ex.Message.Equals("索引在陣列的界限之外。")) { errorId.errorMessge += "(【備註】資訊不足)"; }
-                                        else if (ex.Message.Equals("並未將物件參考設定為物件的執行個體。")) { errorId.errorMessge += "(缺少【樓層】資訊)"; }
-                                        errorId.id = opening.Id.ToString();
-                                        if (errorIds.Where(x => x.id.Equals(opening.Id.ToString())).ToList().Count() == 0) { errorIds.Add(errorId); }
+                                        para.Set(snCasing);
+                                        snCasing++;
                                     }
                                 }
-                                revitPipeType.pypingSystems = pipingSystems;
-                                revitPipeTypeList.Add(revitPipeType);
+                                catch (Exception ex)
+                                {
+                                    LogError(other.opening.Id.ToString(), ex.Message);
+                                }
                             }
                         }
                     }
-                    // 查詢該樓層的開口
+
+                    // 二、開口編號處理 (依使用者排序順序 OrderedOpeningCodes)
                     levelOpeningList = openingInfoList.Where(x => x.level.Id.Equals(docLevel.Id)).ToList();
-                    sn = 1;
-                    foreach (string openingProjectName in openingProjectNames)
+                    int snOpening = 1;
+
+                    foreach (string openingCode in settings.OrderedOpeningCodes)
                     {
-                        RevitLinkInstance rvtIns = rvtInss.Where(x => x.Name.Contains(openingProjectName)).FirstOrDefault();
-                        if (rvtIns != null)
+                        if (!settings.CodeToLinkMap.TryGetValue(openingCode, out RevitLinkInstance rvtIns)) continue;
+                        Document linkDoc = rvtIns.GetLinkDocument();
+                        if (linkDoc == null) continue;
+
+                        // 1. 風管
+                        List<Element> ductElems = new FilteredElementCollector(linkDoc).WherePasses(ductOrOpeningFilter).WhereElementIsNotElementType().ToList();
+                        if (ductElems.Count > 0)
                         {
-                            for (int i = 1; i < pipeDuctCableTrayFilters.Count(); i++)
+                            List<MechanicalSystem> mechanicalSystems = new FilteredElementCollector(linkDoc).OfCategory(BuiltInCategory.OST_DuctSystem).WhereElementIsNotElementType().Cast<MechanicalSystem>().ToList();
+                            foreach (MechanicalSystem mechSystem in mechanicalSystems)
                             {
-                                // 二、風管+風管附件篩選 三、電纜架+電纜架附件篩選
-                                List<Element> elems = new FilteredElementCollector(rvtIns.GetLinkDocument()).WherePasses(pipeDuctCableTrayFilters[i]).WhereElementIsNotElementType().ToList();
-                                if (elems.Count > 0)
+                                List<Element> ductAndFittings = new List<Element>();
+                                foreach (Element elem in mechSystem.DuctNetwork) { ductAndFittings.Add(elem); }
+                                List<PipeData> ductDataList = PipeAndConnector(ductAndFittings);
+                                List<PipeData> ductDataSort = PipeSort(ductDataList);
+                                snOpening = CrushSearch(ductDataSort, levelOpeningList, snOpening);
+                            }
+                        }
+
+                        // 2. 電纜架
+                        List<Element> cableTrayElems = new FilteredElementCollector(linkDoc).WherePasses(cableTrayOrOpeningFilter).WhereElementIsNotElementType().ToList();
+                        if (cableTrayElems.Count > 0)
+                        {
+                            List<PipeData> trayDataList = PipeAndConnector(cableTrayElems);
+                            List<PipeData> trayDataSort = PipeSort(trayDataList);
+                            snOpening = CrushSearch(trayDataSort, levelOpeningList, snOpening);
+                        }
+
+                        // 處理未干涉但屬於該代碼的其餘開口
+                        List<OpeningInfo> otherList = levelOpeningList.Where(x => x.opening.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString()?.Split('_')[0] == openingCode).ToList();
+                        foreach (OpeningInfo other in otherList)
+                        {
+                            try
+                            {
+                                Parameter para = other.opening.LookupParameter("矩形牆開口流水號");
+                                if (para != null)
                                 {
-                                    RevitLinkPipeType revitPipeType = new RevitLinkPipeType();
-                                    if (i.Equals(1))
-                                    {
-                                        revitPipeType.type = "Duct";
-                                        List<MechanicalSystem> mechanicalSystems = new FilteredElementCollector(rvtIns.GetLinkDocument()).OfCategory(BuiltInCategory.OST_DuctSystem).WhereElementIsNotElementType().Cast<MechanicalSystem>().ToList();
-                                        foreach (MechanicalSystem pipingSystem in mechanicalSystems)
-                                        {
-                                            // 儲存各管道系統, 並排序完成
-                                            List<Element> pipeAndFittings = new List<Element>();
-                                            foreach (Element elem in pipingSystem.DuctNetwork) { pipeAndFittings.Add(elem); }                                            
-                                            List<PipeData> pipeDataList = PipeAndConnector(pipeAndFittings); // 查詢並儲存各管道與彎頭的連結對象                                            
-                                            List<PipeData> pipeDataSort = PipeSort(pipeDataList); // 管道排序                                            
-                                            sn = CrushSearch(pipeDataSort, levelOpeningList, sn); // 依管道順序干涉查詢, 將開口編號
-                                        }
-                                        revitPipeType.mechanicalSystems = mechanicalSystems;
-                                    }
-                                    else if (i.Equals(2))
-                                    {
-                                        revitPipeType.type = "CableTray";                                        
-                                        List<PipeData> pipeDataList = PipeAndConnector(elems); // 查詢並儲存各管道與彎頭的連結對象                                        
-                                        List<PipeData> pipeDataSort = PipeSort(pipeDataList); // 管道排序                                        
-                                        sn = CrushSearch(pipeDataSort, levelOpeningList, sn); // 依管道順序干涉查詢, 將開口編號
-                                    }
-                                    // 剩餘還沒編號的該連接專案開口
-                                    List<OpeningInfo> otherList1 = levelOpeningList.Where(x => x.opening.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsString().Split('_')[0] == openingProjectName).ToList();
-                                    foreach (OpeningInfo other in otherList1)
-                                    {
-                                        FamilyInstance opening = other.opening;
-                                        try
-                                        {
-                                            Parameter para = null;
-                                            para = opening.LookupParameter("矩形牆開口流水號");
-                                            para.Set(sn);
-                                            sn++;
-                                        }
-                                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                                    }
-                                    revitPipeTypeList.Add(revitPipeType);
+                                    para.Set(snOpening);
+                                    snOpening++;
                                 }
+                            }
+                            catch (Exception ex)
+                            {
+                                LogError(other.opening.Id.ToString(), ex.Message);
                             }
                         }
                     }
                 }
+
                 trans.Commit();
             }
 
-            if(errorIds.Count > 0) { CreateErrorMessage(); } // 自動標籤錯誤訊息
+            if (errorIds.Count > 0) { CreateErrorMessage(); }
 
-            DateTime timeEnd = DateTime.Now; // 計時結束 取得目前時間
-            TimeSpan totalTime = timeEnd - timeStart;
-            string info = string.Empty;
-            if(errorIds.Count == 0) { info = "完成！\n"; }
-            else { info = "尚有 " + errorIds.Count + " 筆元件需檢查\n"; }
-            TaskDialog.Show("Revit", info + "耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒。");
+            TimeSpan totalTime = DateTime.Now - timeStart;
+            string info = errorIds.Count == 0 ? "完成！\n" : $"尚有 {errorIds.Count} 筆元件需檢查\n";
+            TaskDialog.Show("Revit", info + $"耗時：{totalTime.Minutes} 分 {totalTime.Seconds} 秒。");
 
             return Result.Succeeded;
+        }
+
+        private void LogError(string id, string message)
+        {
+            if (!errorIds.Any(x => x.id == id))
+            {
+                errorIds.Add(new ErrorId { id = id, errorMessge = message });
+            }
         }
         // 將openingList資料儲存為OpeningInfo, 稍後執行排序
         private List<OpeningInfo> SaveOpeningInfo(Document doc, List<FamilyInstance> openingList)
