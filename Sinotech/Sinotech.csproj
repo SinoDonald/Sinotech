@@ -519,6 +519,9 @@
   <ItemGroup>
     <None Include="pic\管道標籤.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\自動開口.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

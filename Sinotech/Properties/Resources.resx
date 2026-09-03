@@ -173,7 +173,7 @@
     <value>..\Resources\自動翻柱.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="自動開口" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\自動開口.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\pic\自動開口.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="規範詳圖" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\規範詳圖.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
