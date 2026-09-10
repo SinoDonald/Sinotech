@@ -164,8 +164,8 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Sinotech_Setup"
-        "ProductCode" = "8:{8553FFA3-4F17-4347-8C3C-BCBF7DB52BE6}"
-        "PackageCode" = "8:{0E0CF2F2-68B2-437C-8E35-8A70384F9DDE}"
+        "ProductCode" = "8:{9EEF3BDD-6E00-4126-B022-F9EF7A96B081}"
+        "PackageCode" = "8:{DBD17201-1A58-4B29-BE15-86ADB015EA1A}"
         "UpgradeCode" = "8:{00298F0E-BAA5-477F-A281-825F67CA4D9A}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"

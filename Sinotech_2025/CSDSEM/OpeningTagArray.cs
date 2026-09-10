@@ -109,6 +109,13 @@ namespace Sinotech_2025.CSDSEM
         {
             List<TagData> tagDataList = new List<TagData>();
 
+            // 關閉引線以取得準確的標籤邊界框
+            foreach (var tag in tags)
+            {
+                try { tag.HasLeader = false; } catch { }
+            }
+            _doc.Regenerate();
+
             // A. 解析標籤與宿主幾何關係
             foreach (var tag in tags)
             {
@@ -121,32 +128,79 @@ namespace Sinotech_2025.CSDSEM
                 XYZ anchorPt = GetElementCenter(targetElem);
                 HostOrientation orientation = DetectHostOrientation(targetElem, anchorPt, hostElements, out XYZ hostDir);
 
+                BoundingBoxXYZ elemBox = targetElem.get_BoundingBox(_view);
+                BoundingBoxXYZ tagBox = tag.get_BoundingBox(_view);
+
+                double tWidth = TagWidthEst;
+                double tHeight = TagHeightEst;
+                if (tagBox != null)
+                {
+                    double w = tagBox.Max.X - tagBox.Min.X;
+                    double h = tagBox.Max.Y - tagBox.Min.Y;
+                    if (w > 0.1) tWidth = w + 0.5; // 加入寬度緩衝區
+                    if (h > 0.1) tHeight = h + 0.5; // 加入高度緩衝區
+                }
+
                 tagDataList.Add(new TagData
                 {
                     Tag = tag,
                     TargetReference = refElem,
                     AnchorPoint = anchorPt,
+                    ElementBBox = elemBox,
+                    TagWidth = tWidth,
+                    TagHeight = tHeight,
                     Orientation = orientation,
                     HostDirection = hostDir
                 });
             }
 
-            // B. 依據結構走向分組排版 (橫向群組 vs 縱向群組)
-            var groups = tagDataList.GroupBy(d => d.Orientation);
+            // B. 對所有標籤進行全局優先順序排版
+            var sortedTags = tagDataList.OrderBy(t => t.AnchorPoint.X).ThenBy(t => t.AnchorPoint.Y).ToList();
+            List<PlacedTagFootprint> placed = new List<PlacedTagFootprint>();
 
-            foreach (var group in groups)
+            foreach (var data in sortedTags)
             {
-                if (group.Key == HostOrientation.Horizontal)
+                PlacedTagFootprint bestCandidate = null;
+
+                // 1. 優先嘗試 4 個正交直線方向 (中心點出發)
+                foreach (var candidate in GenerateStraightCandidates(data))
                 {
-                    ArrangeHorizontalGroup(group.ToList());
+                    if (!IsCollision(candidate, placed))
+                    {
+                        bestCandidate = candidate;
+                        break;
+                    }
                 }
-                else
+
+                // 2. 如果 4 個方向都被干涉，才使用滑動錨點與轉折引線，或者外推
+                if (bestCandidate == null)
                 {
-                    ArrangeVerticalGroup(group.ToList());
+                    foreach (var candidate in GenerateSlidingCandidates(data))
+                    {
+                        if (!IsCollision(candidate, placed))
+                        {
+                            bestCandidate = candidate;
+                            break;
+                        }
+                    }
+                }
+
+                // 3. Fallback: 真的完全找不到位置，硬上第一個直線
+                if (bestCandidate == null)
+                {
+                    bestCandidate = GenerateStraightCandidates(data).FirstOrDefault();
+                }
+
+                if (bestCandidate != null)
+                {
+                    data.CalculatedHeadPos = bestCandidate.Head;
+                    data.CalculatedAnchor = bestCandidate.FinalAnchor;
+                    data.CalculatedElbow = bestCandidate.FinalElbow;
+                    placed.Add(bestCandidate);
                 }
             }
 
-            // C. 寫回 Revit 模型並產生 90 度正交引線
+            // C. 寫回 Revit 模型並產生引線
             _doc.Regenerate();
 
             foreach (var data in tagDataList)
@@ -157,57 +211,67 @@ namespace Sinotech_2025.CSDSEM
             return tagDataList.Count;
         }
 
-        /// <summary>
-        /// 處理橫向牆/樑（標籤向上或向下排隊，引線先垂直再水平）
-        /// </summary>
-        private void ArrangeHorizontalGroup(List<TagData> list)
+        private IEnumerable<PlacedTagFootprint> GenerateStraightCandidates(TagData data)
         {
-            var sorted = list.OrderBy(t => t.AnchorPoint.X).ToList();
-            List<BoundingBox2D> placedBoxes = new List<BoundingBox2D>();
+            if (data.ElementBBox == null) yield break;
 
-            foreach (var data in sorted)
+            double cx = (data.ElementBBox.Min.X + data.ElementBBox.Max.X) / 2.0;
+            double cy = (data.ElementBBox.Min.Y + data.ElementBBox.Max.Y) / 2.0;
+            double z = data.AnchorPoint.Z;
+
+            var top = new { Anchor = new XYZ(cx, data.ElementBBox.Max.Y, z), Head = new XYZ(cx, data.ElementBBox.Max.Y + BaseOffset, z) };
+            var bottom = new { Anchor = new XYZ(cx, data.ElementBBox.Min.Y, z), Head = new XYZ(cx, data.ElementBBox.Min.Y - BaseOffset, z) };
+            var left = new { Anchor = new XYZ(data.ElementBBox.Min.X, cy, z), Head = new XYZ(data.ElementBBox.Min.X - BaseOffset, cy, z) };
+            var right = new { Anchor = new XYZ(data.ElementBBox.Max.X, cy, z), Head = new XYZ(data.ElementBBox.Max.X + BaseOffset, cy, z) };
+
+            if (data.Orientation == HostOrientation.Horizontal)
             {
-                double targetX = data.AnchorPoint.X;
-                double targetY = data.AnchorPoint.Y - BaseOffset; // 預設下方偏移
-                int layer = 0;
-
-                while (IsCollision(targetX, targetY, TagWidthEst, TagHeightEst, placedBoxes))
-                {
-                    layer++;
-                    double direction = (layer % 2 == 1) ? -1.0 : 1.0;
-                    targetY = data.AnchorPoint.Y + direction * (BaseOffset + (layer / 2) * LayerSpacing);
-                }
-
-                data.CalculatedHeadPos = new XYZ(targetX, targetY, data.AnchorPoint.Z);
-                placedBoxes.Add(new BoundingBox2D(targetX, targetY, TagWidthEst, TagHeightEst));
+                yield return GetStraightFootprint(data, top.Anchor, top.Head);
+                yield return GetStraightFootprint(data, bottom.Anchor, bottom.Head);
+            }
+            else
+            {
+                yield return GetStraightFootprint(data, left.Anchor, left.Head);
+                yield return GetStraightFootprint(data, right.Anchor, right.Head);
             }
         }
 
-        /// <summary>
-        /// 處理縱向牆/管道間（標籤向左側垂直排隊，引線先水平再垂直，如圖 4 所示）
-        /// </summary>
-        private void ArrangeVerticalGroup(List<TagData> list)
+        private IEnumerable<PlacedTagFootprint> GenerateSlidingCandidates(TagData data)
         {
-            // 按 Y 座標排序，同一豎向管道間/牆面的套管標籤統一由下至上排隊
-            var sorted = list.OrderBy(t => t.AnchorPoint.Y).ToList();
-            List<BoundingBox2D> placedBoxes = new List<BoundingBox2D>();
-
-            foreach (var data in sorted)
+            double cx = data.AnchorPoint.X;
+            double cy = data.AnchorPoint.Y;
+            if (data.ElementBBox != null)
             {
-                // 圖 4 需求：縱向牆體開口標籤統一放置於左側 (X 軸減去 BaseOffset，拉長距離)
-                double targetX = data.AnchorPoint.X - BaseOffset;
-                double targetY = data.AnchorPoint.Y;
-                int layer = 0;
+                cx = (data.ElementBBox.Min.X + data.ElementBBox.Max.X) / 2.0;
+                cy = (data.ElementBBox.Min.Y + data.ElementBBox.Max.Y) / 2.0;
+            }
 
-                // 若同一垂直方向有多個標籤，沿 Y 軸避讓推移，確保不重疊
-                while (IsCollision(targetX, targetY, TagWidthEst, TagHeightEst, placedBoxes))
+            for (int layer = 0; layer < 5; layer++)
+            {
+                double gapW = data.TagWidth + 1.0;
+                double gapH = data.TagHeight + 1.0;
+                double layerOffsetW = (layer % 2 == 1) ? (gapW / 2.0) : 0.0;
+                double layerOffsetH = (layer % 2 == 1) ? (gapH / 2.0) : 0.0;
+
+                for (int shiftIndex = 1; shiftIndex <= 10; shiftIndex++)
                 {
-                    layer++;
-                    targetY = data.AnchorPoint.Y + layer * (TagHeightEst + 0.3);
-                }
+                    double shiftDir = (shiftIndex % 2 == 1) ? 1.0 : -1.0;
 
-                data.CalculatedHeadPos = new XYZ(targetX, targetY, data.AnchorPoint.Z);
-                placedBoxes.Add(new BoundingBox2D(targetX, targetY, TagWidthEst, TagHeightEst));
+                    if (data.Orientation == HostOrientation.Horizontal)
+                    {
+                        double targetX = cx + layerOffsetW + shiftDir * ((shiftIndex + 1) / 2) * gapW;
+                        double yDist = BaseOffset + layer * LayerSpacing;
+                        yield return GetElbowFootprint(data, targetX, (data.ElementBBox != null ? data.ElementBBox.Max.Y : cy) + yDist, true);
+                        yield return GetElbowFootprint(data, targetX, (data.ElementBBox != null ? data.ElementBBox.Min.Y : cy) - yDist, true);
+                    }
+                    else
+                    {
+                        double targetY = cy + layerOffsetH + shiftDir * ((shiftIndex + 1) / 2) * gapH;
+                        double xDist = BaseOffset + layer * LayerSpacing;
+                        yield return GetElbowFootprint(data, (data.ElementBBox != null ? data.ElementBBox.Min.X : cx) - xDist, targetY, false);
+                        yield return GetElbowFootprint(data, (data.ElementBBox != null ? data.ElementBBox.Max.X : cx) + xDist, targetY, false);
+                    }
+                }
             }
         }
 
@@ -222,30 +286,14 @@ namespace Sinotech_2025.CSDSEM
                 data.Tag.HasLeader = false;
                 data.Tag.TagHeadPosition = data.CalculatedHeadPos;
 
-                // 2. 距離足夠時開啟引線並計算 90 度轉折
-                double dist = data.AnchorPoint.DistanceTo(data.CalculatedHeadPos);
+                // 2. 距離足夠時開啟引線並設置正確的錨點與轉折
+                double dist = data.CalculatedAnchor.DistanceTo(data.CalculatedHeadPos);
                 if (dist > 0.4)
                 {
                     data.Tag.HasLeader = true;
                     data.Tag.LeaderEndCondition = LeaderEndCondition.Free;
-
-                    XYZ anchor = data.AnchorPoint;
-                    XYZ head = data.CalculatedHeadPos;
-                    XYZ elbow;
-
-                    if (data.Orientation == HostOrientation.Horizontal)
-                    {
-                        // 橫向牆：先垂直出牆至 Head.Y，再水平拉至標籤 (Anchor.X, Head.Y)
-                        elbow = new XYZ(anchor.X, head.Y, anchor.Z);
-                    }
-                    else
-                    {
-                        // 縱向牆（圖 4 紅框需求）：先水平向左出牆至 Head.X，再垂直拉至標籤 (Head.X, Anchor.Y)
-                        elbow = new XYZ(head.X, anchor.Y, anchor.Z);
-                    }
-
-                    data.Tag.SetLeaderEnd(data.TargetReference, anchor);
-                    data.Tag.SetLeaderElbow(data.TargetReference, elbow);
+                    data.Tag.SetLeaderEnd(data.TargetReference, data.CalculatedAnchor);
+                    data.Tag.SetLeaderElbow(data.TargetReference, data.CalculatedElbow);
                 }
             }
             catch
@@ -319,10 +367,57 @@ namespace Sinotech_2025.CSDSEM
             return orientation;
         }
 
-        private bool IsCollision(double x, double y, double w, double h, List<BoundingBox2D> boxes)
+        private PlacedTagFootprint GetStraightFootprint(TagData data, XYZ anchor, XYZ head)
         {
-            BoundingBox2D target = new BoundingBox2D(x, y, w, h);
-            return boxes.Any(b => b.Intersects(target));
+            PlacedTagFootprint fp = new PlacedTagFootprint();
+            fp.SetTextBox(head.X, head.Y, data.TagWidth, data.TagHeight);
+            fp.AddLine(anchor.X, anchor.Y, head.X, head.Y, 0.4);
+            fp.FinalAnchor = anchor;
+            fp.FinalElbow = anchor;
+            fp.Head = head;
+            return fp;
+        }
+
+        private PlacedTagFootprint GetElbowFootprint(TagData data, double targetX, double targetY, bool isHorizontal)
+        {
+            PlacedTagFootprint fp = new PlacedTagFootprint();
+            fp.SetTextBox(targetX, targetY, data.TagWidth, data.TagHeight);
+
+            XYZ anchor = data.AnchorPoint;
+            if (data.ElementBBox != null)
+            {
+                double cx = (data.ElementBBox.Min.X + data.ElementBBox.Max.X) / 2.0;
+                double cy = (data.ElementBBox.Min.Y + data.ElementBBox.Max.Y) / 2.0;
+
+                if (isHorizontal)
+                {
+                    double ay = targetY > data.AnchorPoint.Y ? data.ElementBBox.Max.Y : data.ElementBBox.Min.Y;
+                    anchor = new XYZ(cx, ay, data.AnchorPoint.Z);
+                }
+                else
+                {
+                    double ax = targetX > data.AnchorPoint.X ? data.ElementBBox.Max.X : data.ElementBBox.Min.X;
+                    anchor = new XYZ(ax, cy, data.AnchorPoint.Z);
+                }
+            }
+
+            XYZ elbow = isHorizontal ? new XYZ(anchor.X, targetY, anchor.Z) : new XYZ(targetX, anchor.Y, anchor.Z);
+
+            fp.AddLine(anchor.X, anchor.Y, elbow.X, elbow.Y, 0.4);
+            fp.AddLine(elbow.X, elbow.Y, targetX, targetY, 0.4);
+
+            fp.FinalAnchor = anchor;
+            fp.FinalElbow = elbow;
+            fp.Head = new XYZ(targetX, targetY, anchor.Z);
+            return fp;
+        }
+
+        private bool IsCollision(PlacedTagFootprint candidate, List<PlacedTagFootprint> placed)
+        {
+            foreach (var p in placed)
+                if (p.Intersects(candidate))
+                    return true;
+            return false;
         }
 
         private XYZ GetElementCenter(Element elem)
@@ -340,9 +435,60 @@ namespace Sinotech_2025.CSDSEM
             public IndependentTag Tag { get; set; }
             public Reference TargetReference { get; set; }
             public XYZ AnchorPoint { get; set; }
+            public BoundingBoxXYZ ElementBBox { get; set; }
+            public double TagWidth { get; set; }
+            public double TagHeight { get; set; }
             public XYZ CalculatedHeadPos { get; set; }
+            public XYZ CalculatedAnchor { get; set; }
+            public XYZ CalculatedElbow { get; set; }
             public HostOrientation Orientation { get; set; }
             public XYZ HostDirection { get; set; }
+        }
+
+        private class PlacedTagFootprint
+        {
+            public BoundingBox2D TextBox { get; set; }
+            public List<BoundingBox2D> LineBoxes { get; } = new List<BoundingBox2D>();
+            public XYZ FinalAnchor { get; set; }
+            public XYZ FinalElbow { get; set; }
+            public XYZ Head { get; set; }
+
+            public void SetTextBox(double x, double y, double w, double h)
+            {
+                TextBox = new BoundingBox2D(x, y, w, h);
+            }
+
+            public void AddLine(double x1, double y1, double x2, double y2, double thickness)
+            {
+                double minX = Math.Min(x1, x2) - thickness / 2.0;
+                double maxX = Math.Max(x1, x2) + thickness / 2.0;
+                double minY = Math.Min(y1, y2) - thickness / 2.0;
+                double maxY = Math.Max(y1, y2) + thickness / 2.0;
+                LineBoxes.Add(new BoundingBox2D((minX + maxX) / 2.0, (minY + maxY) / 2.0, maxX - minX, maxY - minY));
+            }
+
+            public bool Intersects(PlacedTagFootprint other)
+            {
+                if (TextBox != null && other.TextBox != null && TextBox.Intersects(other.TextBox))
+                    return true;
+
+                if (TextBox != null)
+                {
+                    foreach (var line in other.LineBoxes)
+                        if (TextBox.Intersects(line))
+                            return true;
+                }
+
+                if (other.TextBox != null)
+                {
+                    foreach (var line in LineBoxes)
+                        if (line.Intersects(other.TextBox))
+                            return true;
+                }
+
+                // Allow line vs line overlaps to avoid completely boxing out paths
+                return false;
+            }
         }
 
         private class BoundingBox2D

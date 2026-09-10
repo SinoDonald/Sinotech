@@ -525,6 +525,42 @@
   <ItemGroup>
     <None Include="pic\PCCES.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\元件鎖定.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\自動升版.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\雲形線編號.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\自動接合.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\自動簽圖.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\更新Excel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\更新比例尺.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\更新圖號.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\視圖搬移.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\視圖複製.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\圖紙更新.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\圖紙匯出.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
