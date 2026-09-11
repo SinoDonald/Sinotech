@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -557,6 +557,26 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="pic\圖紙更新.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\原圖\PCCES(原圖).png" />
+    <None Include="pic\原圖\元件鎖定(原圖).png" />
+    <None Include="pic\原圖\圖紙匯出(原圖).png" />
+    <None Include="pic\原圖\圖紙更新(原圖).png" />
+    <None Include="pic\原圖\更新Excel(原圖).png" />
+    <None Include="pic\原圖\更新圖號(原圖).png" />
+    <None Include="pic\原圖\更新比例尺(原圖).png" />
+    <None Include="pic\原圖\標籤排序(原圖).png" />
+    <None Include="pic\原圖\管道標籤(原圖).png" />
+    <None Include="pic\原圖\自動升版(原圖).png" />
+    <None Include="pic\原圖\自動接合(原圖).png" />
+    <None Include="pic\原圖\自動簽圖(原圖).png" />
+    <None Include="pic\原圖\自動編號(原圖).png" />
+    <None Include="pic\原圖\自動開口(原圖).png" />
+    <None Include="pic\原圖\視圖搬移(原圖).png" />
+    <None Include="pic\原圖\視圖複製(原圖).png" />
+    <None Include="pic\原圖\開口標籤(原圖).png" />
+    <None Include="pic\原圖\雲形線編號(原圖).png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="pic\圖紙匯出.png" />

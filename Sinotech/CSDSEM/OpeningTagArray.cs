@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.Attributes;
@@ -162,8 +162,8 @@ namespace Sinotech.CSDSEM
             {
                 PlacedTagFootprint bestCandidate = null;
 
-                // 1. 優先嘗試 4 個正交直線方向 (中心點出發)
-                foreach (var candidate in GenerateStraightCandidates(data))
+                // 1. 第一優先：兩側中軸基礎距離直出（正向 90° 與 180° 反向對側 T 型換向）
+                foreach (var candidate in GeneratePrimaryStraightCandidates(data))
                 {
                     if (!IsCollision(candidate, placed))
                     {
@@ -172,10 +172,10 @@ namespace Sinotech.CSDSEM
                     }
                 }
 
-                // 2. 如果 4 個方向都被干涉，才使用滑動錨點與轉折引線，或者外推
+                // 2. 第二優先：兩側中軸直線延長引線（保持 90° 正交純直線，向外層延伸 Layer 1..4，不橫向轉折）
                 if (bestCandidate == null)
                 {
-                    foreach (var candidate in GenerateSlidingCandidates(data))
+                    foreach (var candidate in GenerateExtendedStraightCandidates(data, 4))
                     {
                         if (!IsCollision(candidate, placed))
                         {
@@ -185,10 +185,23 @@ namespace Sinotech.CSDSEM
                     }
                 }
 
-                // 3. Fallback: 真的完全找不到位置，硬上第一個直線
+                // 3. 第三優先（降級）：當兩側中軸純直線皆無法避讓時，才允許滑動起點與 90° 正交 Elbow 轉折
                 if (bestCandidate == null)
                 {
-                    bestCandidate = GenerateStraightCandidates(data).FirstOrDefault();
+                    foreach (var candidate in GenerateFallbackSlidingCandidates(data))
+                    {
+                        if (!IsCollision(candidate, placed))
+                        {
+                            bestCandidate = candidate;
+                            break;
+                        }
+                    }
+                }
+
+                // 4. 保底機制：若皆無法避讓，套用第一個正交直出位置
+                if (bestCandidate == null)
+                {
+                    bestCandidate = GeneratePrimaryStraightCandidates(data).FirstOrDefault();
                 }
 
                 if (bestCandidate != null)
@@ -211,32 +224,101 @@ namespace Sinotech.CSDSEM
             return tagDataList.Count;
         }
 
-        private IEnumerable<PlacedTagFootprint> GenerateStraightCandidates(TagData data)
+        /// <summary>
+        /// 第一優先：兩側中軸基礎距離直出（正向 90° 與 180° 反向對側 T 型換向）
+        /// </summary>
+        private IEnumerable<PlacedTagFootprint> GeneratePrimaryStraightCandidates(TagData data)
         {
-            if (data.ElementBBox == null) yield break;
-
-            double cx = (data.ElementBBox.Min.X + data.ElementBBox.Max.X) / 2.0;
-            double cy = (data.ElementBBox.Min.Y + data.ElementBBox.Max.Y) / 2.0;
+            double cx = data.AnchorPoint.X;
+            double cy = data.AnchorPoint.Y;
             double z = data.AnchorPoint.Z;
+            double minY = cy, maxY = cy, minX = cx, maxX = cx;
 
-            var top = new { Anchor = new XYZ(cx, data.ElementBBox.Max.Y, z), Head = new XYZ(cx, data.ElementBBox.Max.Y + BaseOffset, z) };
-            var bottom = new { Anchor = new XYZ(cx, data.ElementBBox.Min.Y, z), Head = new XYZ(cx, data.ElementBBox.Min.Y - BaseOffset, z) };
-            var left = new { Anchor = new XYZ(data.ElementBBox.Min.X, cy, z), Head = new XYZ(data.ElementBBox.Min.X - BaseOffset, cy, z) };
-            var right = new { Anchor = new XYZ(data.ElementBBox.Max.X, cy, z), Head = new XYZ(data.ElementBBox.Max.X + BaseOffset, cy, z) };
+            if (data.ElementBBox != null)
+            {
+                cx = (data.ElementBBox.Min.X + data.ElementBBox.Max.X) / 2.0;
+                cy = (data.ElementBBox.Min.Y + data.ElementBBox.Max.Y) / 2.0;
+                minY = data.ElementBBox.Min.Y;
+                maxY = data.ElementBBox.Max.Y;
+                minX = data.ElementBBox.Min.X;
+                maxX = data.ElementBBox.Max.X;
+            }
 
             if (data.Orientation == HostOrientation.Horizontal)
             {
-                yield return GetStraightFootprint(data, top.Anchor, top.Head);
-                yield return GetStraightFootprint(data, bottom.Anchor, bottom.Head);
+                // 水平管道/牆體：優先上方 (+Y)，次之 180° 反向下方 (-Y)
+                XYZ topAnchor = new XYZ(cx, maxY, z);
+                XYZ topHead = new XYZ(cx, maxY + BaseOffset, z);
+                yield return GetStraightFootprint(data, topAnchor, topHead);
+
+                XYZ bottomAnchor = new XYZ(cx, minY, z);
+                XYZ bottomHead = new XYZ(cx, minY - BaseOffset, z);
+                yield return GetStraightFootprint(data, bottomAnchor, bottomHead);
             }
             else
             {
-                yield return GetStraightFootprint(data, left.Anchor, left.Head);
-                yield return GetStraightFootprint(data, right.Anchor, right.Head);
+                // 垂直管道/牆體：優先左側 (-X)，次之 180° 反向右側 (+X)
+                XYZ leftAnchor = new XYZ(minX, cy, z);
+                XYZ leftHead = new XYZ(minX - BaseOffset, cy, z);
+                yield return GetStraightFootprint(data, leftAnchor, leftHead);
+
+                XYZ rightAnchor = new XYZ(maxX, cy, z);
+                XYZ rightHead = new XYZ(maxX + BaseOffset, cy, z);
+                yield return GetStraightFootprint(data, rightAnchor, rightHead);
             }
         }
 
-        private IEnumerable<PlacedTagFootprint> GenerateSlidingCandidates(TagData data)
+        /// <summary>
+        /// 第二優先：兩側中軸直線延長引線（保持純直線無轉折，向上/下或左/右逐層向外延伸）
+        /// </summary>
+        private IEnumerable<PlacedTagFootprint> GenerateExtendedStraightCandidates(TagData data, int maxLayers)
+        {
+            double cx = data.AnchorPoint.X;
+            double cy = data.AnchorPoint.Y;
+            double z = data.AnchorPoint.Z;
+            double minY = cy, maxY = cy, minX = cx, maxX = cx;
+
+            if (data.ElementBBox != null)
+            {
+                cx = (data.ElementBBox.Min.X + data.ElementBBox.Max.X) / 2.0;
+                cy = (data.ElementBBox.Min.Y + data.ElementBBox.Max.Y) / 2.0;
+                minY = data.ElementBBox.Min.Y;
+                maxY = data.ElementBBox.Max.Y;
+                minX = data.ElementBBox.Min.X;
+                maxX = data.ElementBBox.Max.X;
+            }
+
+            for (int layer = 1; layer <= maxLayers; layer++)
+            {
+                double offset = BaseOffset + layer * LayerSpacing;
+
+                if (data.Orientation == HostOrientation.Horizontal)
+                {
+                    XYZ topAnchor = new XYZ(cx, maxY, z);
+                    XYZ topHead = new XYZ(cx, maxY + offset, z);
+                    yield return GetStraightFootprint(data, topAnchor, topHead);
+
+                    XYZ bottomAnchor = new XYZ(cx, minY, z);
+                    XYZ bottomHead = new XYZ(cx, minY - offset, z);
+                    yield return GetStraightFootprint(data, bottomAnchor, bottomHead);
+                }
+                else
+                {
+                    XYZ leftAnchor = new XYZ(minX, cy, z);
+                    XYZ leftHead = new XYZ(minX - offset, cy, z);
+                    yield return GetStraightFootprint(data, leftAnchor, leftHead);
+
+                    XYZ rightAnchor = new XYZ(maxX, cy, z);
+                    XYZ rightHead = new XYZ(maxX + offset, cy, z);
+                    yield return GetStraightFootprint(data, rightAnchor, rightHead);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 第三優先（降級）：當正交直線完全碰撞時，降級啟用滑動與 90° 正交轉折 Elbow
+        /// </summary>
+        private IEnumerable<PlacedTagFootprint> GenerateFallbackSlidingCandidates(TagData data)
         {
             double cx = data.AnchorPoint.X;
             double cy = data.AnchorPoint.Y;
@@ -246,14 +328,14 @@ namespace Sinotech.CSDSEM
                 cy = (data.ElementBBox.Min.Y + data.ElementBBox.Max.Y) / 2.0;
             }
 
-            for (int layer = 0; layer < 5; layer++)
+            for (int layer = 0; layer < 4; layer++)
             {
-                double gapW = data.TagWidth + 1.0;
-                double gapH = data.TagHeight + 1.0;
+                double gapW = data.TagWidth + 0.8;
+                double gapH = data.TagHeight + 0.8;
                 double layerOffsetW = (layer % 2 == 1) ? (gapW / 2.0) : 0.0;
                 double layerOffsetH = (layer % 2 == 1) ? (gapH / 2.0) : 0.0;
 
-                for (int shiftIndex = 1; shiftIndex <= 10; shiftIndex++)
+                for (int shiftIndex = 1; shiftIndex <= 6; shiftIndex++)
                 {
                     double shiftDir = (shiftIndex % 2 == 1) ? 1.0 : -1.0;
                     
