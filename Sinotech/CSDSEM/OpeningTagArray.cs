@@ -209,7 +209,11 @@ namespace Sinotech.CSDSEM
                     data.CalculatedHeadPos = bestCandidate.Head;
                     data.CalculatedAnchor = bestCandidate.FinalAnchor;
                     data.CalculatedElbow = bestCandidate.FinalElbow;
+<<<<<<< HEAD
                     data.HasElbow = bestCandidate.HasElbow;
+=======
+                    data.HasElbow = bestCandidate.IsElbow;
+>>>>>>> fc49b830bb73caa4e65588fede99842f6f5ff4fe
                     placed.Add(bestCandidate);
                 }
             }
@@ -359,19 +363,26 @@ namespace Sinotech.CSDSEM
         }
 
         /// <summary>
-        /// 將位置套用至標籤，並構建精確的 90 度正交 Elbow
+        /// 將位置套用至標籤，並構建精確的 90 度正交 Elbow 或直出貼附端點
         /// </summary>
         private void ApplyTagPositionAndElbow(TagData data)
         {
             try
             {
-                // 1. 先關閉引線以利移動 TagHeadPosition
+                // 1. 先關閉引線以利精準移動 TagHeadPosition
                 data.Tag.HasLeader = false;
                 data.Tag.TagHeadPosition = data.CalculatedHeadPos;
 
+<<<<<<< HEAD
                 // 2. 距離足夠時開啟引線並設置端點條件與轉折
                 double dist = data.CalculatedAnchor.DistanceTo(data.CalculatedHeadPos);
                 if (dist > 0.4)
+=======
+                // 2. 結束後開啟引線：
+                //    預設"貼附端點" (LeaderEndCondition.Attached)
+                //    若有干涉避讓需轉折時，使用"自由端點" (LeaderEndCondition.Free) 並設置 90 度轉折
+                if (data.HasElbow)
+>>>>>>> fc49b830bb73caa4e65588fede99842f6f5ff4fe
                 {
                     data.Tag.HasLeader = true;
                     if (data.HasElbow)
@@ -386,6 +397,11 @@ namespace Sinotech.CSDSEM
                         // 預設直出無轉折時使用貼附端點
                         data.Tag.LeaderEndCondition = LeaderEndCondition.Attached;
                     }
+                }
+                else
+                {
+                    data.Tag.HasLeader = true;
+                    data.Tag.LeaderEndCondition = LeaderEndCondition.Attached;
                 }
             }
             catch
@@ -467,7 +483,11 @@ namespace Sinotech.CSDSEM
             fp.FinalAnchor = anchor;
             fp.FinalElbow = anchor;
             fp.Head = head;
+<<<<<<< HEAD
             fp.HasElbow = false;
+=======
+            fp.IsElbow = false;
+>>>>>>> fc49b830bb73caa4e65588fede99842f6f5ff4fe
             return fp;
         }
 
@@ -502,7 +522,11 @@ namespace Sinotech.CSDSEM
             fp.FinalAnchor = anchor;
             fp.FinalElbow = elbow;
             fp.Head = new XYZ(targetX, targetY, anchor.Z);
+<<<<<<< HEAD
             fp.HasElbow = true;
+=======
+            fp.IsElbow = true;
+>>>>>>> fc49b830bb73caa4e65588fede99842f6f5ff4fe
             return fp;
         }
 
@@ -547,7 +571,11 @@ namespace Sinotech.CSDSEM
             public XYZ FinalAnchor { get; set; }
             public XYZ FinalElbow { get; set; }
             public XYZ Head { get; set; }
+<<<<<<< HEAD
             public bool HasElbow { get; set; }
+=======
+            public bool IsElbow { get; set; }
+>>>>>>> fc49b830bb73caa4e65588fede99842f6f5ff4fe
 
             public void SetTextBox(double x, double y, double w, double h)
             {
