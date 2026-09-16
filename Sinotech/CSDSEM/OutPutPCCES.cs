@@ -6,8 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 
 namespace Sinotech.CSDSEM
 {
@@ -24,9 +24,9 @@ namespace Sinotech.CSDSEM
             public string name = string.Empty; // 章名
             public string type = string.Empty; // 套管or開口
             public string host = string.Empty; // 干涉品類(牆、樑、板)
-            public double diameter = 0.0; // 管徑
-            public double area = 0.0; // 面積
-            public double volume = 0.0; // 體積
+            public double diameter = 0.0; // 管徑（mm）
+            public double area = 0.0; // 面積（m²）
+            public double volume = 0.0; // 體積（m³）
             public double min = 0.0; // 小值
             public double max = 0.0; // 大值
             public string prjNumber = string.Empty; // 工程項目編號
@@ -35,7 +35,7 @@ namespace Sinotech.CSDSEM
         public class ModelInfo
         {
             public Level level = null; // 樓層
-            public double elevation = 0.0; // 高程
+            public double elevation = 0.0; // 高程（Revit 內部單位 ft，僅用於排序）
             public string levelName = string.Empty; // 樓層名稱
             public string item = string.Empty; // 項次
             public string familyName = string.Empty; // 開口名稱
@@ -44,15 +44,15 @@ namespace Sinotech.CSDSEM
             public int isPillar = 0; // 是否為止水墩
             public int pipeOrDuctInt = 0; // 開口類型排序
             public string host = string.Empty; // 開口對象(牆、樑、板)
-            public double diameter = 0.0; // 直徑
-            public double area = 0.0; // 面積
-            public double volume = 0.0; // 體積
-            public double length = 0.0; // 長度(for 導線管) or 周長(for 止水墩)
-            public double floorLength = 0.0; // 樓板(or基座止水墩)長度
-            public double floorWidth = 0.0; // 樓板(or基座止水墩)寬度
-            public double floorHeight = 0.0; // 基座止水墩寬度
+            public double diameter = 0.0; // 直徑（mm）
+            public double area = 0.0; // 面積（m²）
+            public double volume = 0.0; // 體積（m³）
+            public double length = 0.0; // 計價長度（m，導線管與止水墩統一）
+            public double floorLength = 0.0; // 樓板(or基座止水墩)長度（mm）
+            public double floorWidth = 0.0; // 樓板(or基座止水墩)寬度（mm）
+            public double floorHeight = 0.0; // 基座止水墩高度（mm）
             public double perimeter = 0.0; // 周長
-            public double interference = 0.0; // 干涉長度
+            public double interference = 0.0; // 干涉長度（mm）
             public string description = string.Empty; // 項目及說明
             public string unit = string.Empty; // 單位
             public int count = 0; // 數量
@@ -69,7 +69,9 @@ namespace Sinotech.CSDSEM
         // Excel All Sheet比對資料
         public List<OpeningContrast> openingContrastList = new List<OpeningContrast>();
         public static List<ExcelCellData> ecDataList = new List<ExcelCellData>(); // 將Excel中Sheet的Cell資料都撈出來
-        public static double unit_conversion = 304.8; // 專案單位轉換
+        // PCCES 比對單位：直徑與尺寸為 mm，面積為 m²，體積為 m³，計價長度為 m。
+        // 容許單位轉換造成的浮點誤差（mm），不使用顯示精度進行比對。
+        private const double DiameterToleranceMillimeters = 1e-6;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -177,12 +179,11 @@ namespace Sinotech.CSDSEM
                                         else
                                         {
                                             length = Math.Round(sum, 2, MidpointRounding.AwayFromZero); // 貴森兄
-                                            //length = Math.Round(sum * 2 / 1000, 1, MidpointRounding.AwayFromZero); // 寶惠姊 
                                         }
                                     }
                                     else
                                     {
-                                        length = Math.Round(sum / 1000, 0, MidpointRounding.AwayFromZero);
+                                        length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
                                     }
                                 }
                                 // 工程項目編號
@@ -283,12 +284,11 @@ namespace Sinotech.CSDSEM
                                     else
                                     {
                                         length = Math.Round(sum, 2, MidpointRounding.AwayFromZero); // 貴森兄
-                                        //length = Math.Round(sum * 2 / 1000, 1, MidpointRounding.AwayFromZero); // 寶惠姊 
                                     }
                                 }
                                 else
                                 {
-                                    length = Math.Round(sum / 1000, 0, MidpointRounding.AwayFromZero);
+                                    length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
                                 }
                             }
                             // 工程項目編號
@@ -397,12 +397,12 @@ namespace Sinotech.CSDSEM
                         }
                         catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                        modelInfo.diameter = Convert.ToDouble(opening.LookupParameter("指定圓形套管直徑").AsValueString());
-                        if(modelInfo.diameter == 0) { modelInfo.diameter = Convert.ToDouble(opening.LookupParameter("預設圓形套管直徑").AsValueString()); }
+                        modelInfo.diameter = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("指定圓形套管直徑").AsDouble(), UnitTypeId.Millimeters);
+                        if(modelInfo.diameter == 0) { modelInfo.diameter = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("預設圓形套管直徑").AsDouble(), UnitTypeId.Millimeters); }
                         // 開口對象(牆、樑、板)
                         if (opening.Name.Contains("牆")) { modelInfo.host = "牆"; }
                         else if (opening.Name.Contains("樓板") || opening.Name.Contains("樓版")) { modelInfo.host = "樓板"; }                        
-                        string description = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host) && x.diameter.Equals(modelInfo.diameter)).Select(x => x.name).LastOrDefault(); // 項目及說明
+                        string description = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host) && Math.Abs(x.diameter - modelInfo.diameter) < DiameterToleranceMillimeters).Select(x => x.name).LastOrDefault(); // 項目及說明
                         modelInfo.description = description;                        
                         string prjNumber = openingContrastList.Where(x => x.name.Equals(description)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                         modelInfo.prjNumber = prjNumber;
@@ -425,19 +425,14 @@ namespace Sinotech.CSDSEM
                         }
                         catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                        double value = opening.LookupParameter("矩形開口面積").AsDouble();
-                        //double openingArea = value * unit_conversion;
-                        double openingArea = value * unit_conversion;
-                        modelInfo.area = openingArea;
+                        modelInfo.area = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("矩形開口面積").AsDouble(), UnitTypeId.SquareMeters);
                         // 開口對象(牆、樑、板)
                         if (opening.Name.Contains("牆")) { modelInfo.host = "牆"; }
                         else if (opening.Name.Contains("樓板") || opening.Name.Contains("樓版")) 
                         {
                             modelInfo.host = "樓板";
-                            string floorLength = Regex.Replace(opening.LookupParameter("矩形開口高度").AsValueString(), "[^0-9.]", ""); //僅保留數字
-                            string floorWidth = Regex.Replace(opening.LookupParameter("矩形開口寬度").AsValueString(), "[^0-9.]", ""); //僅保留數字
-                            modelInfo.floorLength = Convert.ToDouble(floorLength);
-                            modelInfo.floorWidth = Convert.ToDouble(floorWidth);
+                            modelInfo.floorLength = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("矩形開口高度").AsDouble(), UnitTypeId.Millimeters);
+                            modelInfo.floorWidth = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("矩形開口寬度").AsDouble(), UnitTypeId.Millimeters);
                         }
                         // 項目及說明
                         OpeningContrast item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host))
@@ -481,14 +476,14 @@ namespace Sinotech.CSDSEM
                         }
                         catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                        modelInfo.floorLength = Convert.ToDouble(opening.LookupParameter("長度").AsValueString()); // 基座止水墩長度
-                        modelInfo.floorWidth = Convert.ToDouble(opening.LookupParameter("寬度").AsValueString()); // 基座止水墩寬度
-                        //modelInfo.floorHeight = Convert.ToDouble(opening.LookupParameter("高度").AsValueString()); // 基座止水墩高度
+                        modelInfo.floorLength = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("長度").AsDouble(), UnitTypeId.Millimeters); // 基座止水墩長度
+                        modelInfo.floorWidth = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("寬度").AsDouble(), UnitTypeId.Millimeters); // 基座止水墩寬度（mm）
                         try
                         {
                             // 如果基座需要止水墩, 計算止水墩長度
                             if (modelInfo.isPillar.Equals(1))
                             {
+                                // 尺寸及原有加計量 10、20 均以 mm 計算。
                                 double length = modelInfo.floorLength; // 長度計算
                                 double width = modelInfo.floorWidth; // 寬度計算                                
                                 int crush1 = opening.LookupParameter("周長(長)").AsInteger(); // 如果碰觸牆的為長度
@@ -500,9 +495,7 @@ namespace Sinotech.CSDSEM
                             }
                         }
                         catch (Exception) { }
-                        string value = opening.get_Parameter(BuiltInParameter.HOST_VOLUME_COMPUTED).AsValueString();
-                        string volume = Regex.Replace(opening.get_Parameter(BuiltInParameter.HOST_VOLUME_COMPUTED).AsValueString(), "[^0-9.]", ""); //僅保留數字
-                        modelInfo.volume = Convert.ToDouble(volume); // 體積
+                        modelInfo.volume = UnitUtils.ConvertFromInternalUnits(opening.get_Parameter(BuiltInParameter.HOST_VOLUME_COMPUTED).AsDouble(), UnitTypeId.CubicMeters); // 體積（m³）
                         // 項目及說明
                         OpeningContrast item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct)).Where(x => x.min < modelInfo.volume && modelInfo.volume <= x.max).FirstOrDefault();
                         if(item != null)
@@ -541,13 +534,13 @@ namespace Sinotech.CSDSEM
                         catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         
-                        modelInfo.length = Convert.ToDouble(opening.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH).AsValueString()); // 長度
+                        modelInfo.length = UnitUtils.ConvertFromInternalUnits(opening.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH).AsDouble(), UnitTypeId.Meters); // 長度
                         // 取Excel資料庫中的最近數值
-                        double diameter = Convert.ToDouble(Regex.Replace(opening.get_Parameter(BuiltInParameter.RBS_CONDUIT_DIAMETER_PARAM).AsValueString(), "[^0-9.]", "")); // 直徑 (標稱尺寸)
+                        double diameter = UnitUtils.ConvertFromInternalUnits(opening.get_Parameter(BuiltInParameter.RBS_CONDUIT_DIAMETER_PARAM).AsDouble(), UnitTypeId.Millimeters); // 直徑（mm） (標稱尺寸)
                         List<double> values = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct)).Select(x => x.diameter).Distinct().ToList();
                         diameter = values.OrderBy(x => Math.Abs(x - diameter)).FirstOrDefault();
                         modelInfo.diameter = diameter;                        
-                        string description = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.diameter.Equals(modelInfo.diameter)).Select(x => x.name).LastOrDefault(); // 項目及說明
+                        string description = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && Math.Abs(x.diameter - modelInfo.diameter) < DiameterToleranceMillimeters).Select(x => x.name).LastOrDefault(); // 項目及說明
                         modelInfo.description = description;                        
                         string prjNumber = openingContrastList.Where(x => x.name.Equals(description)).Select(x => x.prjNumber).LastOrDefault(); // 工程項目編號
                         modelInfo.prjNumber = prjNumber;
@@ -566,7 +559,7 @@ namespace Sinotech.CSDSEM
                         modelInfo.level = level;
                     }
                     else { modelInfo.level = doc.GetElement(opening.LevelId) as Level; } // 樓層
-                    modelInfo.elevation = modelInfo.level.Elevation; // 高程
+                    modelInfo.elevation = modelInfo.level.Elevation; // 高程（Revit 內部單位 ft，僅用於排序）
                     modelInfo.levelName = modelInfo.level.Name; // 樓層名稱
                     modelInfo.elementId = opening.Id; // ElementId
                     if (!String.IsNullOrEmpty(modelInfo.description)) { modelInfoList.Add(modelInfo); }
@@ -613,12 +606,13 @@ namespace Sinotech.CSDSEM
                                                         x.pipeOrDuct.Equals("開口") && x.host.Equals("樓板") && x.description.Equals(description)).ToList();
                         foreach (ModelInfo curbStopCalcul in modelDBFilter)
                         {
+                            // 各面積級距的固定計價周長以 m 表示。
                             if (description.Contains("面積≦0.1m2")) { perimeter += 2.56; }
                             else if (description.Contains("0.1m2＜面積≦0.5m2")) { perimeter += 5.68; }
                             else if (description.Contains("0.5m2＜面積≦1.0m2")) { perimeter += 8.0; }
                             else if (description.Contains("1.0m2＜面積≦1.5m2")) { perimeter += 9.84; }
                             else if (description.Contains("1.5m2＜面積≦2.0m2")) { perimeter += 11.36; }
-                            else { perimeter += (curbStopCalcul.floorLength / 1000 + curbStopCalcul.floorWidth / 1000) * 2; }
+                            else { perimeter += UnitUtils.Convert((curbStopCalcul.floorLength + curbStopCalcul.floorWidth) * 2, UnitTypeId.Millimeters, UnitTypeId.Meters); }
                         }
                         ModelInfo modelInfo = new ModelInfo();
                         modelInfo.levelName = disLevelName;
@@ -640,39 +634,7 @@ namespace Sinotech.CSDSEM
                                                         x.pipeOrDuct.Equals("基座") && x.isPillar.Equals(1) && x.description.Equals(stopPillar)).ToList();
                         foreach (ModelInfo curbStopCalcul in modelDBFilter)
                         {
-                            //if (stopPillar.Contains("體積≦0.15m3"))
-                            //{
-                            //    perimeter += 2.56;
-                            //}
-                            //else if (stopPillar.Contains("0.15m3＜體積≦0.5m3"))
-                            //{
-                            //    perimeter += 5.68;
-                            //}
-                            //else if (stopPillar.Contains("0.5m3＜體積≦1.0m3"))
-                            //{
-                            //    perimeter += 8.0;
-                            //}
-                            //else if (stopPillar.Contains("1.0m3＜體積≦1.5m3"))
-                            //{
-                            //    perimeter += 9.84;
-                            //}
-                            //else if (stopPillar.Contains("1.5m3＜體積≦2.0m3"))
-                            //{
-                            //    perimeter += 11.36;
-                            //}
-                            //else if (stopPillar.Contains("2.0m3＜體積≦2.5m3"))
-                            //{
-                            //    perimeter += 11.36;
-                            //}
-                            //else if (stopPillar.Contains("2.5m3＜體積≦3.0m3"))
-                            //{
-                            //    perimeter += 11.36;
-                            //}
-                            //else
-                            //{
-                            perimeter += curbStopCalcul.interference / 1000;
-                            //perimeter += ((curbStopCalcul.floorLength + 20 + curbStopCalcul.floorWidth + 20) * 2 * 2) / 1000; 
-                            //}
+                            perimeter += UnitUtils.Convert(curbStopCalcul.interference, UnitTypeId.Millimeters, UnitTypeId.Meters);
                         }
                         ModelInfo modelInfo = new ModelInfo();
                         modelInfo.levelName = disLevelName;

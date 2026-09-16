@@ -118,7 +118,7 @@ namespace Sinotech_2025.CSDSEM
                     progressForm.UpdateProgress(currentPlan.Name);
                     System.Windows.Forms.Application.DoEvents();
 
-                    List<ElementId> tagsInThisView = TagOpeningsInSingleViewFast(doc, currentPlan, tagSymbolMap, globalOpeningCache);
+                    List<ElementId> tagsInThisView = TagOpeningsInSingleViewFast(doc, currentPlan, tagSymbolMap, globalOpeningCache, sessionResult);
 
                     if (tagsInThisView.Count > 0)
                     {
@@ -141,7 +141,8 @@ namespace Sinotech_2025.CSDSEM
             Document doc,
             ViewPlan view,
             Dictionary<BuiltInCategory, FamilySymbol> tagSymbolMap,
-            List<OpeningCacheItem> openingCache)
+            List<OpeningCacheItem> openingCache,
+            TaggingSessionResult sessionResult)
         {
             List<ElementId> createdInCurrentView = new List<ElementId>();
 
@@ -199,7 +200,12 @@ namespace Sinotech_2025.CSDSEM
                     }
 
                     // 取得品類匹配的標籤型別
-                    tagSymbolMap.TryGetValue(item.Category, out FamilySymbol targetTagSymbol);
+                    if (!tagSymbolMap.TryGetValue(item.Category, out FamilySymbol targetTagSymbol)
+                        || targetTagSymbol == null)
+                    {
+                        sessionResult.TaggingIssues.Add($"視圖：{view.Name}；元件 ID：{item.Id.Value}；類別：{item.Category}；略過原因：未載入對應類別的標籤型別。");
+                        continue;
+                    }
 
                     try
                     {
@@ -234,9 +240,9 @@ namespace Sinotech_2025.CSDSEM
                             existingTaggedIds.Add(item.Id);
                         }
                     }
-                    catch (Autodesk.Revit.Exceptions.ArgumentException)
+                    catch (Exception ex)
                     {
-                        // 略過少數不可標註之退化圖元
+                        sessionResult.TaggingIssues.Add($"視圖：{view.Name}；元件 ID：{item.Id.Value}；類別：{item.Category}；失敗原因：{ex.GetType().Name}: {ex.Message}");
                     }
                 }
 
@@ -551,11 +557,16 @@ namespace Sinotech_2025.CSDSEM
                 {
                     detailSummary.AppendLine($" • {item.Key}：{item.Value} 個");
                 }
+                if (result.TaggingIssues.Count > 0)
+                {
+                    detailSummary.AppendLine($"\n另有 {result.TaggingIssues.Count} 筆視圖／元件標註被略過或發生錯誤，請展開詳細資訊查看。");
+                }
 
                 TaskDialog td = new TaskDialog("自動開口標籤完成")
                 {
                     MainInstruction = $"所有視圖累計成功產生 {totalCount} 個開口標籤！",
                     MainContent = detailSummary.ToString(),
+                    ExpandedContent = string.Join(Environment.NewLine, result.TaggingIssues),
                     CommonButtons = TaskDialogCommonButtons.Close,
                     DefaultButton = TaskDialogResult.Close
                 };
@@ -591,6 +602,11 @@ namespace Sinotech_2025.CSDSEM
                             {
                                 sb.AppendLine(id.Value.ToString());
                             }
+                            sb.AppendLine("[略過與錯誤明細（每筆為一個視圖中的一個元件）]");
+                            foreach (string issue in result.TaggingIssues)
+                            {
+                                sb.AppendLine(issue);
+                            }
 
                             try
                             {
@@ -604,6 +620,17 @@ namespace Sinotech_2025.CSDSEM
                         }
                     }
                 }
+            }
+            else if (result.TaggingIssues.Count > 0)
+            {
+                TaskDialog td = new TaskDialog("自動開口標籤結果")
+                {
+                    MainInstruction = "未產生新標籤，部分元件因缺少標籤型別或標註錯誤而未完成。",
+                    MainContent = $"共有 {result.TaggingIssues.Count} 筆視圖／元件記錄，請展開詳細資訊確認原因；缺少型別時，請載入對應類別的標籤族群後再執行。",
+                    ExpandedContent = string.Join(Environment.NewLine, result.TaggingIssues),
+                    CommonButtons = TaskDialogCommonButtons.Close
+                };
+                td.Show();
             }
             else
             {
@@ -650,6 +677,7 @@ namespace Sinotech_2025.CSDSEM
         public TimeSpan Duration => EndTime - StartTime;
         public List<ElementId> CreatedTagIds { get; } = new List<ElementId>();
         public Dictionary<string, int> ViewTagSummary { get; } = new Dictionary<string, int>();
+        public List<string> TaggingIssues { get; } = new List<string>();
         public int TotalCount => CreatedTagIds.Count;
     }
 
