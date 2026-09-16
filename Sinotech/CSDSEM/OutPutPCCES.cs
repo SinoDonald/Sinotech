@@ -110,7 +110,13 @@ namespace Sinotech.CSDSEM
                 // 將Excel中Sheet的Cell資料都撈出來
                 ecDataList = new List<ExcelCellData>();
                 // 讀取並儲存所有的Element
-                List<ModelInfo> modelDB = ModelDB(doc);
+                List<ModelInfo> modelDB;
+                try { modelDB = ModelDB(doc); }
+                catch (InvalidOperationException ex)
+                {
+                    TaskDialog.Show("PCCES 止水墩計算", ex.Message);
+                    return Result.Cancelled;
+                }
                 // 篩選各樓層, 高程由上而下
                 List<string> disLevelNames = modelDB.OrderByDescending(x => x.elevation).Select(x => x.levelName).Distinct().ToList();
 
@@ -371,6 +377,19 @@ namespace Sinotech.CSDSEM
             List<Element> platforms = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_GenericModel).WhereElementIsNotElementType().Where(x => x.Name.Contains("基座")).ToList();
             openings.AddRange(platforms);
 
+            // 匯出前先驗證所有需要計價的基座，避免後面的既有例外處理漏掉失敗項目。
+            var curbCalculator = new CurbWallContactCalculator(doc);
+            var curbLengths = new Dictionary<ElementId, double>();
+            foreach (Element platform in platforms)
+            {
+                if (platform.LookupParameter("止水墩")?.AsInteger() != 1) continue;
+                try { curbLengths[platform.Id] = curbCalculator.CalculateMillimeters(platform); }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException("基座 " + platform.Id.Value + " 的貼牆計算失敗，已停止匯出。\n" + ex.Message, ex);
+                }
+            }
+
             int i = 1;
             foreach (Element opening in openings)
             {
@@ -470,7 +489,7 @@ namespace Sinotech.CSDSEM
                             if (para != null)
                             {
                                 modelInfo.linkPrj = CommentsLinkPrj(opening, modelInfo); // 連結專案
-                                modelInfo.isPillar = opening.LookupParameter("止水墩").AsInteger(); // 是否為止水墩
+
                                 //modelInfo.pCode = opening.LookupParameter("專業代碼").AsString(); // 專業代碼
                             }
                         }
@@ -478,23 +497,12 @@ namespace Sinotech.CSDSEM
                         catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
                         modelInfo.floorLength = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("長度").AsDouble(), UnitTypeId.Millimeters); // 基座止水墩長度
                         modelInfo.floorWidth = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("寬度").AsDouble(), UnitTypeId.Millimeters); // 基座止水墩寬度（mm）
-                        try
+                        modelInfo.isPillar = opening.LookupParameter("止水墩")?.AsInteger() ?? 0;
+                        if (modelInfo.isPillar == 1)
                         {
-                            // 如果基座需要止水墩, 計算止水墩長度
-                            if (modelInfo.isPillar.Equals(1))
-                            {
-                                // 尺寸及原有加計量 10、20 均以 mm 計算。
-                                double length = modelInfo.floorLength; // 長度計算
-                                double width = modelInfo.floorWidth; // 寬度計算                                
-                                int crush1 = opening.LookupParameter("周長(長)").AsInteger(); // 如果碰觸牆的為長度
-                                int crush2 = opening.LookupParameter("周長(寬)").AsInteger(); // 如果碰觸牆的為寬度
-                                if (crush1.Equals(0) && crush2.Equals(0)) { modelInfo.interference = ((length + 20) * 2 + (width + 20) * 2) * 2; }
-                                else if (crush1.Equals(1) && crush2.Equals(0)) { modelInfo.interference = ((length + 20) + (width + 10) * 2) * 2; }
-                                else if (crush1.Equals(0) && crush2.Equals(1)) { modelInfo.interference = ((length + 10) * 2 + (width + 20)) * 2; }
-                                else if (crush1.Equals(1) && crush2.Equals(1)) { modelInfo.interference = ((length + 10) + (width + 10)) * 2; }
-                            }
+                            // 由實際貼牆區段計算溝槽，不讀取「周長(長)／周長(寬)」勾選值。
+                            modelInfo.interference = curbLengths[opening.Id];
                         }
-                        catch (Exception) { }
                         modelInfo.volume = UnitUtils.ConvertFromInternalUnits(opening.get_Parameter(BuiltInParameter.HOST_VOLUME_COMPUTED).AsDouble(), UnitTypeId.CubicMeters); // 體積（m³）
                         // 項目及說明
                         OpeningContrast item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct)).Where(x => x.min < modelInfo.volume && modelInfo.volume <= x.max).FirstOrDefault();

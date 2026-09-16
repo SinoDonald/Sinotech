@@ -338,6 +338,7 @@
       <DependentUpon>MoveViewForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CSDSEM\OutPutPCCES.cs" />
+    <Compile Include="CSDSEM\CurbWallContactCalculator.cs" />
     <Compile Include="SpeedTool\ParkOrRoom.cs" />
     <Compile Include="SpeedTool\ParkOrRoomForm.cs">
       <SubType>Form</SubType>
