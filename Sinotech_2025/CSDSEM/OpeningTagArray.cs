@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.Attributes;
@@ -68,7 +68,7 @@ namespace Sinotech_2025.CSDSEM
                 int processedCount = engine.ArrangeTags(tags, hostElements);
 
                 trans.Commit();
-                TaskDialog.Show("成功", $"已成功將 {processedCount} 個標籤排版");
+                TaskDialog.Show("成功", $"已完成 {processedCount} 個標籤排版並開啟引線。");
             }
 
             return Result.Succeeded;
@@ -109,51 +109,76 @@ namespace Sinotech_2025.CSDSEM
         {
             List<TagData> tagDataList = new List<TagData>();
 
-            // 關閉引線以取得準確的標籤邊界框
-            foreach (var tag in tags)
+            using (SubTransaction measurement = new SubTransaction(_doc))
             {
-                try { tag.HasLeader = false; } catch { }
-            }
-            _doc.Regenerate();
-
-            // A. 解析標籤與宿主幾何關係
-            foreach (var tag in tags)
-            {
-                Reference refElem = tag.GetTaggedReferences().FirstOrDefault();
-                if (refElem == null) continue;
-
-                Element targetElem = _doc.GetElement(refElem.ElementId);
-                if (targetElem == null) continue;
-
-                XYZ anchorPt = GetElementCenter(targetElem);
-                HostOrientation orientation = DetectHostOrientation(targetElem, anchorPt, hostElements, out XYZ hostDir);
-
-                BoundingBoxXYZ elemBox = targetElem.get_BoundingBox(_view);
-                BoundingBoxXYZ tagBox = tag.get_BoundingBox(_view);
-
-                double tWidth = TagWidthEst;
-                double tHeight = TagHeightEst;
-                if (tagBox != null)
+                measurement.Start();
+                // 關閉引線以取得準確的標籤邊界框
+                foreach (var tag in tags)
                 {
-                    double w = tagBox.Max.X - tagBox.Min.X;
-                    double h = tagBox.Max.Y - tagBox.Min.Y;
-                    if (w > 0.1) tWidth = w + 0.5; // 加入寬度緩衝區
-                    if (h > 0.1) tHeight = h + 0.5; // 加入高度緩衝區
+                    try { tag.HasLeader = false; } catch { }
+                }
+                _doc.Regenerate();
+
+                // A. 解析標籤與宿主幾何關係
+                foreach (var tag in tags)
+                {
+                    var references = tag.GetTaggedReferences();
+                    if (references.Count == 0) continue;
+                    Reference refElem = references.FirstOrDefault();
+                    if (refElem != null && refElem.LinkedElementId != ElementId.InvalidElementId) continue;
+                    if (refElem == null) continue;
+
+                    Element targetElem = _doc.GetElement(refElem.ElementId);
+                    if (targetElem == null) continue;
+
+                    XYZ anchorPt = GetElementCenter(targetElem);
+                    TargetOrientation orientation = DetectTargetOrientation(targetElem, anchorPt, hostElements, out XYZ hostDir);
+
+                    BoundingBoxXYZ elemBox = targetElem.get_BoundingBox(_view);
+                    BoundingBoxXYZ tagBox = tag.get_BoundingBox(_view);
+
+                    double tWidth = TagWidthEst;
+                    double tHeight = TagHeightEst;
+                    if (tagBox != null)
+                    {
+                        double w = tagBox.Max.X - tagBox.Min.X;
+                        double h = tagBox.Max.Y - tagBox.Min.Y;
+                        if (w > 0.1) tWidth = w + 0.5; // 加入寬度緩衝區
+                        if (h > 0.1) tHeight = h + 0.5; // 加入高度緩衝區
+                    }
+
+                    tagDataList.Add(new TagData
+                    {
+                        Tag = tag,
+                        TargetReference = refElem,
+                        AnchorPoint = anchorPt,
+                        ElementBBox = elemBox,
+                        TextOffset = tagBox == null ? XYZ.Zero
+                            : (tagBox.Min + tagBox.Max) * 0.5 - tag.TagHeadPosition,
+                        TagWidth = tWidth,
+                        TagHeight = tHeight,
+                        Orientation = orientation,
+                        HostDirection = hostDir
+                    });
                 }
 
-                tagDataList.Add(new TagData
-                {
-                    Tag = tag,
-                    TargetReference = refElem,
-                    AnchorPoint = anchorPt,
-                    ElementBBox = elemBox,
-                    TagWidth = tWidth,
-                    TagHeight = tHeight,
-                    Orientation = orientation,
-                    HostDirection = hostDir
-                });
+                measurement.RollBack();
             }
 
+            var obstacles = new FilteredElementCollector(_doc, _view.Id)
+                .WherePasses(new ElementMulticategoryFilter(new[] {
+                    BuiltInCategory.OST_PipeAccessory, BuiltInCategory.OST_DuctAccessory,
+                    BuiltInCategory.OST_CableTrayFitting }))
+                .WhereElementIsNotElementType()
+                .Select(e => new { e.Id, Box = e.get_BoundingBox(_view) })
+                .Where(e => e.Box != null).ToDictionary(e => e.Id, e => ToBox(e.Box));
+
+            // 只保留無法參與排版的標籤；可處理標籤的舊位置稍後會移走，不能當成永久障礙。
+            var processableIds = new HashSet<ElementId>(tagDataList.Select(t => t.Tag.Id));
+            var reserved = tags.Where(t => !processableIds.Contains(t.Id))
+                .ToDictionary(t => t.Id, t => t.get_BoundingBox(_view));
+            int processedCount = 0;
+            var arrangedTagIds = new HashSet<ElementId>();
             // B. 對所有標籤進行全局優先順序排版
             var sortedTags = tagDataList.OrderBy(t => t.AnchorPoint.X).ThenBy(t => t.AnchorPoint.Y).ToList();
             List<PlacedTagFootprint> placed = new List<PlacedTagFootprint>();
@@ -162,22 +187,22 @@ namespace Sinotech_2025.CSDSEM
             {
                 PlacedTagFootprint bestCandidate = null;
 
-                // 1. 第一優先：兩側中軸基礎距離直出（正向 90° 與 180° 反向對側 T 型換向）
-                foreach (var candidate in GeneratePrimaryStraightCandidates(data))
+                // 1. 第一優先：垂直於牆 LocationCurve 直出；水平牆先上後下，垂直牆先左後右。
+                foreach (var candidate in GenerateStraightCandidates(data, 0, 0))
                 {
-                    if (!IsCollision(candidate, placed))
+                    if (!IsCollision(candidate, placed, obstacles, reserved, data))
                     {
                         bestCandidate = candidate;
                         break;
                     }
                 }
 
-                // 2. 第二優先：兩側中軸直線延長引線（保持 90° 正交純直線，向外層延伸 Layer 1..4，不橫向轉折）
+                // 2. 第二優先：兩側直出皆碰撞時，先在近距離嘗試 90° 轉折。
                 if (bestCandidate == null)
                 {
-                    foreach (var candidate in GenerateExtendedStraightCandidates(data, 4))
+                    foreach (var candidate in GenerateFallbackSlidingCandidates(data, 0, 4))
                     {
-                        if (!IsCollision(candidate, placed))
+                        if (!IsCollision(candidate, placed, obstacles, reserved, data))
                         {
                             bestCandidate = candidate;
                             break;
@@ -185,12 +210,12 @@ namespace Sinotech_2025.CSDSEM
                     }
                 }
 
-                // 3. 第三優先（降級）：當兩側中軸純直線皆無法避讓時，才允許滑動起點與 90° 正交 Elbow 轉折
+                // 3. 第三優先：近距離轉折仍無法避讓，才逐層延長兩側直線。
                 if (bestCandidate == null)
                 {
-                    foreach (var candidate in GenerateFallbackSlidingCandidates(data))
+                    foreach (var candidate in GenerateStraightCandidates(data, 1, 6))
                     {
-                        if (!IsCollision(candidate, placed))
+                        if (!IsCollision(candidate, placed, obstacles, reserved, data))
                         {
                             bestCandidate = candidate;
                             break;
@@ -198,10 +223,18 @@ namespace Sinotech_2025.CSDSEM
                     }
                 }
 
-                // 4. 保底機制：若皆無法避讓，套用第一個正交直出位置
+                // 4. 密集區擴大搜尋轉折位置，再搜尋較外層直線；所有保底候選仍須通過避碰。
                 if (bestCandidate == null)
                 {
-                    bestCandidate = GeneratePrimaryStraightCandidates(data).FirstOrDefault();
+                    foreach (var candidate in GenerateFallbackSlidingCandidates(data, 5, 16)
+                        .Concat(GenerateStraightCandidates(data, 7, 30)))
+                    {
+                        if (!IsCollision(candidate, placed, obstacles, reserved, data))
+                        {
+                            bestCandidate = candidate;
+                            break;
+                        }
+                    }
                 }
 
                 if (bestCandidate != null)
@@ -209,113 +242,101 @@ namespace Sinotech_2025.CSDSEM
                     data.CalculatedHeadPos = bestCandidate.Head;
                     data.CalculatedAnchor = bestCandidate.FinalAnchor;
                     data.CalculatedElbow = bestCandidate.FinalElbow;
-<<<<<<< HEAD
                     data.HasElbow = bestCandidate.HasElbow;
-=======
-                    data.HasElbow = bestCandidate.IsElbow;
->>>>>>> fc49b830bb73caa4e65588fede99842f6f5ff4fe
-                    placed.Add(bestCandidate);
+                    bool applied = ApplyTagPositionAndElbow(data);
+                    if (!applied && data.HasElbow)
+                    {
+                        // 自由端點／折線不被此標籤型式接受時，改找無碰撞的貼附端點直線。
+                        bestCandidate = GenerateStraightCandidates(data, 1, 30)
+                            .FirstOrDefault(candidate => !IsCollision(candidate, placed, obstacles, reserved, data));
+                        if (bestCandidate != null)
+                        {
+                            data.CalculatedHeadPos = bestCandidate.Head;
+                            data.CalculatedAnchor = bestCandidate.FinalAnchor;
+                            data.CalculatedElbow = bestCandidate.FinalElbow;
+                            data.HasElbow = false;
+                            applied = ApplyTagPositionAndElbow(data);
+                        }
+                    }
+                    if (applied)
+                    {
+                        placed.Add(bestCandidate);
+                        reserved.Remove(data.Tag.Id);
+                        arrangedTagIds.Add(data.Tag.Id);
+                        processedCount++;
+                    }
                 }
             }
 
-            // C. 寫回 Revit 模型並產生引線
-            _doc.Regenerate();
-
-            foreach (var data in tagDataList)
+            // 無法解析或寫回失敗的標籤也必須離開原開口，並開啟貼附端點引線。
+            int fallbackIndex = 0;
+            foreach (var tag in tags.Where(t => !arrangedTagIds.Contains(t.Id)))
             {
-                ApplyTagPositionAndElbow(data);
+                using (SubTransaction fallback = new SubTransaction(_doc))
+                {
+                    fallback.Start();
+                    try
+                    {
+                        double direction = fallbackIndex % 2 == 0 ? -1.0 : 1.0;
+                        tag.HasLeader = false;
+                        tag.TagHeadPosition += XYZ.BasisX * (direction * BaseOffset);
+                        tag.HasLeader = true;
+                        tag.LeaderEndCondition = LeaderEndCondition.Attached;
+                        fallback.Commit();
+                        processedCount++;
+                        fallbackIndex++;
+                    }
+                    catch
+                    {
+                        fallback.RollBack();
+                        try { tag.HasLeader = true; } catch { }
+                    }
+                }
             }
 
-            return tagDataList.Count;
+            return processedCount;
         }
 
         /// <summary>
-        /// 第一優先：兩側中軸基礎距離直出（正向 90° 與 180° 反向對側 T 型換向）
+        /// 以牆 LocationCurve／開口長軸為基準，標籤沿其垂直方向放置。
+        /// 基準軸水平：上、下；基準軸垂直：左、右。延長與轉折均共用此順序。
         /// </summary>
-        private IEnumerable<PlacedTagFootprint> GeneratePrimaryStraightCandidates(TagData data)
+        private static IEnumerable<XYZ> GetPerpendicularSides(TargetOrientation orientation)
         {
-            double cx = data.AnchorPoint.X;
-            double cy = data.AnchorPoint.Y;
-            double z = data.AnchorPoint.Z;
-            double minY = cy, maxY = cy, minX = cx, maxX = cx;
-
-            if (data.ElementBBox != null)
+            if (orientation == TargetOrientation.Horizontal)
             {
-                cx = (data.ElementBBox.Min.X + data.ElementBBox.Max.X) / 2.0;
-                cy = (data.ElementBBox.Min.Y + data.ElementBBox.Max.Y) / 2.0;
-                minY = data.ElementBBox.Min.Y;
-                maxY = data.ElementBBox.Max.Y;
-                minX = data.ElementBBox.Min.X;
-                maxX = data.ElementBBox.Max.X;
-            }
-
-            if (data.Orientation == HostOrientation.Horizontal)
-            {
-                // 水平管道/牆體：優先上方 (+Y)，次之 180° 反向下方 (-Y)
-                XYZ topAnchor = new XYZ(cx, maxY, z);
-                XYZ topHead = new XYZ(cx, maxY + BaseOffset, z);
-                yield return GetStraightFootprint(data, topAnchor, topHead);
-
-                XYZ bottomAnchor = new XYZ(cx, minY, z);
-                XYZ bottomHead = new XYZ(cx, minY - BaseOffset, z);
-                yield return GetStraightFootprint(data, bottomAnchor, bottomHead);
+                yield return XYZ.BasisY;          // 上
+                yield return -XYZ.BasisY;         // 下
             }
             else
             {
-                // 垂直管道/牆體：優先左側 (-X)，次之 180° 反向右側 (+X)
-                XYZ leftAnchor = new XYZ(minX, cy, z);
-                XYZ leftHead = new XYZ(minX - BaseOffset, cy, z);
-                yield return GetStraightFootprint(data, leftAnchor, leftHead);
-
-                XYZ rightAnchor = new XYZ(maxX, cy, z);
-                XYZ rightHead = new XYZ(maxX + BaseOffset, cy, z);
-                yield return GetStraightFootprint(data, rightAnchor, rightHead);
+                yield return -XYZ.BasisX;         // 左
+                yield return XYZ.BasisX;          // 右
             }
         }
 
-        /// <summary>
-        /// 第二優先：兩側中軸直線延長引線（保持純直線無轉折，向上/下或左/右逐層向外延伸）
-        /// </summary>
-        private IEnumerable<PlacedTagFootprint> GenerateExtendedStraightCandidates(TagData data, int maxLayers)
+        private static XYZ GetSideAnchor(TagData data, XYZ side)
         {
-            double cx = data.AnchorPoint.X;
-            double cy = data.AnchorPoint.Y;
-            double z = data.AnchorPoint.Z;
-            double minY = cy, maxY = cy, minX = cx, maxX = cx;
+            if (data.ElementBBox == null) return data.AnchorPoint;
+            var box = data.ElementBBox;
+            double cx = (box.Min.X + box.Max.X) / 2.0;
+            double cy = (box.Min.Y + box.Max.Y) / 2.0;
+            return new XYZ(side.X < 0 ? box.Min.X : side.X > 0 ? box.Max.X : cx,
+                side.Y < 0 ? box.Min.Y : side.Y > 0 ? box.Max.Y : cy, data.AnchorPoint.Z);
+        }
 
-            if (data.ElementBBox != null)
-            {
-                cx = (data.ElementBBox.Min.X + data.ElementBBox.Max.X) / 2.0;
-                cy = (data.ElementBBox.Min.Y + data.ElementBBox.Max.Y) / 2.0;
-                minY = data.ElementBBox.Min.Y;
-                maxY = data.ElementBBox.Max.Y;
-                minX = data.ElementBBox.Min.X;
-                maxX = data.ElementBBox.Max.X;
-            }
-
-            for (int layer = 1; layer <= maxLayers; layer++)
+        /// <summary>
+        /// 每一距離層只嘗試與元件垂直的兩側，再延長到下一層。
+        /// </summary>
+        private IEnumerable<PlacedTagFootprint> GenerateStraightCandidates(TagData data, int firstLayer, int lastLayer)
+        {
+            for (int layer = firstLayer; layer <= lastLayer; layer++)
             {
                 double offset = BaseOffset + layer * LayerSpacing;
-
-                if (data.Orientation == HostOrientation.Horizontal)
+                foreach (XYZ side in GetPerpendicularSides(data.Orientation))
                 {
-                    XYZ topAnchor = new XYZ(cx, maxY, z);
-                    XYZ topHead = new XYZ(cx, maxY + offset, z);
-                    yield return GetStraightFootprint(data, topAnchor, topHead);
-
-                    XYZ bottomAnchor = new XYZ(cx, minY, z);
-                    XYZ bottomHead = new XYZ(cx, minY - offset, z);
-                    yield return GetStraightFootprint(data, bottomAnchor, bottomHead);
-                }
-                else
-                {
-                    XYZ leftAnchor = new XYZ(minX, cy, z);
-                    XYZ leftHead = new XYZ(minX - offset, cy, z);
-                    yield return GetStraightFootprint(data, leftAnchor, leftHead);
-
-                    XYZ rightAnchor = new XYZ(maxX, cy, z);
-                    XYZ rightHead = new XYZ(maxX + offset, cy, z);
-                    yield return GetStraightFootprint(data, rightAnchor, rightHead);
+                    XYZ anchor = GetSideAnchor(data, side);
+                    yield return GetStraightFootprint(data, anchor, anchor + side * offset);
                 }
             }
         }
@@ -323,7 +344,8 @@ namespace Sinotech_2025.CSDSEM
         /// <summary>
         /// 第三優先（降級）：當正交直線完全碰撞時，降級啟用滑動與 90° 正交轉折 Elbow
         /// </summary>
-        private IEnumerable<PlacedTagFootprint> GenerateFallbackSlidingCandidates(TagData data)
+        private IEnumerable<PlacedTagFootprint> GenerateFallbackSlidingCandidates(
+            TagData data, int firstLayer, int lastLayer)
         {
             double cx = data.AnchorPoint.X;
             double cy = data.AnchorPoint.Y;
@@ -333,30 +355,31 @@ namespace Sinotech_2025.CSDSEM
                 cy = (data.ElementBBox.Min.Y + data.ElementBBox.Max.Y) / 2.0;
             }
 
-            for (int layer = 0; layer < 4; layer++)
+            for (int layer = firstLayer; layer <= lastLayer; layer++)
             {
                 double gapW = data.TagWidth + 0.8;
                 double gapH = data.TagHeight + 0.8;
                 double layerOffsetW = (layer % 2 == 1) ? (gapW / 2.0) : 0.0;
                 double layerOffsetH = (layer % 2 == 1) ? (gapH / 2.0) : 0.0;
 
-                for (int shiftIndex = 1; shiftIndex <= 6; shiftIndex++)
+                for (int shiftIndex = 1; shiftIndex <= 12; shiftIndex++)
                 {
                     double shiftDir = (shiftIndex % 2 == 1) ? 1.0 : -1.0;
 
-                    if (data.Orientation == HostOrientation.Horizontal)
+                    foreach (XYZ side in GetPerpendicularSides(data.Orientation))
                     {
-                        double targetX = cx + layerOffsetW + shiftDir * ((shiftIndex + 1) / 2) * gapW;
-                        double yDist = BaseOffset + layer * LayerSpacing;
-                        yield return GetElbowFootprint(data, targetX, (data.ElementBBox != null ? data.ElementBBox.Max.Y : cy) + yDist, true);
-                        yield return GetElbowFootprint(data, targetX, (data.ElementBBox != null ? data.ElementBBox.Min.Y : cy) - yDist, true);
-                    }
-                    else
-                    {
-                        double targetY = cy + layerOffsetH + shiftDir * ((shiftIndex + 1) / 2) * gapH;
-                        double xDist = BaseOffset + layer * LayerSpacing;
-                        yield return GetElbowFootprint(data, (data.ElementBBox != null ? data.ElementBBox.Min.X : cx) - xDist, targetY, false);
-                        yield return GetElbowFootprint(data, (data.ElementBBox != null ? data.ElementBBox.Max.X : cx) + xDist, targetY, false);
+                        XYZ anchor = GetSideAnchor(data, side);
+                        double offset = BaseOffset + layer * LayerSpacing;
+                        if (side.Y != 0)
+                        {
+                            double targetX = cx + layerOffsetW + shiftDir * ((shiftIndex + 1) / 2) * gapW;
+                            yield return GetElbowFootprint(data, targetX, anchor.Y + side.Y * offset, true);
+                        }
+                        else
+                        {
+                            double targetY = cy + layerOffsetH + shiftDir * ((shiftIndex + 1) / 2) * gapH;
+                            yield return GetElbowFootprint(data, anchor.X + side.X * offset, targetY, false);
+                        }
                     }
                 }
             }
@@ -365,136 +388,145 @@ namespace Sinotech_2025.CSDSEM
         /// <summary>
         /// 將位置套用至標籤，並構建精確的 90 度正交 Elbow 或直出貼附端點
         /// </summary>
-        private void ApplyTagPositionAndElbow(TagData data)
+        private bool ApplyTagPositionAndElbow(TagData data)
         {
-            try
+            using (SubTransaction change = new SubTransaction(_doc))
             {
-                // 1. 先關閉引線以利精準移動 TagHeadPosition
-                data.Tag.HasLeader = false;
-                data.Tag.TagHeadPosition = data.CalculatedHeadPos;
-
-<<<<<<< HEAD
-                // 2. 距離足夠時開啟引線並設置端點條件與轉折
-                double dist = data.CalculatedAnchor.DistanceTo(data.CalculatedHeadPos);
-                if (dist > 0.4)
-=======
-                // 2. 結束後開啟引線：
-                //    預設"貼附端點" (LeaderEndCondition.Attached)
-                //    若有干涉避讓需轉折時，使用"自由端點" (LeaderEndCondition.Free) 並設置 90 度轉折
-                if (data.HasElbow)
->>>>>>> fc49b830bb73caa4e65588fede99842f6f5ff4fe
+                change.Start();
+                try
                 {
+                    data.Tag.HasLeader = false;
+                    data.Tag.TagHeadPosition = data.CalculatedHeadPos;
                     data.Tag.HasLeader = true;
+                    data.Tag.LeaderEndCondition = data.HasElbow
+                        ? LeaderEndCondition.Free : LeaderEndCondition.Attached;
                     if (data.HasElbow)
                     {
-                        // 遇到要轉折時才使用自由端點，並設定端點與轉折點
-                        data.Tag.LeaderEndCondition = LeaderEndCondition.Free;
                         data.Tag.SetLeaderEnd(data.TargetReference, data.CalculatedAnchor);
                         data.Tag.SetLeaderElbow(data.TargetReference, data.CalculatedElbow);
                     }
-                    else
-                    {
-                        // 預設直出無轉折時使用貼附端點
-                        data.Tag.LeaderEndCondition = LeaderEndCondition.Attached;
-                    }
+                    _doc.Regenerate();
+                    return change.Commit() == TransactionStatus.Committed;
                 }
-                else
+                catch
                 {
-                    data.Tag.HasLeader = true;
-                    data.Tag.LeaderEndCondition = LeaderEndCondition.Attached;
+                    change.RollBack();
+                    return false;
                 }
-            }
-            catch
-            {
-                // 例外保護機制，確保單一標籤失敗不中斷整體流程
             }
         }
 
         /// <summary>
-        /// 宿主方向多重強健判斷（解決圖 3 誤判問題）
+        /// 判斷牆 LocationCurve／開口長軸方向；標籤放置方向另取其垂直軸。
         /// </summary>
-        private HostOrientation DetectHostOrientation(Element targetElem, XYZ anchorPt, List<Element> hostElements, out XYZ hostDir)
+        private TargetOrientation DetectTargetOrientation(Element targetElem, XYZ anchorPt, List<Element> hostElements, out XYZ hostDir)
         {
             hostDir = XYZ.BasisX;
 
-            // 第一層判定：直接檢查套管元件的 Host 牆體
-            if (targetElem is FamilyInstance fi && fi.Host is Wall hostWall)
+            var family = targetElem as FamilyInstance;
+            // 有直接宿主牆時，以牆的 LocationCurve 為最高優先基準。
+            if (family?.Host is Wall wall && wall.Location is LocationCurve wallLocation)
             {
-                if (hostWall.Location is LocationCurve wallCurve)
+                XYZ tangent = wallLocation.Curve.ComputeDerivatives(0.5, true).BasisX;
+                hostDir = tangent;
+                return Math.Abs(hostDir.X) > Math.Abs(hostDir.Y)
+                    ? TargetOrientation.Horizontal : TargetOrientation.Vertical;
+            }
+
+            // 沒有直接宿主牆時，以 MEP Connector 的穿牆／管道方向推回牆軸。
+            // GetPerpendicularSides 會再取牆軸的垂直方向，因此最後標籤會與管道同向。
+            var connectors = family?.MEPModel?.ConnectorManager?.Connectors;
+            if (connectors != null)
+            {
+                foreach (Connector connector in connectors)
                 {
-                    XYZ dir = (wallCurve.Curve.GetEndPoint(1) - wallCurve.Curve.GetEndPoint(0)).Normalize();
-                    hostDir = dir;
-                    return Math.Abs(dir.X) > Math.Abs(dir.Y) ? HostOrientation.Horizontal : HostOrientation.Vertical;
+                    if (connector.ConnectorType != ConnectorType.End) continue;
+                    XYZ pipeDirection = connector.CoordinateSystem.BasisZ;
+                    if (pipeDirection.X * pipeDirection.X + pipeDirection.Y * pipeDirection.Y < 0.25) continue;
+                    hostDir = new XYZ(-pipeDirection.Y, pipeDirection.X, 0);
+                    return Math.Abs(hostDir.X) > Math.Abs(hostDir.Y)
+                        ? TargetOrientation.Horizontal : TargetOrientation.Vertical;
                 }
             }
 
-            // 第二層判定：檢查套管/開口本身的 BoundingBox 長寬比
+            // 無 MEP Connector 時，FacingOrientation 作為穿牆方向備援；不受族尺寸影響。
+            if (family != null)
+            {
+                XYZ facing = family.FacingOrientation;
+                if (facing.X * facing.X + facing.Y * facing.Y > 0.25)
+                {
+                    hostDir = new XYZ(-facing.Y, facing.X, 0);
+                    return Math.Abs(hostDir.X) > Math.Abs(hostDir.Y)
+                        ? TargetOrientation.Horizontal : TargetOrientation.Vertical;
+                }
+            }
+
+            // 無直接宿主時，優先尋找最近牆的 LocationCurve；結構樑僅作次要備援。
+            TargetOrientation orientation;
+            if (TryGetClosestCurveOrientation(hostElements.Where(h => h is Wall), anchorPt,
+                out orientation, out hostDir)) return orientation;
+            if (TryGetClosestCurveOrientation(hostElements.Where(h => !(h is Wall)), anchorPt,
+                out orientation, out hostDir)) return orientation;
+
+            // 找不到牆／樑時，才以開口或套管的長軸作為備援基準。
             BoundingBoxXYZ bbox = targetElem.get_BoundingBox(_view);
             if (bbox != null)
             {
                 double dx = Math.Abs(bbox.Max.X - bbox.Min.X);
                 double dy = Math.Abs(bbox.Max.Y - bbox.Min.Y);
-                // 若開口本身明顯為縱向延伸（例如縱向管道間開口）
                 if (dy > dx * 1.3)
                 {
                     hostDir = XYZ.BasisY;
-                    return HostOrientation.Vertical;
+                    return TargetOrientation.Vertical;
                 }
-                else if (dx > dy * 1.3)
+                if (dx > dy * 1.3)
                 {
                     hostDir = XYZ.BasisX;
-                    return HostOrientation.Horizontal;
-                }
-            }
-
-            // 第三層判定：擴大周圍牆與樑幾何投影檢索距離至 10 呎
-            double minDist = double.MaxValue;
-            HostOrientation orientation = HostOrientation.Horizontal;
-
-            foreach (var host in hostElements)
-            {
-                if (host.Location is LocationCurve locCurve)
-                {
-                    Curve curve = locCurve.Curve;
-                    XYZ proj = curve.Project(anchorPt).XYZPoint;
-                    double d = anchorPt.DistanceTo(proj);
-
-                    if (d < minDist && d < 10.0) // 擴大至 10 呎檢索範圍
-                    {
-                        minDist = d;
-                        XYZ dir = (curve.GetEndPoint(1) - curve.GetEndPoint(0)).Normalize();
-                        hostDir = dir;
-
-                        orientation = (Math.Abs(dir.X) > Math.Abs(dir.Y))
-                            ? HostOrientation.Horizontal
-                            : HostOrientation.Vertical;
-                    }
+                    return TargetOrientation.Horizontal;
                 }
             }
 
             return orientation;
         }
 
+        private static bool TryGetClosestCurveOrientation(IEnumerable<Element> elements, XYZ point,
+            out TargetOrientation orientation, out XYZ direction)
+        {
+            double minDist = double.MaxValue;
+            direction = XYZ.BasisX;
+            orientation = TargetOrientation.Horizontal;
+            foreach (var element in elements)
+            {
+                if (!(element.Location is LocationCurve location)) continue;
+                Curve curve = location.Curve;
+                var projection = curve.Project(point);
+                if (projection == null) continue;
+                double distance = point.DistanceTo(projection.XYZPoint);
+                if (distance >= minDist || distance >= 10.0) continue;
+                minDist = distance;
+                direction = (curve.GetEndPoint(1) - curve.GetEndPoint(0)).Normalize();
+                orientation = Math.Abs(direction.X) > Math.Abs(direction.Y)
+                    ? TargetOrientation.Horizontal : TargetOrientation.Vertical;
+            }
+            return minDist < double.MaxValue;
+        }
+
         private PlacedTagFootprint GetStraightFootprint(TagData data, XYZ anchor, XYZ head)
         {
             PlacedTagFootprint fp = new PlacedTagFootprint();
-            fp.SetTextBox(head.X, head.Y, data.TagWidth, data.TagHeight);
+            fp.SetTextBox(head.X + data.TextOffset.X, head.Y + data.TextOffset.Y, data.TagWidth, data.TagHeight);
             fp.AddLine(anchor.X, anchor.Y, head.X, head.Y, 0.4);
             fp.FinalAnchor = anchor;
             fp.FinalElbow = anchor;
             fp.Head = head;
-<<<<<<< HEAD
             fp.HasElbow = false;
-=======
-            fp.IsElbow = false;
->>>>>>> fc49b830bb73caa4e65588fede99842f6f5ff4fe
             return fp;
         }
 
         private PlacedTagFootprint GetElbowFootprint(TagData data, double targetX, double targetY, bool isHorizontal)
         {
             PlacedTagFootprint fp = new PlacedTagFootprint();
-            fp.SetTextBox(targetX, targetY, data.TagWidth, data.TagHeight);
+            fp.SetTextBox(targetX + data.TextOffset.X, targetY + data.TextOffset.Y, data.TagWidth, data.TagHeight);
 
             XYZ anchor = data.AnchorPoint;
             if (data.ElementBBox != null)
@@ -522,19 +554,35 @@ namespace Sinotech_2025.CSDSEM
             fp.FinalAnchor = anchor;
             fp.FinalElbow = elbow;
             fp.Head = new XYZ(targetX, targetY, anchor.Z);
-<<<<<<< HEAD
             fp.HasElbow = true;
-=======
-            fp.IsElbow = true;
->>>>>>> fc49b830bb73caa4e65588fede99842f6f5ff4fe
             return fp;
         }
 
-        private bool IsCollision(PlacedTagFootprint candidate, List<PlacedTagFootprint> placed)
+        private static BoundingBox2D ToBox(BoundingBoxXYZ box)
         {
-            foreach (var p in placed)
-                if (p.Intersects(candidate))
-                    return true;
+            return new BoundingBox2D((box.Min.X + box.Max.X) / 2,
+                (box.Min.Y + box.Max.Y) / 2, box.Max.X - box.Min.X, box.Max.Y - box.Min.Y);
+        }
+
+        private bool IsCollision(PlacedTagFootprint candidate, List<PlacedTagFootprint> placed,
+            Dictionary<ElementId, BoundingBox2D> obstacles,
+            Dictionary<ElementId, BoundingBoxXYZ> reserved, TagData data)
+        {
+            if (placed.Any(p => p.Intersects(candidate))) return true;
+            foreach (var obstacle in obstacles)
+            {
+                if (candidate.TextBox.Intersects(obstacle.Value)) return true;
+                // 引線只允許接觸自己的開口／套管。
+                if (obstacle.Key != data.TargetReference.ElementId &&
+                    candidate.LineBoxes.Any(line => line.Intersects(obstacle.Value))) return true;
+            }
+            foreach (var entry in reserved)
+            {
+                if (entry.Key == data.Tag.Id || entry.Value == null) continue;
+                var box = ToBox(entry.Value);
+                if (candidate.TextBox.Intersects(box) ||
+                    candidate.LineBoxes.Any(line => line.Intersects(box))) return true;
+            }
             return false;
         }
 
@@ -546,7 +594,7 @@ namespace Sinotech_2025.CSDSEM
             return XYZ.Zero;
         }
 
-        private enum HostOrientation { Horizontal, Vertical }
+        private enum TargetOrientation { Horizontal, Vertical }
 
         private class TagData
         {
@@ -554,13 +602,14 @@ namespace Sinotech_2025.CSDSEM
             public Reference TargetReference { get; set; }
             public XYZ AnchorPoint { get; set; }
             public BoundingBoxXYZ ElementBBox { get; set; }
+            public XYZ TextOffset { get; set; }
             public double TagWidth { get; set; }
             public double TagHeight { get; set; }
             public XYZ CalculatedHeadPos { get; set; }
             public XYZ CalculatedAnchor { get; set; }
             public XYZ CalculatedElbow { get; set; }
             public bool HasElbow { get; set; }
-            public HostOrientation Orientation { get; set; }
+            public TargetOrientation Orientation { get; set; }
             public XYZ HostDirection { get; set; }
         }
 
@@ -571,11 +620,7 @@ namespace Sinotech_2025.CSDSEM
             public XYZ FinalAnchor { get; set; }
             public XYZ FinalElbow { get; set; }
             public XYZ Head { get; set; }
-<<<<<<< HEAD
             public bool HasElbow { get; set; }
-=======
-            public bool IsElbow { get; set; }
->>>>>>> fc49b830bb73caa4e65588fede99842f6f5ff4fe
 
             public void SetTextBox(double x, double y, double w, double h)
             {
@@ -610,7 +655,8 @@ namespace Sinotech_2025.CSDSEM
                             return true;
                 }
 
-                // Allow line vs line overlaps to avoid completely boxing out paths
+                foreach (var line in LineBoxes)
+                    if (other.LineBoxes.Any(otherLine => line.Intersects(otherLine))) return true;
                 return false;
             }
         }
