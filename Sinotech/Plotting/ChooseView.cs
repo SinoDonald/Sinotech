@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
@@ -275,118 +275,100 @@ namespace Sinotech.Plotting
                         {
                             try
                             {
-                                //// 開啟View
-                                //formUIApp.ActiveUIDocument.ActiveView = viewInfo.view;
-                                //// 關閉其他視圖
-                                //View currView = formDoc.ActiveView;
-                                //formUIApp.ActiveUIDocument.RequestViewChange(currView);
-                                //IList<UIView> openViews = formUIApp.ActiveUIDocument.GetOpenUIViews();
-                                //foreach (UIView openView in openViews)
-                                //{
-                                //    if (openView.ViewId != currView.Id)
-                                //    {
-                                //        openView.Close();
-                                //    }
-                                //}
-                                // 執行交易
-                                using (Transaction trans = new Transaction(doc, "匯出視圖"))
+                                // 執行交易：先寫入視圖/圖框的時間戳記
+                                using (Transaction trans = new Transaction(doc, "更新時間戳記"))
                                 {
                                     // 開始交易
                                     trans.Start();
-                                    ICollection<ElementId> viewSheetElementIds = new List<ElementId>();
-                                    viewSheetElementIds.Add(viewInfo.view.Id);
-                                    // 確認要匯出的格式
-                                    if (formatCB.Text.Equals("DWG"))
+
+                                    // 取得當前時間戳記 (yyyy/MM/dd HH:mm:ss)
+                                    string timestamp = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss");
+
+                                    // 1. 寫入圖紙 (ViewSheet) 的「時間戳記」參數
+                                    Parameter param = viewInfo.view.LookupParameter("時間戳記");
+                                    if (param != null && !param.IsReadOnly)
                                     {
-                                        // 選擇的設置為何
-                                        DWGExportOptions dwgOptions = new DWGExportOptions();
-                                        if (optionCB.Text != "")
-                                        {
-                                            dwgOptions = DWGExportOptions.GetPredefinedOptions(doc, optionCB.Text);
-                                        }
-                                        List<View> views = new FilteredElementCollector(doc).OfClass(typeof(View)).WhereElementIsNotElementType().Cast<View>().ToList();
-                                        View addView = (from x in views
-                                                        where x.Id.ToString().Equals(viewInfo.view.Id.ToString())
-                                                        select x).FirstOrDefault();
-                                        viewSheetElementIds = new List<ElementId>();
-                                        viewSheetElementIds.Add(addView.Id);
-                                        // 匯出, 檔名為電腦圖號
-                                        doc.Export(path, viewInfo.picNumber, viewSheetElementIds, dwgOptions);
-                                        GC.Collect();
-                                        GC.WaitForPendingFinalizers();
+                                        param.Set(timestamp);
                                     }
-                                    else if (formatCB.Text.Equals("DGN"))
+
+                                    // 2. 寫入該圖紙上圖框 (TitleBlock) 的「時間戳記」參數 (若參數綁定於圖框品類)
+                                    FilteredElementCollector titleBlocks = new FilteredElementCollector(doc, viewInfo.view.Id)
+                                        .OfCategory(BuiltInCategory.OST_TitleBlocks)
+                                        .WhereElementIsNotElementType();
+                                    foreach (Element tb in titleBlocks)
                                     {
-                                        // 創建 DGN export options
-                                        DGNExportOptions dgnOptions = new DGNExportOptions();
-                                        // 選擇的設置為何
-                                        if (optionCB.Text != "")
+                                        Parameter tbParam = tb.LookupParameter("時間戳記");
+                                        if (tbParam != null && !tbParam.IsReadOnly)
                                         {
-                                            dgnOptions = DGNExportOptions.GetPredefinedOptions(doc, optionCB.Text);
-                                        }
-                                        else
-                                        {
-                                            dgnOptions.HatchPatternsFileName = @"C:\Program Files\Autodesk\Revit " + versionNumber + @"\ACADInterop\acdbiso.pat";
-                                            dgnOptions.SeedName = @"C:\Program Files\Autodesk\Revit " + versionNumber + @"\ACADInterop\V8-Metric-Seed3D.dgn";
-                                            dgnOptions.LayerMapping = "AIA";
-                                        }
-                                        // 匯出, 檔名為電腦圖號
-                                        doc.Export(path, viewInfo.picNumber, viewSheetElementIds, dgnOptions);
-                                        GC.Collect();
-                                        GC.WaitForPendingFinalizers();
-                                    }
-                                    else if (formatCB.Text.Equals("PDF"))
-                                    {
-                                        try
-                                        {
-                                            // 建立PDF匯出選項
-                                            PDFExportOptions options = new PDFExportOptions();
-                                            string fileName = viewInfo.picNumber; // 檔名為「圖框-電腦圖號」
-                                            options.FileName = fileName; // 直接指定檔名
-                                            options.ColorDepth = ColorDepthType.BlackLine; // 色彩深度
-                                            options.ExportQuality = PDFExportQualityType.DPI300; // 匯出品質
-                                            options.Combine = true; // 合併檔案
-                                            options.HideCropBoundaries = false;                                            
-                                            ICollection<ElementId> views = new List<ElementId>() { viewInfo.view.Id }; // 準備要輸出的View
-                                            bool result = doc.Export(path, views.ToList(), options); // 匯出 PDF
-
-                                            //// Revit 2022以前使用的PDF列印設置
-                                            //ICollection<PrintSetting> printSettings = new FilteredElementCollector(doc).OfClass(typeof(PrintSetting)).Cast<PrintSetting>().ToList();
-                                            //ElementId chosePsid = (from x in printSettings where x.Name == optionCB.Text select x.Id).First<ElementId>();
-                                            //PrintSetting chosedPrintSetting = doc.GetElement(chosePsid) as PrintSetting;
-
-                                            //PrintManager printManager = doc.PrintManager;
-                                            //printManager.PrintRange = PrintRange.Current;
-                                            ////列印設定
-                                            //try
-                                            //{
-                                            //    printManager.SelectNewPrintDriver("PDFCreator");
-                                            //}
-                                            //catch (Exception ex)
-                                            //{
-                                            //    string error = ex.Message + "\n" + ex.ToString();
-                                            //    printManager.SelectNewPrintDriver("Microsoft Print to PDF");
-                                            //}
-                                            //printManager.CombinedFile = true;
-                                            //printManager.PrintToFile = true;
-                                            //printManager.PrintSetup.CurrentPrintSetting = chosedPrintSetting;
-                                            //printManager.PrintToFileName = Path.Combine(path, viewInfo.picNumber + ".pdf"); //輸出位置
-                                            //printManager.Apply();
-                                            //printManager.SubmitPrint(viewInfo.view as View);
-                                            //GC.Collect();
-                                            //GC.WaitForPendingFinalizers();
-
-                                            ////ExportPDF exportPDF = new ExportPDF();
-                                            ////exportPDF.ExportToPDF(formUIApp);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            string error = ex.Message + "\n" + ex.ToString();
-                                            //TaskDialog.Show("ERROR", "Couldn't access PDF driver registry settings");
+                                            tbParam.Set(timestamp);
                                         }
                                     }
 
+                                    doc.Regenerate();
                                     trans.Commit();
+                                }
+
+                                ICollection<ElementId> viewSheetElementIds = new List<ElementId>();
+                                viewSheetElementIds.Add(viewInfo.view.Id);
+                                // 確認要匯出的格式
+                                if (formatCB.Text.Equals("DWG"))
+                                {
+                                    // 選擇的設置為何
+                                    DWGExportOptions dwgOptions = new DWGExportOptions();
+                                    if (optionCB.Text != "")
+                                    {
+                                        dwgOptions = DWGExportOptions.GetPredefinedOptions(doc, optionCB.Text);
+                                    }
+                                    List<View> views = new FilteredElementCollector(doc).OfClass(typeof(View)).WhereElementIsNotElementType().Cast<View>().ToList();
+                                    View addView = (from x in views
+                                                    where x.Id.ToString().Equals(viewInfo.view.Id.ToString())
+                                                    select x).FirstOrDefault();
+                                    viewSheetElementIds = new List<ElementId>();
+                                    viewSheetElementIds.Add(addView.Id);
+                                    // 匯出, 檔名為電腦圖號
+                                    doc.Export(path, viewInfo.picNumber, viewSheetElementIds, dwgOptions);
+                                    GC.Collect();
+                                    GC.WaitForPendingFinalizers();
+                                }
+                                else if (formatCB.Text.Equals("DGN"))
+                                {
+                                    // 創建 DGN export options
+                                    DGNExportOptions dgnOptions = new DGNExportOptions();
+                                    // 選擇的設置為何
+                                    if (optionCB.Text != "")
+                                    {
+                                        dgnOptions = DGNExportOptions.GetPredefinedOptions(doc, optionCB.Text);
+                                    }
+                                    else
+                                    {
+                                        dgnOptions.HatchPatternsFileName = @"C:\Program Files\Autodesk\Revit " + versionNumber + @"\ACADInterop\acdbiso.pat";
+                                        dgnOptions.SeedName = @"C:\Program Files\Autodesk\Revit " + versionNumber + @"\ACADInterop\V8-Metric-Seed3D.dgn";
+                                        dgnOptions.LayerMapping = "AIA";
+                                    }
+                                    // 匯出, 檔名為電腦圖號
+                                    doc.Export(path, viewInfo.picNumber, viewSheetElementIds, dgnOptions);
+                                    GC.Collect();
+                                    GC.WaitForPendingFinalizers();
+                                }
+                                else if (formatCB.Text.Equals("PDF"))
+                                {
+                                    try
+                                    {
+                                        // 建立PDF匯出選項
+                                        PDFExportOptions options = new PDFExportOptions();
+                                        string fileName = viewInfo.picNumber; // 檔名為「圖框-電腦圖號」
+                                        options.FileName = fileName; // 直接指定檔名
+                                        options.ColorDepth = ColorDepthType.BlackLine; // 色彩深度
+                                        options.ExportQuality = PDFExportQualityType.DPI300; // 匯出品質
+                                        options.Combine = true; // 合併檔案
+                                        options.HideCropBoundaries = false;                                            
+                                        ICollection<ElementId> views = new List<ElementId>() { viewInfo.view.Id }; // 準備要輸出的View
+                                        bool result = doc.Export(path, views.ToList(), options); // 匯出 PDF
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        string error = ex.Message + "\n" + ex.ToString();
+                                    }
                                 }
                             }
                             catch (Exception ex)
