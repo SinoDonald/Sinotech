@@ -44,7 +44,7 @@ namespace Sinotech_2025.CSDSEM
         private System.Windows.Forms.Panel modePanel;
         private System.Windows.Forms.RadioButton autoRbtn;
         private System.Windows.Forms.RadioButton manualRbtn;
-        public bool IsAutoResult { get; private set; } = false; // 預設改為 false (手動)
+        public bool IsAutoResult { get; private set; } = true;
 
         public ChooseMultiViewPlansForm(Document doc, List<ViewPlan> viewPlans, FormMode mode)
         {
@@ -94,7 +94,7 @@ namespace Sinotech_2025.CSDSEM
             this.autoRbtn.Name = "autoRbtn";
             this.autoRbtn.Size = new System.Drawing.Size(51, 21);
             this.autoRbtn.Text = "自動";
-            this.autoRbtn.Checked = false; // 取消預設自動
+            this.autoRbtn.Checked = true;
             this.autoRbtn.UseVisualStyleBackColor = true;
 
             this.manualRbtn.AutoSize = true;
@@ -102,7 +102,7 @@ namespace Sinotech_2025.CSDSEM
             this.manualRbtn.Name = "manualRbtn";
             this.manualRbtn.Size = new System.Drawing.Size(51, 21);
             this.manualRbtn.Text = "手動";
-            this.manualRbtn.Checked = true; // 預設手動
+            this.manualRbtn.Checked = false;
             this.manualRbtn.UseVisualStyleBackColor = true;
 
             this.modePanel.Controls.Add(this.autoRbtn);
@@ -110,8 +110,7 @@ namespace Sinotech_2025.CSDSEM
 
             this.Controls.Add(this.modePanel);
 
-            // 【依需求】：強制隱藏 UI，保留日後開啟彈性
-            this.modePanel.Visible = false;
+            this.modePanel.Visible = true;
         }
 
         private void ToggleLengthControls(bool visible)
@@ -123,10 +122,9 @@ namespace Sinotech_2025.CSDSEM
             textBox2.Visible = visible;
             label3.Visible = visible;
 
-            // 確保 TagArray 模式下不會不小心顯示出來
             if (this.modePanel != null)
             {
-                this.modePanel.Visible = false;
+                this.modePanel.Visible = _currentMode == FormMode.TagArray;
             }
         }
 
@@ -204,7 +202,6 @@ namespace Sinotech_2025.CSDSEM
             }
             else if (_currentMode == FormMode.TagArray)
             {
-                // 【依需求】保證傳回手動模式
                 this.IsAutoResult = autoRbtn.Checked;
             }
 

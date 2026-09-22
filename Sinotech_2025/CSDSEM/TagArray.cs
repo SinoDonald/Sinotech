@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
@@ -13,764 +13,578 @@ namespace Sinotech_2025.CSDSEM
     [Transaction(TransactionMode.Manual)]
     public class TagArray : IExternalCommand
     {
+        private const string RegionLineStyleName = "CSD_標籤自動空白區";
+        private const int MaximumRowsPerRegion = 15;
+        private const double Epsilon = 1e-7;
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            UIApplication uiapp = commandData.Application;
-            UIDocument uidoc = uiapp.ActiveUIDocument;
-            Document doc = uidoc.Document;
+            UIDocument uiDoc = commandData.Application.ActiveUIDocument;
+            Document doc = uiDoc.Document;
+            AutoNumberForm typeForm = new AutoNumberForm(doc);
+            typeForm.ShowDialog();
+            if (typeForm.trueOrFalse != true) return Result.Cancelled;
 
-            AutoNumberForm autoNumberForm = new AutoNumberForm(doc);
-            autoNumberForm.ShowDialog();
-            if (autoNumberForm.trueOrFalse != true) return Result.Cancelled;
-
-            List<ViewPlan> viewPlans = AutoPipeTag.GetAutoNumberViewPlans(doc, autoNumberForm.viewFamilyTypeName);
-            ChooseMultiViewPlansForm chooseForm = new ChooseMultiViewPlansForm(doc, viewPlans, ChooseMultiViewPlansForm.FormMode.TagArray);
-
+            List<ViewPlan> availableViews = AutoPipeTag.GetAutoNumberViewPlans(doc, typeForm.viewFamilyTypeName);
+            ChooseMultiViewPlansForm chooseForm = new ChooseMultiViewPlansForm(doc, availableViews,
+                ChooseMultiViewPlansForm.FormMode.TagArray);
             if (chooseForm.ShowDialog() != DialogResult.OK) return Result.Cancelled;
-
             List<ViewPlan> selectedViews = chooseForm.checkViewPlans;
             if (selectedViews == null || selectedViews.Count == 0) return Result.Failed;
 
-            bool isAutoMode = chooseForm.IsAutoResult;
+            List<IndependentTag> targetTags = selectedViews.SelectMany(view => CollectTargetTags(doc, view))
+                .GroupBy(tag => tag.Id.Value).Select(group => group.First()).ToList();
+            List<string> familyWarnings = DisableRotateWithComponent(doc, targetTags);
+            Dictionary<ElementId, List<PickedBox>> manualBoxes = chooseForm.IsAutoResult
+                ? new Dictionary<ElementId, List<PickedBox>>() : PickManualRegions(uiDoc, selectedViews);
 
-            List<ProjectItem> availableProjects = new List<ProjectItem> { new ProjectItem(doc) };
-            FilteredElementCollector linkCollector = new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance));
-            foreach (RevitLinkInstance linkInst in linkCollector.Cast<RevitLinkInstance>())
+            int totalTags = 0;
+            int horizontalTags = 0;
+            int totalRegions = 0;
+            List<string> viewResults = new List<string>();
+            using (Transaction transaction = new Transaction(doc, "標籤空白區域檢查"))
             {
-                Document linkedDoc = linkInst.GetLinkDocument();
-                if (linkedDoc != null) availableProjects.Add(new ProjectItem(linkedDoc, linkInst));
-            }
-
-            BuiltInCategory[] targetCategories = new BuiltInCategory[]
-            {
-                BuiltInCategory.OST_StructuralColumns, BuiltInCategory.OST_Columns, BuiltInCategory.OST_StructuralFraming,
-                BuiltInCategory.OST_Walls, BuiltInCategory.OST_PipeCurves, BuiltInCategory.OST_DuctCurves,
-                BuiltInCategory.OST_CableTray, BuiltInCategory.OST_PipeTags, BuiltInCategory.OST_DuctTags,
-                BuiltInCategory.OST_CableTrayTags, BuiltInCategory.OST_MultiCategoryTags
-            };
-            ElementMulticategoryFilter multiCatFilter = new ElementMulticategoryFilter(targetCategories);
-
-            List<BuiltInCategory> tagCategories = new List<BuiltInCategory>
-            {
-                BuiltInCategory.OST_PipeTags, BuiltInCategory.OST_DuctTags, BuiltInCategory.OST_CableTrayTags
-            };
-            ElementMulticategoryFilter tagFilter = new ElementMulticategoryFilter(tagCategories);
-
-            int grandTotalMovedTags = 0;
-
-            if (isAutoMode)
-            {
-                using (Transaction trans = new Transaction(doc, "自動標籤排序"))
+                transaction.Start();
+                GraphicsStyle lineStyle = GetOrCreateRegionLineStyle(doc);
+                foreach (ViewPlan view in selectedViews)
                 {
-                    trans.Start();
-                    foreach (ViewPlan viewPlan in selectedViews)
-                    {
-                        grandTotalMovedTags += ProcessViewTags(doc, viewPlan, true, multiCatFilter, tagFilter, availableProjects, null);
-                    }
-                    trans.Commit();
-                }
-            }
-            else
-            {
-                Dictionary<ViewPlan, List<PickedBox>> allPickedBoxes = new Dictionary<ViewPlan, List<PickedBox>>();
-
-                foreach (ViewPlan viewPlan in selectedViews)
-                {
-                    if (uidoc.ActiveView.Id != viewPlan.Id)
-                    {
-                        uidoc.ActiveView = viewPlan;
-                    }
-
-                    List<PickedBox> pickedBoxes = new List<PickedBox>();
-                    TaskDialog.Show("手動框選模式", $"目前視圖: 【{viewPlan.Name}】\n\n操作說明：\n1. 滑鼠左鍵拖曳框選標籤放置區\n2. 框選完畢請按鍵盤 [ESC] 鍵結束此視圖。");
-
-                    while (true)
+                    ClearOldRegionLines(doc, view);
+                    List<IndependentTag> tags = CollectTargetTags(doc, view);
+                    totalTags += tags.Count;
+                    foreach (IndependentTag tag in tags)
                     {
                         try
                         {
-                            PickedBox box = uidoc.Selection.PickBox(PickBoxStyle.Directional, "請框選標籤放置的矩形範圍 (完成請按鍵盤 ESC 鍵結束)");
-                            pickedBoxes.Add(box);
+                            tag.TagOrientation = TagOrientation.Horizontal;
+                            if (tag.TagOrientation == TagOrientation.AnyModelDirection) tag.RotationAngle = 0;
+                            horizontalTags++;
                         }
-                        catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                        {
-                            break;
-                        }
+                        catch { }
                     }
+                    doc.Regenerate();
 
-                    if (pickedBoxes.Count > 0)
+                    ViewFrame frame = new ViewFrame(view);
+                    List<TagSize> sizes = tags.Select(tag => MeasureTag(tag, view, frame))
+                        .Where(size => size != null).ToList();
+                    if (sizes.Count == 0)
                     {
-                        allPickedBoxes.Add(viewPlan, pickedBoxes);
+                        viewResults.Add($"{view.Name}：沒有可量測的無引線管道／電纜架標籤");
+                        continue;
                     }
-                }
-
-                if (allPickedBoxes.Count > 0)
-                {
-                    using (Transaction trans = new Transaction(doc, "手動標籤排序"))
+                    double cellWidth = sizes.Max(size => size.Width);
+                    double cellHeight = sizes.Max(size => size.Height);
+                    List<Rect2D> regions;
+                    if (chooseForm.IsAutoResult)
                     {
-                        trans.Start();
-                        foreach (var kvp in allPickedBoxes)
-                        {
-                            grandTotalMovedTags += ProcessViewTags(doc, kvp.Key, false, multiCatFilter, tagFilter, availableProjects, kvp.Value);
-                        }
-                        trans.Commit();
-                    }
-                }
-            }
-
-            TaskDialog.Show("Revit", $"智慧排版處理完畢！\n共將 {grandTotalMovedTags} 個標籤移動至安全區並精準對齊。");
-            return Result.Succeeded;
-        }
-
-        // =========================================================================
-        // 【核心大腦】動態邊界分析與三段式引線引擎
-        // =========================================================================
-        private int ProcessViewTags(Document doc, ViewPlan viewPlan, bool isAutoMode, ElementMulticategoryFilter multiCatFilter, ElementMulticategoryFilter tagFilter, List<ProjectItem> availableProjects, List<PickedBox> pickedBoxes)
-        {
-            List<IndependentTag> existingTags = new FilteredElementCollector(doc, viewPlan.Id)
-                .WherePasses(tagFilter).OfClass(typeof(IndependentTag)).Cast<IndependentTag>()
-                .Where(x => x.Category.BuiltInCategory != BuiltInCategory.OST_DuctTags)
-                .ToList();
-
-            if (existingTags.Count == 0) return 0;
-
-            // 確保一開始所有標籤關閉引線，不受引線幾何干擾
-            Dictionary<ElementId, bool> origLeaderStates = new Dictionary<ElementId, bool>();
-            foreach (var tag in existingTags)
-            {
-                origLeaderStates[tag.Id] = tag.HasLeader;
-                try { tag.HasLeader = false; } catch { }
-            }
-            doc.Regenerate();
-
-            double tagW = 1000.0 / 304.8;
-            double tagH = 300.0 / 304.8;
-
-            IndependentTag sampleTag = new FilteredElementCollector(doc, viewPlan.Id)
-                .WherePasses(tagFilter).OfClass(typeof(IndependentTag)).Cast<IndependentTag>().FirstOrDefault();
-
-            if (sampleTag != null)
-            {
-                BoundingBoxXYZ tagBbox = sampleTag.get_BoundingBox(viewPlan);
-                if (tagBbox != null)
-                {
-                    double w = tagBbox.Max.X - tagBbox.Min.X;
-                    double h = tagBbox.Max.Y - tagBbox.Min.Y;
-                    if (w > 0 && w < 15.0) tagW = w;
-                    if (h > 0 && h < 15.0) tagH = h;
-                }
-            }
-
-            double gapX = 30.0 / 304.8;
-            double gapY = 30.0 / 304.8;
-            double slotW = tagW + gapX;
-            double slotH = tagH + gapY;
-
-            double exactZMin = GetPlaneElevation(viewPlan, PlanViewPlane.ViewDepthPlane, 1000.0, -1000.0);
-            double exactCutZ = viewPlan.GenLevel != null ? viewPlan.GenLevel.Elevation : exactZMin;
-
-            List<SafeRegion> safeRegions = new List<SafeRegion>();
-
-            if (isAutoMode)
-            {
-                double exactZMax = GetPlaneElevation(viewPlan, PlanViewPlane.TopClipPlane, 1000.0, -1000.0);
-                double validZ_Min = exactZMin - 0.5;
-                double validZ_Max = exactZMax + 0.5;
-
-                double viewMinX = -2000.0, viewMinY = -2000.0, viewMaxX = 2000.0, viewMaxY = 2000.0;
-                BoundingBoxXYZ cb = viewPlan.CropBox;
-                if (viewPlan.CropBoxActive)
-                {
-                    Transform ct = cb.Transform;
-                    viewMinX = double.MaxValue; viewMinY = double.MaxValue; viewMaxX = double.MinValue; viewMaxY = double.MinValue;
-                    foreach (double lx in new[] { cb.Min.X, cb.Max.X })
-                        foreach (double ly in new[] { cb.Min.Y, cb.Max.Y })
-                        {
-                            XYZ wp = ct.OfPoint(new XYZ(lx, ly, 0));
-                            if (wp.X < viewMinX) viewMinX = wp.X; if (wp.Y < viewMinY) viewMinY = wp.Y;
-                            if (wp.X > viewMaxX) viewMaxX = wp.X; if (wp.Y > viewMaxY) viewMaxY = wp.Y;
-                        }
-                }
-
-                List<int[]> autoRectangles = GenerateAutoRectangles(doc, viewPlan, availableProjects, multiCatFilter, viewMinX, viewMaxX, viewMinY, viewMaxY, exactCutZ, validZ_Min, validZ_Max, tagW, tagH);
-                foreach (var rect in autoRectangles)
-                {
-                    double pMinX = viewMinX + rect[0] * tagW;
-                    double pMinY = viewMinY + rect[2] * tagH;
-                    double pMaxX = viewMinX + (rect[1] + 1) * tagW;
-                    double pMaxY = viewMinY + (rect[3] + 1) * tagH;
-                    SafeRegion region = CreateSafeRegion(pMinX, pMaxX, pMinY, pMaxY, exactCutZ, slotW, slotH);
-                    if (region != null) safeRegions.Add(region);
-                }
-            }
-            else
-            {
-                if (pickedBoxes != null)
-                {
-                    foreach (PickedBox box in pickedBoxes)
-                    {
-                        double pMinX = Math.Min(box.Min.X, box.Max.X);
-                        double pMaxX = Math.Max(box.Min.X, box.Max.X);
-                        double pMinY = Math.Min(box.Min.Y, box.Max.Y);
-                        double pMaxY = Math.Max(box.Min.Y, box.Max.Y);
-                        SafeRegion region = CreateSafeRegion(pMinX, pMaxX, pMinY, pMaxY, exactCutZ, slotW, slotH);
-                        if (region != null) safeRegions.Add(region);
-                    }
-                }
-            }
-
-            Dictionary<SafeRegion, List<IndependentTag>> regionAssignments = new Dictionary<SafeRegion, List<IndependentTag>>();
-            foreach (var r in safeRegions) regionAssignments[r] = new List<IndependentTag>();
-
-            foreach (IndependentTag tag in existingTags)
-            {
-                if (tag.IsOrphaned) continue;
-                XYZ pos;
-                try { pos = tag.TagHeadPosition; } catch { continue; }
-
-                SafeRegion closestRegion = safeRegions.OrderBy(r => r.TopLeft.DistanceTo(pos)).FirstOrDefault();
-                if (closestRegion != null)
-                {
-                    regionAssignments[closestRegion].Add(tag);
-                }
-            }
-
-            List<IndependentTag> overflowTags = new List<IndependentTag>();
-            List<IndependentTag> movedTagsList = new List<IndependentTag>(); // 紀錄成功移動的標籤
-
-            // =========================================================
-            // 階段一：僅移動位置 (保持 HasLeader = false)
-            // =========================================================
-            foreach (var kvp in regionAssignments)
-            {
-                SafeRegion region = kvp.Key;
-
-                // 防交叉演算法：水管優先，然後依 Y 高低排序
-                List<IndependentTag> tagsInRegion = kvp.Value
-                    .OrderBy(t => t.Category.Id.Value == (long)BuiltInCategory.OST_PipeTags ? 0 : 1)
-                    .ThenByDescending(t => GetTagLeaderEndSafe(doc, t).Y)
-                    .ThenBy(t => GetTagLeaderEndSafe(doc, t).X)
-                    .ToList();
-
-                // Bubble-Swap 優化
-                bool improved = true;
-                int maxPasses = tagsInRegion.Count + 1;
-                while (improved && maxPasses-- > 0)
-                {
-                    improved = false;
-                    for (int i = 0; i < tagsInRegion.Count - 1; i++)
-                    {
-                        if (i + 1 >= region.Slots.Count) break;
-                        XYZ slotA = region.Slots[i];
-                        XYZ slotB = region.Slots[i + 1];
-                        XYZ pipeA = GetTagLeaderEndSafe(doc, tagsInRegion[i]);
-                        XYZ pipeB = GetTagLeaderEndSafe(doc, tagsInRegion[i + 1]);
-
-                        int crossBefore = CountLeaderPairCrossings(slotA, pipeA, slotB, pipeB, tagW);
-                        int crossAfter = CountLeaderPairCrossings(slotA, pipeB, slotB, pipeA, tagW);
-
-                        if (crossAfter < crossBefore)
-                        {
-                            var tmp = tagsInRegion[i];
-                            tagsInRegion[i] = tagsInRegion[i + 1];
-                            tagsInRegion[i + 1] = tmp;
-                            improved = true;
-                        }
-                    }
-                }
-
-                foreach (var tag in tagsInRegion)
-                {
-                    if (!region.IsFull)
-                    {
-                        ApplyTagToSlotStage1(tag, region, exactCutZ);
-                        movedTagsList.Add(tag);
+                        Rect2D cropBounds = frame.Project(view.CropBox);
+                        List<List<UV2>> cropLoops = GetCropLoops(view, frame);
+                        ObstacleSet obstacles = CollectVisibleObstacles(doc, view, frame);
+                        regions = FindAutomaticRegions(cropBounds, cropLoops, obstacles, cellWidth, cellHeight);
                     }
                     else
                     {
-                        overflowTags.Add(tag);
+                        manualBoxes.TryGetValue(view.Id, out List<PickedBox> boxes);
+                        regions = CreateManualRegions(frame, boxes, cellWidth, cellHeight);
                     }
+                    DrawRegions(doc, view, frame, regions, lineStyle);
+                    totalRegions += regions.Count;
+                    viewResults.Add($"{view.Name}：標籤 {tags.Count} 個，基準 " +
+                        $"{cellWidth * 304.8 / view.Scale:F2} × {cellHeight * 304.8 / view.Scale:F2} mm（紙面），空白區 {regions.Count} 個");
                 }
+                transaction.Commit();
             }
 
-            foreach (var tag in overflowTags)
-            {
-                XYZ pos;
-                try { pos = tag.TagHeadPosition; } catch { continue; }
-
-                SafeRegion nextBestRegion = safeRegions.Where(r => !r.IsFull).OrderBy(r => r.TopLeft.DistanceTo(pos)).FirstOrDefault();
-                if (nextBestRegion != null)
-                {
-                    ApplyTagToSlotStage1(tag, nextBestRegion, exactCutZ);
-                    movedTagsList.Add(tag);
-                }
-                else
-                {
-                    try { tag.HasLeader = origLeaderStates[tag.Id]; } catch { }
-                }
-            }
-
-            // 更新模型鎖定座標
-            doc.Regenerate();
-
-            // =========================================================
-            // 階段二：開啟引線設定
-            // =========================================================
-            foreach (var tag in movedTagsList)
-            {
-                try
-                {
-                    tag.HasLeader = true;
-                    tag.LeaderEndCondition = LeaderEndCondition.Free;
-                }
-                catch { }
-            }
-
-            // 再次更新模型，讓 Revit 內部產生初步的引線幾何
-            doc.Regenerate();
-
-            // =========================================================
-            // 階段三：強制計算與覆寫 90 度 Elbow (頭尾避讓)
-            // =========================================================
-            foreach (var tag in movedTagsList)
-            {
-                try
-                {
-                    Reference taggedRef = tag.GetTaggedReferences().FirstOrDefault();
-                    if (taggedRef != null)
-                    {
-                        XYZ endPt = tag.GetLeaderEnd(taggedRef);
-                        XYZ headPos = tag.TagHeadPosition;
-
-                        double textLeft = headPos.X;
-                        // 還原客製化偏移量以利準確計算邊界
-                        if (tag.Name.Contains("管_尺寸+系統")) textLeft -= 5.8;
-
-                        double textRight = textLeft + tagW;
-                        double midX = (textLeft + textRight) / 2.0;
-
-                        double elbowGap = 10.0 / 304.8;
-                        double elbowX = endPt.X;
-
-                        // 頭尾避讓邏輯
-                        if (elbowX >= textLeft - elbowGap && elbowX <= textRight + elbowGap)
-                        {
-                            if (elbowX < midX)
-                                elbowX = textLeft - elbowGap;
-                            else
-                                elbowX = textRight + elbowGap;
-                        }
-
-                        XYZ elbowPt = new XYZ(elbowX, headPos.Y, exactCutZ);
-                        tag.SetLeaderElbow(taggedRef, elbowPt);
-                    }
-                }
-                catch { }
-            }
-
-            return movedTagsList.Count;
+            string warnings = familyWarnings.Count == 0 ? "" :
+                "\n\n無法關閉「隨元件旋轉」：\n" + string.Join("\n", familyWarnings.Distinct());
+            TaskDialog.Show("標籤空白區域檢查", $"處理完成（本階段沒有移動標籤）。\n" +
+                $"無引線標籤：{totalTags} 個\n已設定水平：{horizontalTags} 個\n空白區：{totalRegions} 個\n\n" +
+                string.Join("\n", viewResults) + warnings);
+            return Result.Succeeded;
         }
 
-        // =========================================================================
-        // 【第一階段】僅賦予座標
-        // =========================================================================
-        private void ApplyTagToSlotStage1(IndependentTag tag, SafeRegion region, double exactCutZ)
+        private static List<IndependentTag> CollectTargetTags(Document doc, ViewPlan view)
         {
-            XYZ targetTopLeft = region.Slots[region.NextSlotIndex++];
-            XYZ newHeadPos = new XYZ(targetTopLeft.X, targetTopLeft.Y, exactCutZ);
+            return new FilteredElementCollector(doc, view.Id).OfClass(typeof(IndependentTag))
+                .Cast<IndependentTag>().Where(tag => tag.Category != null && !tag.HasLeader && !tag.IsOrphaned &&
+                    (tag.Category.BuiltInCategory == BuiltInCategory.OST_PipeTags ||
+                     tag.Category.BuiltInCategory == BuiltInCategory.OST_CableTrayTags)).ToList();
+        }
 
-            if (tag.Name.Contains("管_尺寸+系統"))
+        private static List<string> DisableRotateWithComponent(Document projectDoc, IEnumerable<IndependentTag> tags)
+        {
+            List<string> warnings = new List<string>();
+            List<Family> families = tags.Select(tag => projectDoc.GetElement(tag.GetTypeId()) as FamilySymbol)
+                .Where(symbol => symbol != null).Select(symbol => symbol.Family)
+                .GroupBy(family => family.Id.Value).Select(group => group.First()).ToList();
+            foreach (Family family in families)
             {
-                newHeadPos = new XYZ(targetTopLeft.X + 5.8, targetTopLeft.Y, exactCutZ);
+                Document familyDoc = null;
+                try
+                {
+                    if (!family.IsEditable) { warnings.Add($"{family.Name}（族不可編輯）"); continue; }
+                    familyDoc = projectDoc.EditFamily(family);
+                    Parameter parameter = familyDoc.OwnerFamily
+                        .get_Parameter(BuiltInParameter.FAMILY_ROTATE_WITH_COMPONENT);
+                    if (parameter == null) { warnings.Add($"{family.Name}（找不到族參數）"); continue; }
+                    using (Transaction transaction = new Transaction(familyDoc, "關閉隨元件旋轉"))
+                    {
+                        transaction.Start();
+                        if (parameter.IsReadOnly || !parameter.Set(0))
+                            throw new InvalidOperationException("族參數無法寫入");
+                        transaction.Commit();
+                    }
+                    familyDoc.LoadFamily(projectDoc, new OverwriteFamilyLoadOptions());
+                }
+                catch (Exception ex) { warnings.Add($"{family.Name}（{ex.Message}）"); }
+                finally
+                {
+                    if (familyDoc != null && familyDoc.IsValidObject)
+                        try { familyDoc.Close(false); } catch { }
+                }
             }
+            return warnings;
+        }
 
+        private static Dictionary<ElementId, List<PickedBox>> PickManualRegions(UIDocument uiDoc,
+            IEnumerable<ViewPlan> views)
+        {
+            Dictionary<ElementId, List<PickedBox>> result = new Dictionary<ElementId, List<PickedBox>>();
+            foreach (ViewPlan view in views)
+            {
+                if (uiDoc.ActiveView.Id != view.Id) uiDoc.ActiveView = view;
+                List<PickedBox> boxes = new List<PickedBox>();
+                TaskDialog.Show("手動空白區域", $"目前視圖：【{view.Name}】\n連續框選可放置標籤的區域，完成後按 ESC。");
+                while (true)
+                {
+                    try { boxes.Add(uiDoc.Selection.PickBox(PickBoxStyle.Directional, "框選空白區域；完成請按 ESC")); }
+                    catch (Autodesk.Revit.Exceptions.OperationCanceledException) { break; }
+                }
+                result[view.Id] = boxes;
+            }
+            return result;
+        }
+
+        private static TagSize MeasureTag(IndependentTag tag, Autodesk.Revit.DB.View view, ViewFrame frame)
+        {
             try
             {
-                tag.TagHeadPosition = newHeadPos;
+                BoundingBoxXYZ box = tag.get_BoundingBox(view);
+                if (box == null) return null;
+                Rect2D projected = frame.Project(box);
+                return projected.Width > Epsilon && projected.Height > Epsilon
+                    ? new TagSize(projected.Width, projected.Height) : null;
+            }
+            catch { return null; }
+        }
+
+        private static ObstacleSet CollectVisibleObstacles(Document doc, ViewPlan view, ViewFrame frame)
+        {
+            ObstacleSet result = new ObstacleSet();
+            foreach (Element element in new FilteredElementCollector(doc, view.Id).WhereElementIsNotElementType())
+            {
+                if (element is RevitLinkInstance || IsRegionLine(element)) continue;
+                AddElementObstacle(result, element, view, frame, null);
+            }
+            foreach (RevitLinkInstance link in new FilteredElementCollector(doc, view.Id)
+                .OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>())
+            {
+                Document linkDoc = link.GetLinkDocument();
+                if (linkDoc == null) continue;
+                Transform transform = link.GetTotalTransform();
+                Autodesk.Revit.DB.View linkedView = null;
+                try
+                {
+                    RevitLinkGraphicsSettings settings = view.GetLinkOverrides(link.Id)
+                        ?? view.GetLinkOverrides(link.GetTypeId());
+                    if (settings != null && settings.LinkedViewId != ElementId.InvalidElementId)
+                        linkedView = linkDoc.GetElement(settings.LinkedViewId) as Autodesk.Revit.DB.View;
+                }
+                catch { }
+                try
+                {
+                    foreach (Element element in new FilteredElementCollector(doc, view.Id, link.Id)
+                        .WhereElementIsNotElementType())
+                        AddElementObstacle(result, element, linkedView, frame, transform);
+                }
+                catch
+                {
+                    foreach (Element element in new FilteredElementCollector(linkDoc).WhereElementIsNotElementType())
+                        AddElementObstacle(result, element, null, frame, transform);
+                }
+            }
+            return result;
+        }
+
+        private static void AddElementObstacle(ObstacleSet result, Element element, Autodesk.Revit.DB.View view,
+            ViewFrame frame, Transform transform)
+        {
+            try
+            {
+                // 容器的 BoundingBox 會包住所有成員，不能當成實心障礙物。
+                if (element is Group || element is AssemblyInstance) return;
+                if (element is CurveElement curveElement)
+                {
+                    AddCurveObstacle(result, curveElement.GeometryCurve, frame, transform);
+                    return;
+                }
+                if (element is ImportInstance)
+                {
+                    Options options = new Options { IncludeNonVisibleObjects = false };
+                    if (view != null && view.Document.Equals(element.Document)) options.View = view;
+                    AddGeometryObstacles(result, element.get_Geometry(options), frame, transform);
+                    return;
+                }
+
+                bool isAnnotation = element.Category != null &&
+                    element.Category.CategoryType == CategoryType.Annotation;
+                if (isAnnotation || element is IndependentTag || element is TextNote ||
+                    element is Dimension || element is FilledRegion || element is ImageInstance)
+                {
+                    BoundingBoxXYZ box = element.get_BoundingBox(view);
+                    if (box == null) return;
+                    Rect2D rect = frame.Project(box, transform);
+                    if (rect.Width > Epsilon || rect.Height > Epsilon) result.Rectangles.Add(rect);
+                    return;
+                }
+
+                // 模型元件只使用目前視圖實際畫出的幾何邊線。若以整個元件 BoundingBox
+                // 判斷，樓板、地形或大型族的外框會把其內部及周圍空白全部誤判為障礙。
+                Options geometryOptions = new Options
+                {
+                    IncludeNonVisibleObjects = false,
+                    ComputeReferences = false
+                };
+                if (view != null && view.Document.Equals(element.Document)) geometryOptions.View = view;
+                else geometryOptions.DetailLevel = ViewDetailLevel.Fine;
+                AddGeometryObstacles(result, element.get_Geometry(geometryOptions), frame, transform);
             }
             catch { }
         }
 
-        // =========================================================================
-        // 【引線交叉計算輔助方法】
-        // =========================================================================
-        private int CountLeaderPairCrossings(XYZ slotA, XYZ pipeA, XYZ slotB, XYZ pipeB, double tagW)
+        private static void AddGeometryObstacles(ObstacleSet result, GeometryElement geometry,
+            ViewFrame frame, Transform outerTransform)
         {
-            int count = 0;
-            if (AxisAlignedSegsCross(
-                slotA.X, slotA.Y, pipeA.X, slotA.Y,
-                pipeB.X, slotB.Y, pipeB.X, pipeB.Y))
-                count++;
-            if (AxisAlignedSegsCross(
-                pipeA.X, slotA.Y, pipeA.X, pipeA.Y,
-                slotB.X, slotB.Y, pipeB.X, slotB.Y))
-                count++;
-            return count;
-        }
-
-        private bool AxisAlignedSegsCross(double ax1, double ay1, double ax2, double ay2,
-                                           double bx1, double by1, double bx2, double by2)
-        {
-            bool aHoriz = Math.Abs(ay2 - ay1) < 1e-6;
-            bool bHoriz = Math.Abs(by2 - by1) < 1e-6;
-            if (aHoriz == bHoriz) return false;
-
-            double hY, hXmin, hXmax, vX, vYmin, vYmax;
-            if (aHoriz)
+            if (geometry == null) return;
+            foreach (GeometryObject item in geometry)
             {
-                hY = ay1; hXmin = Math.Min(ax1, ax2); hXmax = Math.Max(ax1, ax2);
-                vX = bx1; vYmin = Math.Min(by1, by2); vYmax = Math.Max(by1, by2);
-            }
-            else
-            {
-                hY = by1; hXmin = Math.Min(bx1, bx2); hXmax = Math.Max(bx1, bx2);
-                vX = ax1; vYmin = Math.Min(ay1, ay2); vYmax = Math.Max(ay1, ay2);
-            }
-
-            const double tol = 1e-6;
-            return vX > hXmin + tol && vX < hXmax - tol &&
-                   hY > vYmin + tol && hY < vYmax - tol;
-        }
-
-        private XYZ GetTagLeaderEndSafe(Document doc, IndependentTag tag)
-        {
-            try
-            {
-                if (tag.HasLeader)
+                if (item is Curve curve) AddCurveObstacle(result, curve, frame, outerTransform);
+                else if (item is PolyLine polyLine)
                 {
-                    Reference r = tag.GetTaggedReferences().FirstOrDefault();
-                    if (r != null) return tag.GetLeaderEnd(r);
+                    IList<XYZ> points = polyLine.GetCoordinates();
+                    for (int i = 1; i < points.Count; i++)
+                        AddSegmentObstacle(result, points[i - 1], points[i], frame, outerTransform);
                 }
-            }
-            catch { }
-            try { return tag.TagHeadPosition; } catch { return XYZ.Zero; }
-        }
-
-        // =========================================================================
-        // 共用方法區：停車場(SafeRegion)建立邏輯
-        // =========================================================================
-        public class SafeRegion
-        {
-            public XYZ TopLeft { get; set; }
-            public XYZ Center { get; set; }
-            public double BBoxMinX { get; set; }
-            public double BBoxMaxX { get; set; }
-            public double BBoxMinY { get; set; }
-            public double BBoxMaxY { get; set; }
-            public int SlotRows { get; set; }
-
-            public List<XYZ> Slots { get; set; } = new List<XYZ>();
-            public int NextSlotIndex { get; set; } = 0;
-            public bool IsFull => NextSlotIndex >= Slots.Count;
-
-            public double NearestBBoxDistance(XYZ pt)
-            {
-                double cx = Math.Max(BBoxMinX, Math.Min(BBoxMaxX, pt.X));
-                double cy = Math.Max(BBoxMinY, Math.Min(BBoxMaxY, pt.Y));
-                double dx = pt.X - cx;
-                double dy = pt.Y - cy;
-                return Math.Sqrt(dx * dx + dy * dy);
-            }
-        }
-
-        private SafeRegion CreateSafeRegion(double pMinX, double pMaxX, double pMinY, double pMaxY, double exactCutZ, double slotW, double slotH)
-        {
-            SafeRegion region = new SafeRegion();
-            region.TopLeft = new XYZ(pMinX, pMaxY, exactCutZ);
-            region.Center = new XYZ((pMinX + pMaxX) / 2.0, (pMinY + pMaxY) / 2.0, exactCutZ);
-            region.BBoxMinX = pMinX;
-            region.BBoxMaxX = pMaxX;
-            region.BBoxMinY = pMinY;
-            region.BBoxMaxY = pMaxY;
-
-            int slotCols = (int)((pMaxX - pMinX) / slotW);
-            int slotRows = (int)((pMaxY - pMinY) / slotH);
-
-            if (slotCols < 1 || slotRows < 1) return null;
-
-            region.SlotRows = slotRows;
-
-            double startX = pMinX;
-            double startY = pMaxY;
-
-            for (int c = 0; c < slotCols; c++)
-            {
-                for (int r = 0; r < slotRows; r++)
+                else if (item is GeometryInstance instance)
+                    AddGeometryObstacles(result, instance.GetInstanceGeometry(), frame, outerTransform);
+                else if (item is Solid solid && solid.Edges.Size > 0)
+                    foreach (Edge edge in solid.Edges)
+                        AddCurveObstacle(result, edge.AsCurve(), frame, outerTransform);
+                else if (item is Mesh mesh)
                 {
-                    double cx = startX + c * (slotW + 1);
-                    double cy = startY - r * slotH;
-                    region.Slots.Add(new XYZ(cx, cy, exactCutZ));
-                }
-            }
-            return region;
-        }
-
-        // =========================================================================
-        // 【自動模式】核心生成邏輯
-        // =========================================================================
-        private List<int[]> GenerateAutoRectangles(Document doc, ViewPlan viewPlan, List<ProjectItem> availableProjects, ElementMulticategoryFilter multiCatFilter, double viewMinX, double viewMaxX, double viewMinY, double viewMaxY, double exactCutZ, double validZ_Min, double validZ_Max, double tagW, double tagH)
-        {
-            List<int[]> finalRectangles = new List<int[]>();
-            int minTagsFit = 5;
-
-            List<CurveLoop> baseLoops = new List<CurveLoop>();
-            CurveLoop viewExtentLoop = new CurveLoop();
-            viewExtentLoop.Append(Line.CreateBound(new XYZ(viewMinX, viewMinY, exactCutZ), new XYZ(viewMaxX, viewMinY, exactCutZ)));
-            viewExtentLoop.Append(Line.CreateBound(new XYZ(viewMaxX, viewMinY, exactCutZ), new XYZ(viewMaxX, viewMaxY, exactCutZ)));
-            viewExtentLoop.Append(Line.CreateBound(new XYZ(viewMaxX, viewMaxY, exactCutZ), new XYZ(viewMinX, viewMaxY, exactCutZ)));
-            viewExtentLoop.Append(Line.CreateBound(new XYZ(viewMinX, viewMaxY, exactCutZ), new XYZ(viewMinX, viewMinY, exactCutZ)));
-            baseLoops.Add(viewExtentLoop);
-
-            Solid emptyAreaSolid = GeometryCreationUtilities.CreateExtrusionGeometry(baseLoops, XYZ.BasisZ, 0.1);
-            BoundingBoxXYZ cb = viewPlan.CropBox;
-
-            foreach (ProjectItem projItem in availableProjects)
-            {
-                List<Element> validElements = new List<Element>();
-                if (projItem.IsMainModel)
-                {
-                    validElements = new FilteredElementCollector(doc, viewPlan.Id).WherePasses(multiCatFilter).WhereElementIsNotElementType().ToList();
-                }
-                else
-                {
-                    Transform invTransform = projItem.LinkInstance.GetTotalTransform().Inverse;
-                    Outline linkOutline = GetTransformedOutline(viewPlan, cb, invTransform, validZ_Min, validZ_Max);
-                    validElements = new FilteredElementCollector(projItem.Doc).WherePasses(multiCatFilter).WherePasses(new BoundingBoxIntersectsFilter(linkOutline)).WhereElementIsNotElementType().ToList();
-                }
-
-                foreach (Element elem in validElements)
-                {
-                    Transform linkXform = projItem.IsMainModel ? null : projItem.LinkInstance.GetTotalTransform();
-                    if (elem.Location is LocationCurve locCurve && locCurve.Curve != null)
+                    for (int i = 0; i < mesh.NumTriangles; i++)
                     {
-                        double visLen = GetVisibleLengthInView(elem, linkXform, viewMinX, viewMaxX, viewMinY, viewMaxY);
-                        if (visLen <= 0) continue;
+                        MeshTriangle triangle = mesh.get_Triangle(i);
+                        XYZ a = triangle.get_Vertex(0); XYZ b = triangle.get_Vertex(1); XYZ c = triangle.get_Vertex(2);
+                        AddSegmentObstacle(result, a, b, frame, outerTransform);
+                        AddSegmentObstacle(result, b, c, frame, outerTransform);
+                        AddSegmentObstacle(result, c, a, frame, outerTransform);
                     }
+                }
+            }
+        }
 
-                    GeometryElement geomElem = elem.get_Geometry(new Options { View = viewPlan });
-                    if (geomElem == null) continue;
+        private static void AddCurveObstacle(ObstacleSet result, Curve curve, ViewFrame frame, Transform transform)
+        {
+            if (curve == null) return;
+            IList<XYZ> points = curve.Tessellate();
+            for (int i = 1; i < points.Count; i++)
+                AddSegmentObstacle(result, points[i - 1], points[i], frame, transform);
+        }
 
-                    foreach (GeometryObject geomObj in geomElem)
+        private static void AddSegmentObstacle(ObstacleSet result, XYZ a, XYZ b,
+            ViewFrame frame, Transform transform)
+        {
+            if (transform != null) { a = transform.OfPoint(a); b = transform.OfPoint(b); }
+            UV2 start = frame.Project(a); UV2 end = frame.Project(b);
+            if (Distance(start, end) > Epsilon) result.Segments.Add(new Segment2D(start, end));
+        }
+
+        private static bool IsRegionLine(Element element)
+        {
+            CurveElement curve = element as CurveElement;
+            return curve?.LineStyle != null && curve.LineStyle.Name == RegionLineStyleName;
+        }
+
+        private static List<Rect2D> FindAutomaticRegions(Rect2D crop, List<List<UV2>> cropLoops,
+            ObstacleSet obstacles, double cellWidth, double cellHeight)
+        {
+            List<Rect2D> candidates = new List<Rect2D>();
+            if (cellWidth <= Epsilon || cellHeight <= Epsilon) return candidates;
+
+            // 固定單一格網起點會漏掉未與裁切框對齊的空白帶。
+            // 以四分之一格為位移掃描 16 組格網，再挑選互不重疊的最大候選區。
+            const int phaseCount = 4;
+            for (int horizontalPhase = 0; horizontalPhase < phaseCount; horizontalPhase++)
+            {
+                double startU = crop.MinU + horizontalPhase * cellWidth / phaseCount;
+                int columns = (int)Math.Floor((crop.MaxU - startU) / cellWidth);
+                if (columns < 1) continue;
+                for (int verticalPhase = 0; verticalPhase < phaseCount; verticalPhase++)
+                {
+                    double startV = crop.MinV + verticalPhase * cellHeight / phaseCount;
+                    int rows = (int)Math.Floor((crop.MaxV - startV) / cellHeight);
+                    if (rows < 1) continue;
+                    for (int column = 0; column < columns; column++)
                     {
-                        if (geomObj is GeometryInstance geomInst)
+                        bool[] free = new bool[rows];
+                        double minU = startU + column * cellWidth;
+                        for (int row = 0; row < rows; row++)
                         {
-                            foreach (GeometryObject instObj in geomInst.GetInstanceGeometry())
+                            Rect2D cell = new Rect2D(minU, minU + cellWidth,
+                                startV + row * cellHeight, startV + (row + 1) * cellHeight);
+                            free[row] = IsInsideCrop(cell, cropLoops) && !obstacles.IsBlocked(cell);
+                        }
+                        int rowIndex = 0;
+                        while (rowIndex < rows)
+                        {
+                            while (rowIndex < rows && !free[rowIndex]) rowIndex++;
+                            int runStart = rowIndex;
+                            while (rowIndex < rows && free[rowIndex]) rowIndex++;
+                            int remaining = rowIndex - runStart;
+                            int partStart = runStart;
+                            while (remaining > 0)
                             {
-                                if (instObj is Solid s && s.Volume > 0)
-                                    emptyAreaSolid = SubtractSolid2D(emptyAreaSolid, linkXform != null ? SolidUtils.CreateTransformed(s, linkXform) : s);
-                            }
-                        }
-                        else if (geomObj is Solid solid && solid.Volume > 0)
-                        {
-                            emptyAreaSolid = SubtractSolid2D(emptyAreaSolid, linkXform != null ? SolidUtils.CreateTransformed(solid, linkXform) : solid);
-                        }
-                    }
-                }
-            }
-
-            if (emptyAreaSolid == null) return finalRectangles;
-
-            PlanarFace topFace = null;
-            foreach (Face face in emptyAreaSolid.Faces)
-            {
-                if (face is PlanarFace pf && pf.FaceNormal.IsAlmostEqualTo(XYZ.BasisZ, 0.01))
-                {
-                    topFace = pf; break;
-                }
-            }
-            if (topFace == null) return finalRectangles;
-
-            int cols = (int)Math.Ceiling((viewMaxX - viewMinX) / tagW);
-            int rows = (int)Math.Ceiling((viewMaxY - viewMinY) / tagH);
-            bool[,] isFree = new bool[cols, rows];
-
-            double zTop = topFace.Origin.Z;
-            for (int c = 0; c < cols; c++)
-            {
-                for (int r = 0; r < rows; r++)
-                {
-                    double x = viewMinX + c * tagW + tagW / 2;
-                    double y = viewMinY + r * tagH + tagH / 2;
-                    XYZ testPt = new XYZ(x, y, zTop);
-                    IntersectionResult ir = topFace.Project(testPt);
-                    if (ir != null && ir.Distance < 0.01 && topFace.IsInside(ir.UVPoint))
-                    {
-                        isFree[c, r] = true;
-                    }
-                }
-            }
-
-            bool[,] isExterior = new bool[cols, rows];
-            Queue<int[]> queue = new Queue<int[]>();
-            for (int c = 0; c < cols; c++)
-            {
-                for (int r = 0; r < rows; r++)
-                {
-                    if (c == 0 || c == cols - 1 || r == 0 || r == rows - 1)
-                    {
-                        if (isFree[c, r])
-                        {
-                            isExterior[c, r] = true;
-                            queue.Enqueue(new int[] { c, r });
-                        }
-                    }
-                }
-            }
-
-            int[] dc = { -1, 1, 0, 0 };
-            int[] dr = { 0, 0, -1, 1 };
-            while (queue.Count > 0)
-            {
-                int[] curr = queue.Dequeue();
-                for (int i = 0; i < 4; i++)
-                {
-                    int nc = curr[0] + dc[i];
-                    int nr = curr[1] + dr[i];
-                    if (nc >= 0 && nc < cols && nr >= 0 && nr < rows)
-                    {
-                        if (isFree[nc, nr] && !isExterior[nc, nr])
-                        {
-                            isExterior[nc, nr] = true;
-                            queue.Enqueue(new int[] { nc, nr });
-                        }
-                    }
-                }
-            }
-
-            while (true)
-            {
-                int maxArea = 0;
-                int bestMinC = 0, bestMaxC = 0, bestMinR = 0, bestMaxR = 0;
-                int[] heights = new int[cols];
-
-                for (int r = 0; r < rows; r++)
-                {
-                    for (int c = 0; c < cols; c++)
-                        heights[c] = isExterior[c, r] ? heights[c] + 1 : 0;
-
-                    for (int c = 0; c < cols; c++)
-                    {
-                        int minH = heights[c];
-                        for (int c2 = c; c2 < cols; c2++)
-                        {
-                            minH = Math.Min(minH, heights[c2]);
-                            if (minH == 0) break;
-
-                            int area = minH * (c2 - c + 1);
-                            if (area > maxArea)
-                            {
-                                maxArea = area;
-                                bestMinC = c; bestMaxC = c2;
-                                bestMinR = r - minH + 1; bestMaxR = r;
+                                int count = Math.Min(MaximumRowsPerRegion, remaining);
+                                candidates.Add(new Rect2D(minU, minU + cellWidth,
+                                    startV + partStart * cellHeight,
+                                    startV + (partStart + count) * cellHeight));
+                                partStart += count;
+                                remaining -= count;
                             }
                         }
                     }
                 }
-
-                if (maxArea < minTagsFit) break;
-                finalRectangles.Add(new int[] { bestMinC, bestMaxC, bestMinR, bestMaxR });
-
-                for (int c = bestMinC; c <= bestMaxC; c++)
-                    for (int r = bestMinR; r <= bestMaxR; r++)
-                        isExterior[c, r] = false;
             }
 
-            return finalRectangles;
+            List<Rect2D> result = new List<Rect2D>();
+            foreach (Rect2D candidate in candidates
+                .OrderByDescending(region => region.Height)
+                .ThenBy(region => region.MinU).ThenBy(region => region.MinV))
+            {
+                if (!result.Any(existing => existing.IntersectsInterior(candidate))) result.Add(candidate);
+            }
+            return result.OrderBy(region => region.MinU).ThenBy(region => region.MinV).ToList();
         }
 
-        // =========================================================================
-        // 原有幾何核心輔助方法（不變）
-        // =========================================================================
-        private double GetVisibleLengthInView(Element elem, Transform linkTransform, double viewMinX, double viewMaxX, double viewMinY, double viewMaxY)
+        private static List<Rect2D> CreateManualRegions(ViewFrame frame, List<PickedBox> boxes,
+            double cellWidth, double cellHeight)
         {
+            List<Rect2D> result = new List<Rect2D>();
+            if (boxes == null) return result;
+            foreach (PickedBox box in boxes)
+            {
+                UV2 a = frame.Project(box.Min); UV2 b = frame.Project(box.Max);
+                double minU = Math.Min(a.U, b.U); double minV = Math.Min(a.V, b.V);
+                int columns = (int)Math.Floor(Math.Abs(a.U - b.U) / cellWidth);
+                int rows = (int)Math.Floor(Math.Abs(a.V - b.V) / cellHeight);
+                for (int column = 0; column < columns; column++)
+                    for (int row = 0; row < rows; row += MaximumRowsPerRegion)
+                    {
+                        int count = Math.Min(MaximumRowsPerRegion, rows - row);
+                        result.Add(new Rect2D(minU + column * cellWidth, minU + (column + 1) * cellWidth,
+                            minV + row * cellHeight, minV + (row + count) * cellHeight));
+                    }
+            }
+            return result;
+        }
+
+        private static List<List<UV2>> GetCropLoops(ViewPlan view, ViewFrame frame)
+        {
+            List<List<UV2>> result = new List<List<UV2>>();
             try
             {
-                if (!(elem.Location is LocationCurve lc) || lc.Curve == null) return 0;
-                XYZ p0 = lc.Curve.GetEndPoint(0); XYZ p1 = lc.Curve.GetEndPoint(1);
-                if (linkTransform != null) { p0 = linkTransform.OfPoint(p0); p1 = linkTransform.OfPoint(p1); }
-                const double tol = 1e-6;
-                bool p0In = p0.X >= viewMinX - tol && p0.X <= viewMaxX + tol && p0.Y >= viewMinY - tol && p0.Y <= viewMaxY + tol;
-                bool p1In = p1.X >= viewMinX - tol && p1.X <= viewMaxX + tol && p1.Y >= viewMinY - tol && p1.Y <= viewMaxY + tol;
-                if (p0In && p1In) return p0.DistanceTo(p1);
-                XYZ c0, c1;
-                if (ClipSegmentToViewBounds(p0, p1, viewMinX, viewMaxX, viewMinY, viewMaxY, out c0, out c1)) return c0.DistanceTo(c1);
-            }
-            catch { }
-            return 0;
-        }
-
-        private bool ClipSegmentToViewBounds(XYZ p0, XYZ p1, double xMin, double xMax, double yMin, double yMax, out XYZ clipped0, out XYZ clipped1)
-        {
-            double dx = p1.X - p0.X; double dy = p1.Y - p0.Y; double dz = p1.Z - p0.Z;
-            double tMin = 0.0; double tMax = 1.0;
-            double[] p = new double[] { -dx, dx, -dy, dy };
-            double[] q = new double[] { p0.X - xMin, xMax - p0.X, p0.Y - yMin, yMax - p0.Y };
-            for (int i = 0; i < 4; i++)
-            {
-                if (Math.Abs(p[i]) < 1e-10) { if (q[i] < 0) { clipped0 = p0; clipped1 = p1; return false; } }
-                else
+                foreach (CurveLoop loop in view.GetCropRegionShapeManager().GetCropShape())
                 {
-                    double t = q[i] / p[i];
-                    if (p[i] < 0) { if (t > tMin) tMin = t; } else { if (t < tMax) tMax = t; }
+                    List<UV2> points = new List<UV2>();
+                    foreach (Curve curve in loop)
+                        foreach (XYZ point in curve.Tessellate())
+                        {
+                            UV2 projected = frame.Project(point);
+                            if (points.Count == 0 || Distance(points.Last(), projected) > Epsilon) points.Add(projected);
+                        }
+                    if (points.Count >= 3) result.Add(points);
                 }
-                if (tMin > tMax) { clipped0 = p0; clipped1 = p1; return false; }
-            }
-            clipped0 = new XYZ(p0.X + tMin * dx, p0.Y + tMin * dy, p0.Z + tMin * dz);
-            clipped1 = new XYZ(p0.X + tMax * dx, p0.Y + tMax * dy, p0.Z + tMax * dz);
-            return true;
-        }
-
-        private double GetPlaneElevation(ViewPlan view, PlanViewPlane plane, double defaultHigh, double defaultLow)
-        {
-            PlanViewRange viewRange = view.GetViewRange();
-            ElementId levelId = viewRange.GetLevelId(plane);
-            double offset = viewRange.GetOffset(plane);
-            if (levelId == ElementId.InvalidElementId) return plane == PlanViewPlane.TopClipPlane ? defaultHigh : defaultLow;
-            if (levelId.Value < 0)
-            {
-                long specialId = levelId.Value;
-                if (specialId == -5) return plane == PlanViewPlane.TopClipPlane ? defaultHigh : defaultLow;
-                if (specialId == -2) return (view.GenLevel != null ? view.GenLevel.Elevation : 0) + offset;
-                if (specialId == -4) return defaultHigh;
-                if (specialId == -3) return defaultLow;
-            }
-            Element elem = view.Document.GetElement(levelId);
-            if (elem is Level lvl) return lvl.Elevation + offset;
-            return (view.GenLevel != null ? view.GenLevel.Elevation : 0) + offset;
-        }
-
-        private Outline GetTransformedOutline(ViewPlan view, BoundingBoxXYZ viewBBox, Transform hostToLinkTransform, double hostZMin, double hostZMax)
-        {
-            Transform viewToHostTransform = viewBBox.Transform;
-            double lMinX = view.CropBoxActive ? viewBBox.Min.X : -100000.0;
-            double lMinY = view.CropBoxActive ? viewBBox.Min.Y : -100000.0;
-            double lMaxX = view.CropBoxActive ? viewBBox.Max.X : 100000.0;
-            double lMaxY = view.CropBoxActive ? viewBBox.Max.Y : 100000.0;
-            XYZ[] hostCorners = new XYZ[4] {
-                viewToHostTransform.OfPoint(new XYZ(lMinX, lMinY, 0)), viewToHostTransform.OfPoint(new XYZ(lMaxX, lMinY, 0)),
-                viewToHostTransform.OfPoint(new XYZ(lMinX, lMaxY, 0)), viewToHostTransform.OfPoint(new XYZ(lMaxX, lMaxY, 0))
-            };
-            List<XYZ> worldPoints = new List<XYZ>();
-            foreach (XYZ pt in hostCorners) { worldPoints.Add(new XYZ(pt.X, pt.Y, hostZMin)); worldPoints.Add(new XYZ(pt.X, pt.Y, hostZMax)); }
-            double minX = double.MaxValue, minY = double.MaxValue, minZ = double.MaxValue;
-            double maxX = double.MinValue, maxY = double.MinValue, maxZ = double.MinValue;
-            foreach (XYZ pt in worldPoints)
-            {
-                XYZ linkPt = hostToLinkTransform.OfPoint(pt);
-                if (linkPt.X < minX) minX = linkPt.X; if (linkPt.Y < minY) minY = linkPt.Y; if (linkPt.Z < minZ) minZ = linkPt.Z;
-                if (linkPt.X > maxX) maxX = linkPt.X; if (linkPt.Y > maxY) maxY = linkPt.Y; if (linkPt.Z > maxZ) maxZ = linkPt.Z;
-            }
-            return new Outline(new XYZ(minX - 5.0, minY - 5.0, minZ - 1.0), new XYZ(maxX + 5.0, maxY + 5.0, maxZ + 1.0));
-        }
-
-        private Solid SubtractSolid2D(Solid baseSolid, Solid subtractorSolid)
-        {
-            try
-            {
-                Solid result = BooleanOperationsUtils.ExecuteBooleanOperation(baseSolid, subtractorSolid, BooleanOperationsType.Difference);
-                if (result != null && result.Edges.Size > 0) return result;
             }
             catch { }
-            return baseSolid;
+            return result;
+        }
+
+        private static bool IsInsideCrop(Rect2D cell, List<List<UV2>> loops)
+        {
+            if (loops.Count == 0) return true;
+            return new[] { new UV2(cell.MinU, cell.MinV), new UV2(cell.MaxU, cell.MinV),
+                new UV2(cell.MaxU, cell.MaxV), new UV2(cell.MinU, cell.MaxV) }
+                .All(point => IsPointInside(point, loops));
+        }
+
+        private static bool IsPointInside(UV2 point, List<List<UV2>> loops)
+        {
+            bool inside = false;
+            foreach (List<UV2> polygon in loops)
+            {
+                bool inThisLoop = false;
+                for (int i = 0, j = polygon.Count - 1; i < polygon.Count; j = i++)
+                {
+                    UV2 a = polygon[i]; UV2 b = polygon[j];
+                    if (((a.V > point.V) != (b.V > point.V)) &&
+                        point.U < (b.U - a.U) * (point.V - a.V) / (b.V - a.V) + a.U)
+                        inThisLoop = !inThisLoop;
+                }
+                if (inThisLoop) inside = !inside;
+            }
+            return inside;
+        }
+
+        private static void ClearOldRegionLines(Document doc, ViewPlan view)
+        {
+            List<ElementId> ids = new FilteredElementCollector(doc, view.Id).OfClass(typeof(CurveElement))
+                .Cast<CurveElement>().Where(IsRegionLine).Where(curve => curve.OwnerViewId == view.Id)
+                .Select(curve => curve.Id).ToList();
+            if (ids.Count > 0) doc.Delete(ids);
+        }
+
+        private static GraphicsStyle GetOrCreateRegionLineStyle(Document doc)
+        {
+            Category lines = doc.Settings.Categories.get_Item(BuiltInCategory.OST_Lines);
+            Category style = lines.SubCategories.Cast<Category>()
+                .FirstOrDefault(category => category.Name == RegionLineStyleName);
+            if (style == null) style = doc.Settings.Categories.NewSubcategory(lines, RegionLineStyleName);
+            style.LineColor = new Autodesk.Revit.DB.Color(0, 255, 255);
+            try { style.SetLineWeight(3, GraphicsStyleType.Projection); } catch { }
+            return style.GetGraphicsStyle(GraphicsStyleType.Projection);
+        }
+
+        private static void DrawRegions(Document doc, ViewPlan view, ViewFrame frame,
+            IEnumerable<Rect2D> regions, GraphicsStyle style)
+        {
+            foreach (Rect2D box in regions)
+            {
+                XYZ a = frame.PointAt(view.Origin, box.MinU, box.MinV);
+                XYZ b = frame.PointAt(view.Origin, box.MaxU, box.MinV);
+                XYZ c = frame.PointAt(view.Origin, box.MaxU, box.MaxV);
+                XYZ d = frame.PointAt(view.Origin, box.MinU, box.MaxV);
+                foreach (Line line in new[] { Line.CreateBound(a, b), Line.CreateBound(b, c),
+                    Line.CreateBound(c, d), Line.CreateBound(d, a) })
+                {
+                    DetailCurve curve = doc.Create.NewDetailCurve(view, line);
+                    curve.LineStyle = style;
+                }
+            }
+        }
+
+        private static double Distance(UV2 a, UV2 b)
+            => Math.Sqrt((a.U - b.U) * (a.U - b.U) + (a.V - b.V) * (a.V - b.V));
+
+        private class OverwriteFamilyLoadOptions : IFamilyLoadOptions
+        {
+            public bool OnFamilyFound(bool familyInUse, out bool overwriteParameterValues)
+            { overwriteParameterValues = true; return true; }
+            public bool OnSharedFamilyFound(Family sharedFamily, bool familyInUse,
+                out FamilySource source, out bool overwriteParameterValues)
+            { source = FamilySource.Family; overwriteParameterValues = true; return true; }
+        }
+
+        private class TagSize
+        {
+            public TagSize(double width, double height) { Width = width; Height = height; }
+            public double Width { get; }
+            public double Height { get; }
+        }
+
+        private class UV2
+        {
+            public UV2(double u, double v) { U = u; V = v; }
+            public double U { get; }
+            public double V { get; }
+        }
+
+        private class Rect2D
+        {
+            public Rect2D(double minU, double maxU, double minV, double maxV)
+            { MinU = minU; MaxU = maxU; MinV = minV; MaxV = maxV; }
+            public double MinU { get; }
+            public double MaxU { get; }
+            public double MinV { get; }
+            public double MaxV { get; }
+            public double Width => MaxU - MinU;
+            public double Height => MaxV - MinV;
+            public bool Contains(UV2 point) => point.U >= MinU - Epsilon && point.U <= MaxU + Epsilon &&
+                point.V >= MinV - Epsilon && point.V <= MaxV + Epsilon;
+            public bool IntersectsInterior(Rect2D other) => MaxU > other.MinU + Epsilon &&
+                MinU < other.MaxU - Epsilon && MaxV > other.MinV + Epsilon && MinV < other.MaxV - Epsilon;
+        }
+
+        private class Segment2D
+        {
+            public Segment2D(UV2 start, UV2 end) { Start = start; End = end; }
+            public UV2 Start { get; }
+            public UV2 End { get; }
+            public bool Intersects(Rect2D box)
+            {
+                Rect2D inner = new Rect2D(box.MinU + Epsilon, box.MaxU - Epsilon,
+                    box.MinV + Epsilon, box.MaxV - Epsilon);
+                if (inner.Width <= Epsilon || inner.Height <= Epsilon) return false;
+                if ((Start.U < inner.MinU && End.U < inner.MinU) || (Start.U > inner.MaxU && End.U > inner.MaxU) ||
+                    (Start.V < inner.MinV && End.V < inner.MinV) || (Start.V > inner.MaxV && End.V > inner.MaxV)) return false;
+                if (inner.Contains(Start) || inner.Contains(End)) return true;
+                UV2 a = new UV2(inner.MinU, inner.MinV); UV2 b = new UV2(inner.MaxU, inner.MinV);
+                UV2 c = new UV2(inner.MaxU, inner.MaxV); UV2 d = new UV2(inner.MinU, inner.MaxV);
+                return Crosses(Start, End, a, b) || Crosses(Start, End, b, c) ||
+                       Crosses(Start, End, c, d) || Crosses(Start, End, d, a);
+            }
+            private static bool Crosses(UV2 a, UV2 b, UV2 c, UV2 d)
+            {
+                double o1 = Orientation(a, b, c); double o2 = Orientation(a, b, d);
+                double o3 = Orientation(c, d, a); double o4 = Orientation(c, d, b);
+                return o1 * o2 <= Epsilon && o3 * o4 <= Epsilon;
+            }
+            private static double Orientation(UV2 a, UV2 b, UV2 c)
+                => (b.U - a.U) * (c.V - a.V) - (b.V - a.V) * (c.U - a.U);
+        }
+
+        private class ObstacleSet
+        {
+            public List<Rect2D> Rectangles { get; } = new List<Rect2D>();
+            public List<Segment2D> Segments { get; } = new List<Segment2D>();
+            public bool IsBlocked(Rect2D cell) => Rectangles.Any(rect => rect.IntersectsInterior(cell)) ||
+                Segments.Any(segment => segment.Intersects(cell));
+        }
+
+        private class ViewFrame
+        {
+            private readonly XYZ _right;
+            private readonly XYZ _up;
+            public ViewFrame(Autodesk.Revit.DB.View view) { _right = view.RightDirection.Normalize(); _up = view.UpDirection.Normalize(); }
+            public UV2 Project(XYZ point) => new UV2(point.DotProduct(_right), point.DotProduct(_up));
+            public Rect2D Project(BoundingBoxXYZ box, Transform outerTransform = null)
+            {
+                List<UV2> points = new List<UV2>();
+                foreach (double x in new[] { box.Min.X, box.Max.X })
+                    foreach (double y in new[] { box.Min.Y, box.Max.Y })
+                        foreach (double z in new[] { box.Min.Z, box.Max.Z })
+                        {
+                            XYZ point = box.Transform.OfPoint(new XYZ(x, y, z));
+                            if (outerTransform != null) point = outerTransform.OfPoint(point);
+                            points.Add(Project(point));
+                        }
+                return new Rect2D(points.Min(p => p.U), points.Max(p => p.U),
+                    points.Min(p => p.V), points.Max(p => p.V));
+            }
+            public XYZ PointAt(XYZ planePoint, double u, double v)
+            {
+                UV2 current = Project(planePoint);
+                return planePoint + _right * (u - current.U) + _up * (v - current.V);
+            }
         }
     }
 }
