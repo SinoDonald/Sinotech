@@ -16,11 +16,12 @@ namespace Sinotech_2025.CSDSEM
     public class TagArray : IExternalCommand
     {
         private const string RegionLineStyleName = "CSD_標籤自動空白區";
-        private const string TagArrayVersion = "TagArray-20260922-R10";
+        private const string TagArrayVersion = "TagArray-20260922-R12";
         private const int MaximumRowsPerRegion = 15;
         private const double AnnotationBoundsInsetPaperMm = 0.5;
         private const double RowSpacingPaperMm = 0.2;
         private const double PlacementTolerancePaperMm = 0.05;
+        private const double HorizontalLeaderTolerancePaperMm = 0.2;
         private const double Epsilon = 1e-7;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -45,10 +46,9 @@ namespace Sinotech_2025.CSDSEM
                 ? new Dictionary<ElementId, List<PickedBox>>() : PickManualRegions(uiDoc, selectedViews);
 
             int totalTags = 0;
-            int horizontalTags = 0;
-            int totalRegions = 0;
             int totalMoved = 0;
             List<string> unmovedTags = new List<string>();
+            List<string> processingMessages = new List<string>();
             List<string> viewResults = new List<string>();
             foreach (IGrouping<ElementId, ViewPlan> viewGroup in selectedViews.GroupBy(view =>
             {
@@ -70,7 +70,6 @@ namespace Sinotech_2025.CSDSEM
                 using (Transaction transaction = new Transaction(doc, "標籤空白區域排序"))
                 {
                     transaction.Start();
-                    GraphicsStyle lineStyle = GetOrCreateRegionLineStyle(doc);
                     foreach (ViewPlan view in viewGroup)
                     {
                     ClearOldRegionLines(doc, view);
@@ -82,7 +81,6 @@ namespace Sinotech_2025.CSDSEM
                         {
                             tag.TagOrientation = TagOrientation.Horizontal;
                             if (tag.TagOrientation == TagOrientation.AnyModelDirection) tag.RotationAngle = 0;
-                            horizontalTags++;
                         }
                         catch { }
                     }
@@ -93,7 +91,9 @@ namespace Sinotech_2025.CSDSEM
                         .Where(size => size != null).ToList();
                     if (sizes.Count == 0)
                     {
-                        viewResults.Add($"{view.Name}：沒有可量測的無引線管道／電纜架標籤");
+                        viewResults.Add($"{view.Name}：無引線標籤 {tags.Count} 個，成功移動 0 個");
+                        if (tags.Count > 0)
+                            processingMessages.Add($"視圖：{view.Name} | 無法量測無引線管道／電纜架標籤範圍");
                         continue;
                     }
                     double cellWidth = sizes.Max(size => size.Width);
@@ -128,25 +128,18 @@ namespace Sinotech_2025.CSDSEM
                         out List<string> viewUnmoved);
                     totalMoved += moved;
                     unmovedTags.AddRange(viewUnmoved);
-                    DrawRegions(doc, view, frame, displayRegions, lineStyle);
-                    totalRegions += displayRegions.Count;
-                    viewResults.Add($"{view.Name}：標籤 {tags.Count} 個，基準 " +
-                        $"{cellWidth * 304.8 / view.Scale:F2} × {cellHeight * 304.8 / view.Scale:F2} mm（紙面），" +
-                        $"空白區 {displayRegions.Count} 個，上下合併 {verticalMergeCount} 次，成功移動 {moved} 個");
+                    viewResults.Add($"{view.Name}：無引線標籤 {tags.Count} 個，成功移動 {moved} 個");
                     }
                     transaction.Commit();
                 }
             }
 
-            string warnings = familyWarnings.Count == 0 ? "" :
-                "\n\n無法關閉「隨元件旋轉」：\n" + string.Join("\n", familyWarnings.Distinct());
-            string unmovedFile = WriteUnmovedReport(doc, unmovedTags);
-            string unmovedSummary = unmovedTags.Count == 0 ? "" :
-                $"\n未移動：{unmovedTags.Count} 個\n未移動清單已輸出至：\n{unmovedFile}";
-            TaskDialog.Show("標籤空白區域排序", $"處理完成。\n版本：{TagArrayVersion}\n" +
-                $"無引線標籤：{totalTags} 個\n已設定水平：{horizontalTags} 個\n空白區：{totalRegions} 個\n\n" +
-                $"成功移動：{totalMoved} 個" + unmovedSummary + "\n\n" +
-                string.Join("\n", viewResults) + warnings);
+            processingMessages.AddRange(familyWarnings.Distinct()
+                .Select(warning => $"無法關閉「隨元件旋轉」：{warning}"));
+            WriteDiagnosticReport(doc, unmovedTags, processingMessages);
+            TaskDialog.Show("標籤空白區域排序", $"處理完成。\n" +
+                $"無引線標籤：{totalTags} 個\n成功移動：{totalMoved} 個\n\n" +
+                string.Join("\n", viewResults));
             return Result.Succeeded;
         }
 
@@ -415,14 +408,37 @@ namespace Sinotech_2025.CSDSEM
                     XYZ finalHeadPosition = data.Tag.TagHeadPosition;
                     UV2 expectedHead = frame.Project(finalHeadPosition);
                     data.Tag.HasLeader = true;
-                    data.Tag.LeaderEndCondition = LeaderEndCondition.Attached;
-
-                    // 本階段先不設定自由端點與 Elbow。Revit 開啟貼附引線時仍可能自動
-                    // 移動 Head，因此重複固定並確認最後座標仍位於指定格位。
-                    for (int attempt = 0; attempt < 3; attempt++)
+                    double horizontalTolerance = HorizontalLeaderTolerancePaperMm * view.Scale / 304.8;
+                    bool isHorizontal = Math.Abs(data.AnchorV - desiredCenterV) <= horizontalTolerance;
+                    if (isHorizontal)
                     {
-                        data.Tag.TagHeadPosition = finalHeadPosition;
-                        doc.Regenerate();
+                        data.Tag.LeaderEndCondition = LeaderEndCondition.Attached;
+                        StabilizeTagHead(doc, data.Tag, finalHeadPosition);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            data.Tag.LeaderEndCondition = LeaderEndCondition.Free;
+                            data.Tag.TagHeadPosition = finalHeadPosition;
+                            data.Tag.SetLeaderEnd(data.TargetReference, data.AnchorPoint);
+
+                            // 標籤端至 Elbow 維持水平，Elbow 至被標註點維持垂直，
+                            // 因此只會在標籤左側或右側形成一個 90 度轉折。
+                            XYZ elbow = frame.PointAt(data.AnchorPoint, data.AnchorU, desiredCenterV);
+                            data.Tag.SetLeaderElbow(data.TargetReference, elbow);
+                            StabilizeTagHead(doc, data.Tag, finalHeadPosition);
+                            data.Tag.SetLeaderEnd(data.TargetReference, data.AnchorPoint);
+                            data.Tag.SetLeaderElbow(data.TargetReference, elbow);
+                            doc.Regenerate();
+                        }
+                        catch
+                        {
+                            // 個別標籤族若不支援自由端點，保留 R10 的貼附引線，
+                            // 不讓引線整形失敗連帶復原已正確完成的標籤位置。
+                            data.Tag.LeaderEndCondition = LeaderEndCondition.Attached;
+                            StabilizeTagHead(doc, data.Tag, finalHeadPosition);
+                        }
                     }
 
                     UV2 actualHead = frame.Project(data.Tag.TagHeadPosition);
@@ -442,23 +458,42 @@ namespace Sinotech_2025.CSDSEM
             }
         }
 
+        private static void StabilizeTagHead(Document doc, IndependentTag tag, XYZ headPosition)
+        {
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                tag.TagHeadPosition = headPosition;
+                doc.Regenerate();
+            }
+        }
+
         private static string DescribeUnmoved(ViewPlan view, IndependentTag tag, string reason)
             => $"視圖：{view.Name} | 標籤 ID：{tag.Id.Value} | 類別：{tag.Category?.Name} | 原因：{reason}";
 
-        private static string WriteUnmovedReport(Document doc, List<string> unmoved)
+        private static string WriteDiagnosticReport(Document doc, List<string> unmoved,
+            List<string> processingMessages)
         {
-            if (unmoved.Count == 0) return string.Empty;
+            if (unmoved.Count == 0 && processingMessages.Count == 0) return string.Empty;
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             string projectName = string.IsNullOrWhiteSpace(doc.PathName)
                 ? doc.Title : Path.GetFileNameWithoutExtension(doc.PathName);
             foreach (char invalid in Path.GetInvalidFileNameChars()) projectName = projectName.Replace(invalid, '_');
             string path = Path.Combine(desktop,
-                $"{projectName}_標籤排序未移動清單_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
+                $"{projectName}_標籤排序處理訊息_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
             StringBuilder content = new StringBuilder();
             content.AppendLine($"版本：{TagArrayVersion}");
-            content.AppendLine($"未移動標籤：{unmoved.Count} 個");
-            content.AppendLine();
-            foreach (string line in unmoved) content.AppendLine(line);
+            if (unmoved.Count > 0)
+            {
+                content.AppendLine($"未移動標籤：{unmoved.Count} 個");
+                content.AppendLine();
+                foreach (string line in unmoved) content.AppendLine(line);
+            }
+            if (processingMessages.Count > 0)
+            {
+                if (unmoved.Count > 0) content.AppendLine();
+                content.AppendLine("其他處理訊息：");
+                foreach (string line in processingMessages) content.AppendLine(line);
+            }
             File.WriteAllText(path, content.ToString(), Encoding.UTF8);
             return path;
         }

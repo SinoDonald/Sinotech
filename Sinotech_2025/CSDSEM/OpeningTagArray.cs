@@ -35,16 +35,25 @@ namespace Sinotech_2025.CSDSEM
             };
             ElementMulticategoryFilter tagFilter = new ElementMulticategoryFilter(tagCategories);
 
-            List<IndependentTag> tags = new FilteredElementCollector(doc, activeView.Id)
+            List<IndependentTag> allTags = new FilteredElementCollector(doc, activeView.Id)
                 .WherePasses(tagFilter)
                 .OfClass(typeof(IndependentTag))
                 .Cast<IndependentTag>()
                 .Where(t => !t.IsOrphaned)
                 .ToList();
 
-            if (tags.Count == 0)
+            if (allTags.Count == 0)
             {
                 TaskDialog.Show("提示", "當前視圖未發現開口套管標籤。");
+                return Result.Succeeded;
+            }
+
+            // 已開啟引線代表使用者已完成放置，只作為避碰障礙，不再重新演算或移動。
+            List<IndependentTag> tags = allTags.Where(t => !t.HasLeader).ToList();
+            List<IndependentTag> fixedTags = allTags.Where(t => t.HasLeader).ToList();
+            if (tags.Count == 0)
+            {
+                TaskDialog.Show("提示", $"目前 {fixedTags.Count} 個開口套管標籤皆已開啟引線，未重新排列。");
                 return Result.Succeeded;
             }
 
@@ -65,10 +74,11 @@ namespace Sinotech_2025.CSDSEM
                 trans.Start();
 
                 TagOrthogonalEngine engine = new TagOrthogonalEngine(doc, activeView);
-                int processedCount = engine.ArrangeTags(tags, hostElements);
+                int processedCount = engine.ArrangeTags(tags, fixedTags, hostElements);
 
                 trans.Commit();
-                TaskDialog.Show("成功", $"已完成 {processedCount} 個標籤排版並開啟引線。");
+                TaskDialog.Show("成功",
+                    $"已完成 {processedCount} 個未開啟引線標籤的排版；保留 {fixedTags.Count} 個已完成標籤不變。");
             }
 
             return Result.Succeeded;
@@ -103,21 +113,27 @@ namespace Sinotech_2025.CSDSEM
         /// 執行標籤自動排版與引線計算
         /// </summary>
         /// <param name="tags">標籤列表</param>
+        /// <param name="fixedTags">已開啟引線、不得移動的標籤</param>
         /// <param name="hostElements">宿主牆樑元件列表</param>
         /// <returns>處理數量</returns>
-        public int ArrangeTags(List<IndependentTag> tags, List<Element> hostElements)
+        public int ArrangeTags(List<IndependentTag> tags, List<IndependentTag> fixedTags,
+            List<Element> hostElements)
         {
             List<TagData> tagDataList = new List<TagData>();
+            var fixedTagBoxes = new Dictionary<ElementId, BoundingBoxXYZ>();
 
             using (SubTransaction measurement = new SubTransaction(_doc))
             {
                 measurement.Start();
                 // 關閉引線以取得準確的標籤邊界框
-                foreach (var tag in tags)
+                foreach (var tag in tags.Concat(fixedTags))
                 {
                     try { tag.HasLeader = false; } catch { }
                 }
                 _doc.Regenerate();
+
+                foreach (var fixedTag in fixedTags)
+                    fixedTagBoxes[fixedTag.Id] = fixedTag.get_BoundingBox(_view);
 
                 // A. 解析標籤與宿主幾何關係
                 foreach (var tag in tags)
@@ -173,10 +189,11 @@ namespace Sinotech_2025.CSDSEM
                 .Select(e => new { e.Id, Box = e.get_BoundingBox(_view) })
                 .Where(e => e.Box != null).ToDictionary(e => e.Id, e => ToBox(e.Box));
 
-            // 只保留無法參與排版的標籤；可處理標籤的舊位置稍後會移走，不能當成永久障礙。
+            // 已完成標籤及無法參與排版的標籤都是固定障礙；可處理標籤的舊位置不保留。
             var processableIds = new HashSet<ElementId>(tagDataList.Select(t => t.Tag.Id));
-            var reserved = tags.Where(t => !processableIds.Contains(t.Id))
-                .ToDictionary(t => t.Id, t => t.get_BoundingBox(_view));
+            var reserved = new Dictionary<ElementId, BoundingBoxXYZ>(fixedTagBoxes);
+            foreach (var tag in tags.Where(t => !processableIds.Contains(t.Id)))
+                reserved[tag.Id] = tag.get_BoundingBox(_view);
             int processedCount = 0;
             var arrangedTagIds = new HashSet<ElementId>();
             // B. 對所有標籤進行全局優先順序排版
