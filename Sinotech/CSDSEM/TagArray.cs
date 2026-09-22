@@ -16,7 +16,7 @@ namespace Sinotech.CSDSEM
     public class TagArray : IExternalCommand
     {
         private const string RegionLineStyleName = "CSD_標籤自動空白區";
-        private const string TagArrayVersion = "TagArray-20260922-R12";
+        private const string TagArrayVersion = "TagArray-20260922-R13";
         private const int MaximumRowsPerRegion = 15;
         private const double AnnotationBoundsInsetPaperMm = 0.5;
         private const double RowSpacingPaperMm = 0.2;
@@ -119,12 +119,12 @@ namespace Sinotech.CSDSEM
                     {
                         manualBoxes.TryGetValue(view.Id, out List<PickedBox> boxes);
                         regions = CreateManualRegions(frame, boxes, cellWidth, cellHeight);
-                        placementSlots = ExpandRegionsToSlots(regions, cellHeight);
+                        placementSlots = CreateManualSlots(frame, boxes, cellWidth, cellHeight);
                         displayRegions = regions;
                     }
 
                     int moved = ArrangeTagsInSlots(doc, view, frame, tags, displayRegions, placementSlots,
-                        cellWidth, cellHeight,
+                        cellWidth, cellHeight, !chooseForm.IsAutoResult,
                         out List<string> viewUnmoved);
                     totalMoved += moved;
                     unmovedTags.AddRange(viewUnmoved);
@@ -220,7 +220,7 @@ namespace Sinotech.CSDSEM
 
         private static int ArrangeTagsInSlots(Document doc, ViewPlan view, ViewFrame frame,
             List<IndependentTag> tags, List<Rect2D> displayRegions, List<Rect2D> slots,
-            double cellWidth, double cellHeight,
+            double cellWidth, double cellHeight, bool useManualSlotOrder,
             out List<string> unmoved)
         {
             unmoved = new List<string>();
@@ -235,7 +235,7 @@ namespace Sinotech.CSDSEM
             }
 
             List<PlacementGroup> groups = BuildPlacementGroups(displayRegions, slots);
-            NormalizePlacementSlots(groups, cellWidth, cellHeight);
+            if (!useManualSlotOrder) NormalizePlacementSlots(groups, cellWidth, cellHeight);
             AssignTagsToGroups(data.Where(item => item.IsPipe), groups);
             AssignTagsToGroups(data.Where(item => !item.IsPipe), groups);
 
@@ -248,9 +248,11 @@ namespace Sinotech.CSDSEM
             double placementTolerance = PlacementTolerancePaperMm * view.Scale / 304.8;
             foreach (PlacementGroup group in groups)
             {
-                List<Rect2D> availableSlots = group.Slots
-                    .OrderByDescending(slot => (slot.MinV + slot.MaxV) / 2.0)
-                    .ThenBy(slot => slot.MinU).ToList();
+                List<Rect2D> availableSlots = useManualSlotOrder
+                    ? group.Slots.OrderBy(slot => slot.MinU)
+                        .ThenByDescending(slot => (slot.MinV + slot.MaxV) / 2.0).ToList()
+                    : group.Slots.OrderByDescending(slot => (slot.MinV + slot.MaxV) / 2.0)
+                        .ThenBy(slot => slot.MinU).ToList();
                 List<TagPlacementData> orderedTags = group.AssignedTags.Where(item => item.IsPipe)
                     .OrderByDescending(item => item.AnchorV)
                     .Concat(group.AssignedTags.Where(item => !item.IsPipe)
@@ -883,18 +885,41 @@ namespace Sinotech.CSDSEM
             foreach (PickedBox box in boxes)
             {
                 UV2 a = frame.Project(box.Min); UV2 b = frame.Project(box.Max);
-                double minU = Math.Min(a.U, b.U); double minV = Math.Min(a.V, b.V);
-                int columns = (int)Math.Floor(Math.Abs(a.U - b.U) / cellWidth);
-                int rows = (int)Math.Floor(Math.Abs(a.V - b.V) / cellHeight);
-                for (int column = 0; column < columns; column++)
-                    for (int row = 0; row < rows; row += MaximumRowsPerRegion)
-                    {
-                        int count = Math.Min(MaximumRowsPerRegion, rows - row);
-                        result.Add(new Rect2D(minU + column * cellWidth, minU + (column + 1) * cellWidth,
-                            minV + row * cellHeight, minV + (row + count) * cellHeight));
-                    }
+                double minU = Math.Min(a.U, b.U); double maxU = Math.Max(a.U, b.U);
+                double minV = Math.Min(a.V, b.V); double maxV = Math.Max(a.V, b.V);
+                if (maxU - minU + Epsilon < cellWidth || maxV - minV + Epsilon < cellHeight) continue;
+                result.Add(new Rect2D(minU, maxU, minV, maxV));
             }
             return result;
+        }
+
+        private static List<Rect2D> CreateManualSlots(ViewFrame frame, List<PickedBox> boxes,
+            double cellWidth, double cellHeight)
+        {
+            List<Rect2D> slots = new List<Rect2D>();
+            if (boxes == null || cellWidth <= Epsilon || cellHeight <= Epsilon) return slots;
+            foreach (PickedBox box in boxes)
+            {
+                UV2 a = frame.Project(box.Min); UV2 b = frame.Project(box.Max);
+                double minU = Math.Min(a.U, b.U); double maxU = Math.Max(a.U, b.U);
+                double minV = Math.Min(a.V, b.V); double maxV = Math.Max(a.V, b.V);
+                int columns = (int)Math.Floor((maxU - minU + Epsilon) / cellWidth);
+                int rows = (int)Math.Floor((maxV - minV + Epsilon) / cellHeight);
+
+                // 手動框選不檢查障礙物，也不限制 15 列。每一欄由上往下排滿後，
+                // 再以視圖中最長標籤的寬度向右換到下一欄。
+                for (int column = 0; column < columns; column++)
+                {
+                    double slotMinU = minU + column * cellWidth;
+                    for (int row = 0; row < rows; row++)
+                    {
+                        double slotMaxV = maxV - row * cellHeight;
+                        slots.Add(new Rect2D(slotMinU, slotMinU + cellWidth,
+                            slotMaxV - cellHeight, slotMaxV));
+                    }
+                }
+            }
+            return slots;
         }
 
         private static List<List<UV2>> GetCropLoops(ViewPlan view, ViewFrame frame)
