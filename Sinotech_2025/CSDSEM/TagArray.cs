@@ -14,7 +14,9 @@ namespace Sinotech_2025.CSDSEM
     public class TagArray : IExternalCommand
     {
         private const string RegionLineStyleName = "CSD_標籤自動空白區";
+        private const string TagArrayVersion = "TagArray-20260922-R4";
         private const int MaximumRowsPerRegion = 15;
+        private const double AnnotationBoundsInsetPaperMm = 0.5;
         private const double Epsilon = 1e-7;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -73,30 +75,39 @@ namespace Sinotech_2025.CSDSEM
                     }
                     double cellWidth = sizes.Max(size => size.Width);
                     double cellHeight = sizes.Max(size => size.Height);
+                    int verticalMergeCount = 0;
                     List<Rect2D> regions;
+                    List<Rect2D> displayRegions;
                     if (chooseForm.IsAutoResult)
                     {
                         Rect2D cropBounds = frame.Project(view.CropBox);
                         List<List<UV2>> cropLoops = GetCropLoops(view, frame);
-                        ObstacleSet obstacles = CollectVisibleObstacles(doc, view, frame);
-                        regions = FindAutomaticRegions(cropBounds, cropLoops, obstacles, cellWidth, cellHeight);
+                        double annotationInset = AnnotationBoundsInsetPaperMm * view.Scale / 304.8;
+                        ObstacleSet obstacles = CollectVisibleObstacles(doc, view, frame, annotationInset);
+                        regions = FindAutomaticRegions(cropBounds, cropLoops, obstacles, cellWidth, cellHeight,
+                            out verticalMergeCount);
+                        displayRegions = MergeVerticalDisplayRegions(regions, cellWidth, cellHeight,
+                            out int displayMergeCount);
+                        verticalMergeCount += displayMergeCount;
                     }
                     else
                     {
                         manualBoxes.TryGetValue(view.Id, out List<PickedBox> boxes);
                         regions = CreateManualRegions(frame, boxes, cellWidth, cellHeight);
+                        displayRegions = regions;
                     }
-                    DrawRegions(doc, view, frame, regions, lineStyle);
-                    totalRegions += regions.Count;
+                    DrawRegions(doc, view, frame, displayRegions, lineStyle);
+                    totalRegions += displayRegions.Count;
                     viewResults.Add($"{view.Name}：標籤 {tags.Count} 個，基準 " +
-                        $"{cellWidth * 304.8 / view.Scale:F2} × {cellHeight * 304.8 / view.Scale:F2} mm（紙面），空白區 {regions.Count} 個");
+                        $"{cellWidth * 304.8 / view.Scale:F2} × {cellHeight * 304.8 / view.Scale:F2} mm（紙面），" +
+                        $"空白區 {displayRegions.Count} 個，上下合併 {verticalMergeCount} 次");
                 }
                 transaction.Commit();
             }
 
             string warnings = familyWarnings.Count == 0 ? "" :
                 "\n\n無法關閉「隨元件旋轉」：\n" + string.Join("\n", familyWarnings.Distinct());
-            TaskDialog.Show("標籤空白區域檢查", $"處理完成（本階段沒有移動標籤）。\n" +
+            TaskDialog.Show("標籤空白區域檢查", $"處理完成（本階段沒有移動標籤）。\n版本：{TagArrayVersion}\n" +
                 $"無引線標籤：{totalTags} 個\n已設定水平：{horizontalTags} 個\n空白區：{totalRegions} 個\n\n" +
                 string.Join("\n", viewResults) + warnings);
             return Result.Succeeded;
@@ -177,13 +188,14 @@ namespace Sinotech_2025.CSDSEM
             catch { return null; }
         }
 
-        private static ObstacleSet CollectVisibleObstacles(Document doc, ViewPlan view, ViewFrame frame)
+        private static ObstacleSet CollectVisibleObstacles(Document doc, ViewPlan view, ViewFrame frame,
+            double annotationInset)
         {
             ObstacleSet result = new ObstacleSet();
             foreach (Element element in new FilteredElementCollector(doc, view.Id).WhereElementIsNotElementType())
             {
                 if (element is RevitLinkInstance || IsRegionLine(element)) continue;
-                AddElementObstacle(result, element, view, frame, null);
+                AddElementObstacle(result, element, view, frame, null, annotationInset);
             }
             foreach (RevitLinkInstance link in new FilteredElementCollector(doc, view.Id)
                 .OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>())
@@ -204,19 +216,19 @@ namespace Sinotech_2025.CSDSEM
                 {
                     foreach (Element element in new FilteredElementCollector(doc, view.Id, link.Id)
                         .WhereElementIsNotElementType())
-                        AddElementObstacle(result, element, linkedView, frame, transform);
+                        AddElementObstacle(result, element, linkedView, frame, transform, annotationInset);
                 }
                 catch
                 {
                     foreach (Element element in new FilteredElementCollector(linkDoc).WhereElementIsNotElementType())
-                        AddElementObstacle(result, element, null, frame, transform);
+                        AddElementObstacle(result, element, null, frame, transform, annotationInset);
                 }
             }
             return result;
         }
 
         private static void AddElementObstacle(ObstacleSet result, Element element, Autodesk.Revit.DB.View view,
-            ViewFrame frame, Transform transform)
+            ViewFrame frame, Transform transform, double annotationInset)
         {
             try
             {
@@ -243,6 +255,10 @@ namespace Sinotech_2025.CSDSEM
                     BoundingBoxXYZ box = element.get_BoundingBox(view);
                     if (box == null) return;
                     Rect2D rect = frame.Project(box, transform);
+                    // Revit 的註解外框通常帶有少量文字留白或控制範圍；以紙面固定值
+                    // 向內收縮，但保留填滿區域與影像的完整可見範圍。
+                    if (!(element is FilledRegion) && !(element is ImageInstance))
+                        rect = InsetAnnotationBounds(rect, annotationInset);
                     if (rect.Width > Epsilon || rect.Height > Epsilon) result.Rectangles.Add(rect);
                     return;
                 }
@@ -315,11 +331,21 @@ namespace Sinotech_2025.CSDSEM
             return curve?.LineStyle != null && curve.LineStyle.Name == RegionLineStyleName;
         }
 
-        private static List<Rect2D> FindAutomaticRegions(Rect2D crop, List<List<UV2>> cropLoops,
-            ObstacleSet obstacles, double cellWidth, double cellHeight)
+        private static Rect2D InsetAnnotationBounds(Rect2D rect, double requestedInset)
         {
+            double insetU = Math.Min(requestedInset, rect.Width * 0.20);
+            double insetV = Math.Min(requestedInset, rect.Height * 0.20);
+            return new Rect2D(rect.MinU + insetU, rect.MaxU - insetU,
+                rect.MinV + insetV, rect.MaxV - insetV);
+        }
+
+        private static List<Rect2D> FindAutomaticRegions(Rect2D crop, List<List<UV2>> cropLoops,
+            ObstacleSet obstacles, double cellWidth, double cellHeight, out int verticalMergeCount)
+        {
+            verticalMergeCount = 0;
             List<Rect2D> candidates = new List<Rect2D>();
             if (cellWidth <= Epsilon || cellHeight <= Epsilon) return candidates;
+            double cropTolerance = Math.Max(Epsilon * 10.0, Math.Min(cellWidth, cellHeight) * 0.001);
 
             // 固定單一格網起點會漏掉未與裁切框對齊的空白帶。
             // 以四分之一格為位移掃描 16 組格網，再挑選互不重疊的最大候選區。
@@ -342,7 +368,7 @@ namespace Sinotech_2025.CSDSEM
                         {
                             Rect2D cell = new Rect2D(minU, minU + cellWidth,
                                 startV + row * cellHeight, startV + (row + 1) * cellHeight);
-                            free[row] = IsInsideCrop(cell, cropLoops) && !obstacles.IsBlocked(cell);
+                            free[row] = IsInsideCrop(cell, cropLoops, cropTolerance) && !obstacles.IsBlocked(cell);
                         }
                         int rowIndex = 0;
                         while (rowIndex < rows)
@@ -373,7 +399,152 @@ namespace Sinotech_2025.CSDSEM
             {
                 if (!result.Any(existing => existing.IntersectsInterior(candidate))) result.Add(candidate);
             }
-            return result.OrderBy(region => region.MinU).ThenBy(region => region.MinV).ToList();
+            return MergeVerticalRegions(result, cropLoops, obstacles, cellWidth, cellHeight, cropTolerance,
+                out verticalMergeCount);
+        }
+
+        private static List<Rect2D> MergeVerticalRegions(List<Rect2D> regions,
+            List<List<UV2>> cropLoops, ObstacleSet obstacles, double cellWidth, double cellHeight,
+            double cropTolerance, out int mergeCount)
+        {
+            mergeCount = 0;
+            List<Rect2D> result = regions.OrderBy(region => region.MinU)
+                .ThenBy(region => region.MinV).ToList();
+            double exactAlignmentTolerance = Math.Max(Epsilon * 10.0, cellWidth * 0.001);
+            double maximumHorizontalShift = cellWidth * 0.26;
+            double maximumVerticalGap = cellHeight * 1.26;
+            double sharedBoundaryTolerance = Math.Max(Epsilon * 10.0, cellHeight * 0.001);
+            double maximumHeight = MaximumRowsPerRegion * cellHeight + sharedBoundaryTolerance;
+
+            bool mergedAny;
+            do
+            {
+                mergedAny = false;
+                for (int i = 0; i < result.Count && !mergedAny; i++)
+                {
+                    for (int j = i + 1; j < result.Count; j++)
+                    {
+                        Rect2D first = result[i]; Rect2D second = result[j];
+                        double horizontalShift = Math.Max(Math.Abs(first.MinU - second.MinU),
+                            Math.Abs(first.MaxU - second.MaxU));
+                        if (horizontalShift > maximumHorizontalShift) continue;
+
+                        Rect2D lower = first.MinV <= second.MinV ? first : second;
+                        Rect2D upper = ReferenceEquals(lower, first) ? second : first;
+                        double gap = upper.MinV - lower.MaxV;
+                        if (gap < -sharedBoundaryTolerance || gap > maximumVerticalGap) continue;
+
+                        Rect2D merged = TryCreateVerticalMerge(lower, upper, horizontalShift,
+                            exactAlignmentTolerance, cropLoops, obstacles, cellHeight, cropTolerance,
+                            maximumHeight);
+                        if (merged == null) continue;
+                        if (result.Where((region, index) => index != i && index != j)
+                            .Any(region => region.IntersectsInterior(merged))) continue;
+
+                        result[i] = merged;
+                        result.RemoveAt(j);
+                        mergeCount++;
+                        result = result.OrderBy(region => region.MinU)
+                            .ThenBy(region => region.MinV).ToList();
+                        mergedAny = true;
+                        break;
+                    }
+                }
+            }
+            while (mergedAny);
+
+            return result;
+        }
+
+        private static Rect2D TryCreateVerticalMerge(Rect2D lower, Rect2D upper,
+            double horizontalShift, double exactAlignmentTolerance, List<List<UV2>> cropLoops,
+            ObstacleSet obstacles, double cellHeight, double cropTolerance, double maximumHeight)
+        {
+            List<double> candidateMinUs = new List<double> { lower.MinU };
+            if (Math.Abs(upper.MinU - lower.MinU) > exactAlignmentTolerance)
+            {
+                candidateMinUs.Add(upper.MinU);
+                candidateMinUs.Add((lower.MinU + upper.MinU) / 2.0);
+            }
+
+            foreach (double minU in candidateMinUs)
+            {
+                double maxU = minU + Math.Min(lower.Width, upper.Width);
+                Rect2D merged = new Rect2D(minU, maxU, lower.MinV, upper.MaxV);
+                if (merged.Height > maximumHeight ||
+                    !IsInsideCrop(merged, cropLoops, cropTolerance)) continue;
+
+                // 完全對齊時，兩個框本身已逐格通過障礙檢查；中間被細線占用的一格
+                // 只作為合併外框的間隔。偏移框則用原有格高重新驗證所選欄位。
+                if (horizontalShift <= exactAlignmentTolerance ||
+                    (IsColumnRangeClear(minU, maxU, lower.MinV, lower.MaxV, cellHeight, obstacles) &&
+                     IsColumnRangeClear(minU, maxU, upper.MinV, upper.MaxV, cellHeight, obstacles)))
+                    return merged;
+            }
+            return null;
+        }
+
+        private static bool IsColumnRangeClear(double minU, double maxU, double minV, double maxV,
+            double cellHeight, ObstacleSet obstacles)
+        {
+            for (double rowMin = minV; rowMin < maxV - Epsilon; rowMin += cellHeight)
+            {
+                double rowMax = Math.Min(maxV, rowMin + cellHeight);
+                if (obstacles.IsBlocked(new Rect2D(minU, maxU, rowMin, rowMax))) return false;
+            }
+            return true;
+        }
+
+        private static List<Rect2D> MergeVerticalDisplayRegions(List<Rect2D> regions,
+            double cellWidth, double cellHeight, out int mergeCount)
+        {
+            mergeCount = 0;
+            List<Rect2D> result = regions.OrderBy(region => region.MinU)
+                .ThenBy(region => region.MinV).ToList();
+            double maximumCenterShift = cellWidth * 0.26;
+            double maximumVerticalGap = cellHeight * 1.26;
+            double maximumHeight = MaximumRowsPerRegion * cellHeight + Epsilon;
+
+            bool mergedAny;
+            do
+            {
+                mergedAny = false;
+                for (int i = 0; i < result.Count && !mergedAny; i++)
+                {
+                    for (int j = i + 1; j < result.Count; j++)
+                    {
+                        Rect2D first = result[i]; Rect2D second = result[j];
+                        double firstCenter = (first.MinU + first.MaxU) / 2.0;
+                        double secondCenter = (second.MinU + second.MaxU) / 2.0;
+                        if (Math.Abs(firstCenter - secondCenter) > maximumCenterShift) continue;
+
+                        Rect2D lower = first.MinV <= second.MinV ? first : second;
+                        Rect2D upper = ReferenceEquals(lower, first) ? second : first;
+                        double gap = upper.MinV - lower.MaxV;
+                        if (gap < -Epsilon || gap > maximumVerticalGap) continue;
+
+                        Rect2D merged = new Rect2D(Math.Min(first.MinU, second.MinU),
+                            Math.Max(first.MaxU, second.MaxU), lower.MinV, upper.MaxV);
+                        if (merged.Height > maximumHeight) continue;
+
+                        // 顯示外框可以跨過已知的細線隔離區，但不可蓋到另一個已保留的
+                        // 空白框；實際可放置格位仍保留在原始 regions 內。
+                        if (result.Where((region, index) => index != i && index != j)
+                            .Any(region => region.IntersectsInterior(merged))) continue;
+
+                        result[i] = merged;
+                        result.RemoveAt(j);
+                        result = result.OrderBy(region => region.MinU)
+                            .ThenBy(region => region.MinV).ToList();
+                        mergeCount++;
+                        mergedAny = true;
+                        break;
+                    }
+                }
+            }
+            while (mergedAny);
+
+            return result;
         }
 
         private static List<Rect2D> CreateManualRegions(ViewFrame frame, List<PickedBox> boxes,
@@ -419,16 +590,17 @@ namespace Sinotech_2025.CSDSEM
             return result;
         }
 
-        private static bool IsInsideCrop(Rect2D cell, List<List<UV2>> loops)
+        private static bool IsInsideCrop(Rect2D cell, List<List<UV2>> loops, double tolerance)
         {
             if (loops.Count == 0) return true;
             return new[] { new UV2(cell.MinU, cell.MinV), new UV2(cell.MaxU, cell.MinV),
                 new UV2(cell.MaxU, cell.MaxV), new UV2(cell.MinU, cell.MaxV) }
-                .All(point => IsPointInside(point, loops));
+                .All(point => IsPointInsideOrOnBoundary(point, loops, tolerance));
         }
 
-        private static bool IsPointInside(UV2 point, List<List<UV2>> loops)
+        private static bool IsPointInsideOrOnBoundary(UV2 point, List<List<UV2>> loops, double tolerance)
         {
+            if (loops.Any(polygon => IsPointOnBoundary(point, polygon, tolerance))) return true;
             bool inside = false;
             foreach (List<UV2> polygon in loops)
             {
@@ -443,6 +615,24 @@ namespace Sinotech_2025.CSDSEM
                 if (inThisLoop) inside = !inside;
             }
             return inside;
+        }
+
+        private static bool IsPointOnBoundary(UV2 point, List<UV2> polygon, double tolerance)
+        {
+            for (int i = 0, j = polygon.Count - 1; i < polygon.Count; j = i++)
+            {
+                UV2 a = polygon[j]; UV2 b = polygon[i];
+                double du = b.U - a.U; double dv = b.V - a.V;
+                double lengthSquared = du * du + dv * dv;
+                if (lengthSquared <= Epsilon) continue;
+                double parameter = ((point.U - a.U) * du + (point.V - a.V) * dv) / lengthSquared;
+                if (parameter < 0.0 || parameter > 1.0) continue;
+                double nearestU = a.U + parameter * du; double nearestV = a.V + parameter * dv;
+                double distance = Math.Sqrt((point.U - nearestU) * (point.U - nearestU) +
+                    (point.V - nearestV) * (point.V - nearestV));
+                if (distance <= tolerance) return true;
+            }
+            return false;
         }
 
         private static void ClearOldRegionLines(Document doc, ViewPlan view)
