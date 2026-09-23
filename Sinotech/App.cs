@@ -104,11 +104,11 @@ namespace Sinotech
                 panel_list = application.GetRibbonPanels("中興自動化");
                 foreach (RibbonPanel rp in panel_list) { if (rp.Name == "CSD") { ribbonPanel = rp; } }
             }
-            PushButton autoPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeTag", "管道標籤", addinAssmeblyPath, "Sinotech.CSDSEM.AutoPipeTag")) as PushButton;
+            PushButton autoPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeTag", "管道標籤", addinAssmeblyPath, "Sinotech.CSD.AutoPipeTag")) as PushButton;
             autoPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.管道標籤);
             autoPipeTagBtn.ToolTip = "在視圖中會讀取管道, 並且在管道中放置標籤, 顯示管道相關資訊。";
             autoPipeTagBtn.ToolTipImage = convertFromBitmap(Properties.Resources.管道標籤_原圖, 250);
-            PushButton tagArrayBtn = ribbonPanel.AddItem(new PushButtonData("TagArray", "標籤排序", addinAssmeblyPath, "Sinotech.CSDSEM.TagArray")) as PushButton;
+            PushButton tagArrayBtn = ribbonPanel.AddItem(new PushButtonData("TagArray", "標籤排序", addinAssmeblyPath, "Sinotech.CSD.TagArray")) as PushButton;
             tagArrayBtn.LargeImage = convertFromBitmap(Properties.Resources.標籤排序);
             tagArrayBtn.ToolTip = "使用者框選視圖中的空白區域, 會將視圖中鄰近的標籤移至空白處, 並依序排列。";
             tagArrayBtn.ToolTipImage = convertFromBitmap(Properties.Resources.標籤排序_原圖, 250);
@@ -121,25 +121,25 @@ namespace Sinotech
                 panel_list = application.GetRibbonPanels("中興自動化");
                 foreach (RibbonPanel rp in panel_list) { if (rp.Name == "SEM") { ribbonPanel = rp; } }
             }
-            PushButton autoPipeOpenBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeOpen", "自動開口", addinAssmeblyPath, "Sinotech.CSDSEM.LinkOpening")) as PushButton;
+            PushButton autoPipeOpenBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeOpen", "自動開口", addinAssmeblyPath, "Sinotech.SEM.LinkOpening")) as PushButton;
             autoPipeOpenBtn.LargeImage = convertFromBitmap(Properties.Resources.自動開口);
             autoPipeOpenBtn.ToolTip = "在模型中讀取所有管道、風管、電纜架等機電設施, 當這些構件與樑、板、牆交接時, 在這些交接的位置進行開口與套管的動作。";
             autoPipeOpenBtn.ToolTipImage = convertFromBitmap(Properties.Resources.自動開口_原圖, 250);
-            PushButton autoNumberBtn = ribbonPanel.AddItem(new PushButtonData("AutoNumber", "自動編號", addinAssmeblyPath, "Sinotech.CSDSEM.AutoNumber")) as PushButton;
+            PushButton autoNumberBtn = ribbonPanel.AddItem(new PushButtonData("AutoNumber", "自動編號", addinAssmeblyPath, "Sinotech.SEM.AutoNumber")) as PushButton;
             autoNumberBtn.LargeImage = convertFromBitmap(Properties.Resources.自動編號);
             autoNumberBtn.ToolTip = "在模型中依每一張視圖的所有開口, 依照網格順序由左而右、由上而下進行數字編號。";
             autoNumberBtn.ToolTipImage = convertFromBitmap(Properties.Resources.自動編號_原圖, 250);
-            //PushButton manualPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("ManualPipeTag", "手動編號", addinAssmeblyPath, "Sinotech.CSDSEM.ManualPipeTag")) as PushButton;
+            //PushButton manualPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("ManualPipeTag", "手動編號", addinAssmeblyPath, "Sinotech.SEM.ManualPipeTag")) as PushButton;
             //manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動編號);
-            PushButton autoOpeningTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoOpeningTag", "開口標籤", addinAssmeblyPath, "Sinotech.CSDSEM.AutoOpeningTag")) as PushButton;
+            PushButton autoOpeningTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoOpeningTag", "開口標籤", addinAssmeblyPath, "Sinotech.SEM.AutoOpeningTag")) as PushButton;
             autoOpeningTagBtn.LargeImage = convertFromBitmap(Properties.Resources.開口標籤);
             autoOpeningTagBtn.ToolTip = "在開口的中心點放置標籤, 顯示開口的編號為多少。";
             autoOpeningTagBtn.ToolTipImage = convertFromBitmap(Properties.Resources.開口標籤_原圖, 250);
-            PushButton openingTagArrayBtn = ribbonPanel.AddItem(new PushButtonData("OpeningTagArrayBtn", "標籤排序", addinAssmeblyPath, "Sinotech.CSDSEM.OpeningTagArray")) as PushButton;
+            PushButton openingTagArrayBtn = ribbonPanel.AddItem(new PushButtonData("OpeningTagArrayBtn", "標籤排序", addinAssmeblyPath, "Sinotech.SEM.OpeningTagArray")) as PushButton;
             openingTagArrayBtn.LargeImage = convertFromBitmap(Properties.Resources.標籤排序);
             openingTagArrayBtn.ToolTip = "將開口標籤移至空白處, 盡量避免標籤重疊。";
             openingTagArrayBtn.ToolTipImage = convertFromBitmap(Properties.Resources.標籤排序_原圖, 250);
-            PushButton PCCESBtn = ribbonPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", addinAssmeblyPath, "Sinotech.CSDSEM.OutPutPCCES")) as PushButton;
+            PushButton PCCESBtn = ribbonPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", addinAssmeblyPath, "Sinotech.SEM.OutPutPCCES")) as PushButton;
             PCCESBtn.LargeImage = convertFromBitmap(Properties.Resources.PCCES);
             PCCESBtn.ToolTip = "計算專案中的開口、套管尺寸與數量, 輸出至安裝檔中的\"工程數量詳細表\"範本。";
             PCCESBtn.ToolTipImage = convertFromBitmap(Properties.Resources.PCCES_原圖, 250);

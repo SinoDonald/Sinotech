@@ -59,10 +59,10 @@
 
   <!-- ── WinForms 設計工具表單編譯聲明 ── -->
   <ItemGroup>
-    <Compile Update="CSDSEM\AutoNumberSettingForm.cs">
+    <Compile Update="SEM\AutoNumberSettingForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Update="CSDSEM\ProfessionalCodeForm.cs">
+    <Compile Update="SEM\ProfessionalCodeForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="Properties\Resources.Designer.cs">

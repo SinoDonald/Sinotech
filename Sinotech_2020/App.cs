@@ -74,25 +74,34 @@ namespace Sinotech_2020
             PushButton autoUpdateBtn = ribbonPanel.AddItem(new PushButtonData("AutoUpdate", "自動升版", addinAssmeblyPath, "Sinotech_2020.SpeedTool.AutoUpdate")) as PushButton;
             autoUpdateBtn.LargeImage = convertFromBitmap(Properties.Resources.自動升版);
 
-            // 添加「CSD/SEM」面板
-            try { ribbonPanel = application.CreateRibbonPanel("中興自動化", "CSD/SEM"); }
+            // 添加「CSD」面板
+            try { ribbonPanel = application.CreateRibbonPanel("中興自動化", "CSD"); }
             catch
             {
                 List<RibbonPanel> panel_list = new List<RibbonPanel>();
                 panel_list = application.GetRibbonPanels("中興自動化");
-                foreach (RibbonPanel rp in panel_list) { if (rp.Name == "CSD/SEM") { ribbonPanel = rp; } }
+                foreach (RibbonPanel rp in panel_list) { if (rp.Name == "CSD") { ribbonPanel = rp; } }
             }
-            PushButton autoPipeOpenBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeOpen", "自動開口", addinAssmeblyPath, "Sinotech_2020.CSDSEM.LinkOpening")) as PushButton;
-            autoPipeOpenBtn.LargeImage = convertFromBitmap(Properties.Resources.自動開口);
-            PushButton autoNumberBtn = ribbonPanel.AddItem(new PushButtonData("AutoNumber", "自動編號", addinAssmeblyPath, "Sinotech_2020.CSDSEM.AutoNumber")) as PushButton;
-            autoNumberBtn.LargeImage = convertFromBitmap(Properties.Resources.自動編號);
-            PushButton manualPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("ManualPipeTag", "手動編號", addinAssmeblyPath, "Sinotech_2020.CSDSEM.ManualPipeTag")) as PushButton;
-            manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動編號);
-            PushButton autoPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeTag", "自動標籤", addinAssmeblyPath, "Sinotech_2020.CSDSEM.AutoPipeTag")) as PushButton;
+            PushButton autoPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeTag", "自動標籤", addinAssmeblyPath, "Sinotech_2020.CSD.AutoPipeTag")) as PushButton;
             autoPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.自動標籤);
-            PushButton tagArrayBtn = ribbonPanel.AddItem(new PushButtonData("TagArray", "標籤排序", addinAssmeblyPath, "Sinotech_2020.CSDSEM.TagArray")) as PushButton;
+            PushButton tagArrayBtn = ribbonPanel.AddItem(new PushButtonData("TagArray", "標籤排序", addinAssmeblyPath, "Sinotech_2020.CSD.TagArray")) as PushButton;
             tagArrayBtn.LargeImage = convertFromBitmap(Properties.Resources.標籤排序);
-            PushButton PCCESBtn = ribbonPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", addinAssmeblyPath, "Sinotech_2020.CSDSEM.OutPutPCCES")) as PushButton;
+
+            // 添加「SEM」面板
+            try { ribbonPanel = application.CreateRibbonPanel("中興自動化", "SEM"); }
+            catch
+            {
+                List<RibbonPanel> panel_list = new List<RibbonPanel>();
+                panel_list = application.GetRibbonPanels("中興自動化");
+                foreach (RibbonPanel rp in panel_list) { if (rp.Name == "SEM") { ribbonPanel = rp; } }
+            }
+            PushButton autoPipeOpenBtn = ribbonPanel.AddItem(new PushButtonData("AutoPipeOpen", "自動開口", addinAssmeblyPath, "Sinotech_2020.SEM.LinkOpening")) as PushButton;
+            autoPipeOpenBtn.LargeImage = convertFromBitmap(Properties.Resources.自動開口);
+            PushButton autoNumberBtn = ribbonPanel.AddItem(new PushButtonData("AutoNumber", "自動編號", addinAssmeblyPath, "Sinotech_2020.SEM.AutoNumber")) as PushButton;
+            autoNumberBtn.LargeImage = convertFromBitmap(Properties.Resources.自動編號);
+            PushButton manualPipeTagBtn = ribbonPanel.AddItem(new PushButtonData("ManualPipeTag", "手動編號", addinAssmeblyPath, "Sinotech_2020.SEM.ManualPipeTag")) as PushButton;
+            manualPipeTagBtn.LargeImage = convertFromBitmap(Properties.Resources.手動編號);
+            PushButton PCCESBtn = ribbonPanel.AddItem(new PushButtonData("OutPutPCCES", "PCCES", addinAssmeblyPath, "Sinotech_2020.SEM.OutPutPCCES")) as PushButton;
             PCCESBtn.LargeImage = convertFromBitmap(Properties.Resources.PCCES);
 
             // 添加「元件保護」面板
