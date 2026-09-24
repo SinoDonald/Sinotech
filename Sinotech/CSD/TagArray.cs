@@ -17,6 +17,7 @@ namespace Sinotech.CSD
     public class TagArray : IExternalCommand
     {
         private const string RegionLineStyleName = "CSD_標籤自動空白區";
+        private const string TagBoundsLineStyleName = "CSD_標籤診斷邊框";
         private const string TagArrayVersion = "TagArray-20260922-R13";
         private const int MaximumRowsPerRegion = 15;
         private const double AnnotationBoundsInsetPaperMm = 0.5;
@@ -42,6 +43,7 @@ namespace Sinotech.CSD
 
             List<IndependentTag> targetTags = selectedViews.SelectMany(view => CollectTargetTags(doc, view))
                 .GroupBy(tag => tag.Id.Value).Select(group => group.First()).ToList();
+            // 先關閉標籤族的「隨元件旋轉」，讓後續空白區判斷使用水平文字尺寸。
             List<string> familyWarnings = DisableRotateWithComponent(doc, targetTags);
             Dictionary<ElementId, List<PickedBox>> manualBoxes = chooseForm.IsAutoResult
                 ? new Dictionary<ElementId, List<PickedBox>>() : PickManualRegions(uiDoc, selectedViews);
@@ -73,63 +75,68 @@ namespace Sinotech.CSD
                     transaction.Start();
                     foreach (ViewPlan view in viewGroup)
                     {
-                    ClearOldRegionLines(doc, view);
-                    List<IndependentTag> tags = CollectTargetTags(doc, view);
-                    totalTags += tags.Count;
-                    foreach (IndependentTag tag in tags)
-                    {
-                        try
+                        ClearOldRegionLines(doc, view);
+                        List<IndependentTag> tags = CollectTargetTags(doc, view);
+                        totalTags += tags.Count;
+                        foreach (IndependentTag tag in tags) SetTagHorizontal(tag);
+                        doc.Regenerate();
+
+                        ViewFrame frame = new ViewFrame(view);
+                        List<Rect2D> tagBounds = tags.Select(tag => GetTagBounds(doc, tag, view, frame))
+                            .Where(bounds => bounds != null).ToList();
+                        HashSet<long> targetTagIds = new HashSet<long>(tags.Select(tag => tag.Id.Value));
+                        List<Rect2D> fixedTagBounds = new FilteredElementCollector(doc, view.Id)
+                            .OfClass(typeof(IndependentTag)).Cast<IndependentTag>()
+                            .Where(tag => !targetTagIds.Contains(tag.Id.Value) && !tag.IsOrphaned &&
+                                tag.Category != null &&
+                                (tag.Category.BuiltInCategory == BuiltInCategory.OST_PipeTags ||
+                                 tag.Category.BuiltInCategory == BuiltInCategory.OST_CableTrayTags))
+                            .Select(tag => GetTagBounds(doc, tag, view, frame))
+                            .Where(bounds => bounds != null).ToList();
+
+                        List<TagSize> sizes = tagBounds.Select(bounds =>
+                            new TagSize(bounds.Width, bounds.Height)).ToList();
+                        if (sizes.Count == 0)
                         {
-                            tag.TagOrientation = TagOrientation.Horizontal;
-                            if (tag.TagOrientation == TagOrientation.AnyModelDirection) tag.RotationAngle = 0;
+                            viewResults.Add($"{view.Name}：無引線標籤 {tags.Count} 個，成功移動 0 個");
+                            if (tags.Count > 0)
+                                processingMessages.Add($"視圖：{view.Name} | 無法量測無引線管道／電纜架標籤範圍");
+                            continue;
                         }
-                        catch { }
-                    }
-                    doc.Regenerate();
+                        double cellWidth = sizes.Max(size => size.Width);
+                        double cellHeight = sizes.Max(size => size.Height) + RowSpacingPaperMm * view.Scale / 304.8;
+                        int verticalMergeCount = 0;
+                        List<Rect2D> regions;
+                        List<Rect2D> displayRegions;
+                        List<Rect2D> placementSlots;
+                        if (chooseForm.IsAutoResult)
+                        {
+                            Rect2D cropBounds = frame.Project(view.CropBox);
+                            List<List<UV2>> cropLoops = GetCropLoops(view, frame);
+                            double annotationInset = AnnotationBoundsInsetPaperMm * view.Scale / 304.8;
+                            ObstacleSet obstacles = CollectVisibleObstacles(doc, view, frame, annotationInset);
+                            obstacles.Rectangles.AddRange(fixedTagBounds);
+                            regions = FindAutomaticRegions(cropBounds, cropLoops, obstacles, cellWidth, cellHeight,
+                                out verticalMergeCount, out placementSlots);
+                            // 顯示框直接由實際可放置格位組成，避免標籤使用到畫面上沒有框出的格位。
+                            displayRegions = MergeVerticalDisplayRegions(placementSlots, cellWidth, cellHeight,
+                                out int displayMergeCount);
+                            verticalMergeCount += displayMergeCount;
+                        }
+                        else
+                        {
+                            manualBoxes.TryGetValue(view.Id, out List<PickedBox> boxes);
+                            regions = CreateManualRegions(frame, boxes, cellWidth, cellHeight);
+                            placementSlots = CreateManualSlots(frame, boxes, cellWidth, cellHeight);
+                            displayRegions = regions;
+                        }
 
-                    ViewFrame frame = new ViewFrame(view);
-                    List<TagSize> sizes = tags.Select(tag => MeasureTag(tag, view, frame))
-                        .Where(size => size != null).ToList();
-                    if (sizes.Count == 0)
-                    {
-                        viewResults.Add($"{view.Name}：無引線標籤 {tags.Count} 個，成功移動 0 個");
-                        if (tags.Count > 0)
-                            processingMessages.Add($"視圖：{view.Name} | 無法量測無引線管道／電纜架標籤範圍");
-                        continue;
-                    }
-                    double cellWidth = sizes.Max(size => size.Width);
-                    double cellHeight = sizes.Max(size => size.Height) + RowSpacingPaperMm * view.Scale / 304.8;
-                    int verticalMergeCount = 0;
-                    List<Rect2D> regions;
-                    List<Rect2D> displayRegions;
-                    List<Rect2D> placementSlots;
-                    if (chooseForm.IsAutoResult)
-                    {
-                        Rect2D cropBounds = frame.Project(view.CropBox);
-                        List<List<UV2>> cropLoops = GetCropLoops(view, frame);
-                        double annotationInset = AnnotationBoundsInsetPaperMm * view.Scale / 304.8;
-                        ObstacleSet obstacles = CollectVisibleObstacles(doc, view, frame, annotationInset);
-                        regions = FindAutomaticRegions(cropBounds, cropLoops, obstacles, cellWidth, cellHeight,
-                            out verticalMergeCount, out placementSlots);
-                        // 顯示框直接由實際可放置格位組成，避免標籤使用到畫面上沒有框出的格位。
-                        displayRegions = MergeVerticalDisplayRegions(placementSlots, cellWidth, cellHeight,
-                            out int displayMergeCount);
-                        verticalMergeCount += displayMergeCount;
-                    }
-                    else
-                    {
-                        manualBoxes.TryGetValue(view.Id, out List<PickedBox> boxes);
-                        regions = CreateManualRegions(frame, boxes, cellWidth, cellHeight);
-                        placementSlots = CreateManualSlots(frame, boxes, cellWidth, cellHeight);
-                        displayRegions = regions;
-                    }
-
-                    int moved = ArrangeTagsInSlots(doc, view, frame, tags, displayRegions, placementSlots,
-                        cellWidth, cellHeight, !chooseForm.IsAutoResult,
-                        out List<string> viewUnmoved);
-                    totalMoved += moved;
-                    unmovedTags.AddRange(viewUnmoved);
-                    viewResults.Add($"{view.Name}：無引線標籤 {tags.Count} 個，成功移動 {moved} 個");
+                        int moved = ArrangeTagsInSlots(doc, view, frame, tags, displayRegions, placementSlots,
+                            cellWidth, cellHeight, !chooseForm.IsAutoResult, fixedTagBounds,
+                            out List<string> viewUnmoved);
+                        totalMoved += moved;
+                        unmovedTags.AddRange(viewUnmoved);
+                        viewResults.Add($"{view.Name}：無引線標籤 {tags.Count} 個，成功移動 {moved} 個");
                     }
                     transaction.Commit();
                 }
@@ -138,6 +145,16 @@ namespace Sinotech.CSD
             processingMessages.AddRange(familyWarnings.Distinct()
                 .Select(warning => $"無法關閉「隨元件旋轉」：{warning}"));
             WriteDiagnosticReport(doc, unmovedTags, processingMessages);
+            ViewPlan lastSelectedView = selectedViews.LastOrDefault();
+            if (lastSelectedView != null)
+            {
+                try
+                {
+                    uiDoc.RequestViewChange(lastSelectedView);
+                    System.Windows.Forms.Application.DoEvents();
+                }
+                catch { }
+            }
             TaskDialog.Show("標籤空白區域排序", $"處理完成。\n" +
                 $"無引線標籤：{totalTags} 個\n成功移動：{totalMoved} 個\n\n" +
                 string.Join("\n", viewResults));
@@ -150,6 +167,24 @@ namespace Sinotech.CSD
                 .Cast<IndependentTag>().Where(tag => tag.Category != null && !tag.HasLeader && !tag.IsOrphaned &&
                     (tag.Category.BuiltInCategory == BuiltInCategory.OST_PipeTags ||
                      tag.Category.BuiltInCategory == BuiltInCategory.OST_CableTrayTags)).ToList();
+        }
+
+        private static void SetTagHorizontal(IndependentTag tag)
+        {
+            // AnyModelDirection 必須在切換方向前先把既有旋轉角歸零。
+            try
+            {
+                if (tag.TagOrientation == TagOrientation.AnyModelDirection)
+                    tag.RotationAngle = 0.0;
+            }
+            catch { }
+            try { tag.TagOrientation = TagOrientation.Horizontal; } catch { }
+            try
+            {
+                if (tag.TagOrientation == TagOrientation.AnyModelDirection)
+                    tag.RotationAngle = 0.0;
+            }
+            catch { }
         }
 
         private static List<string> DisableRotateWithComponent(Document projectDoc, IEnumerable<IndependentTag> tags)
@@ -222,6 +257,7 @@ namespace Sinotech.CSD
         private static int ArrangeTagsInSlots(Document doc, ViewPlan view, ViewFrame frame,
             List<IndependentTag> tags, List<Rect2D> displayRegions, List<Rect2D> slots,
             double cellWidth, double cellHeight, bool useManualSlotOrder,
+            IEnumerable<Rect2D> fixedTagBounds,
             out List<string> unmoved)
         {
             unmoved = new List<string>();
@@ -237,45 +273,172 @@ namespace Sinotech.CSD
 
             List<PlacementGroup> groups = BuildPlacementGroups(displayRegions, slots);
             if (!useManualSlotOrder) NormalizePlacementSlots(groups, cellWidth, cellHeight);
-            AssignTagsToGroups(data.Where(item => item.IsPipe), groups);
-            AssignTagsToGroups(data.Where(item => !item.IsPipe), groups);
+            AssignTagsToGroups(data, groups);
 
             HashSet<ElementId> assignedIds = new HashSet<ElementId>(groups
                 .SelectMany(group => group.AssignedTags).Select(item => item.Tag.Id));
             foreach (TagPlacementData item in data.Where(item => !assignedIds.Contains(item.Tag.Id)))
                 unmoved.Add(DescribeUnmoved(view, item.Tag, "空白格位不足"));
 
+            OptimizeOverlappedTags(groups, useManualSlotOrder, fixedTagBounds, view);
+            List<TagPlacementPlan> plans = BuildPlacementPlans(groups, useManualSlotOrder);
+
             int moved = 0;
             double placementTolerance = PlacementTolerancePaperMm * view.Scale / 304.8;
-            foreach (PlacementGroup group in groups)
+            foreach (TagPlacementPlan plan in plans)
             {
-                List<Rect2D> availableSlots = useManualSlotOrder
-                    ? group.Slots.OrderBy(slot => slot.MinU)
-                        .ThenByDescending(slot => (slot.MinV + slot.MaxV) / 2.0).ToList()
-                    : group.Slots.OrderByDescending(slot => (slot.MinV + slot.MaxV) / 2.0)
-                        .ThenBy(slot => slot.MinU).ToList();
-                List<TagPlacementData> orderedTags = group.AssignedTags.Where(item => item.IsPipe)
-                    .OrderByDescending(item => item.AnchorV)
-                    .Concat(group.AssignedTags.Where(item => !item.IsPipe)
-                        .OrderByDescending(item => item.AnchorV)).ToList();
-
-                foreach (TagPlacementData item in orderedTags)
+                TagPlacementData item = plan.Data;
+                string failureReason;
+                bool applied = ApplyTagPlacement(doc, view, frame, item, plan.Slot,
+                    placementTolerance, out failureReason);
+                if (applied)
                 {
-                    bool applied = false;
-                    string failureReason = availableSlots.Count == 0 ? "沒有剩餘空白格位" : "無法套用任何空白格位";
-                    for (int slotIndex = 0; slotIndex < availableSlots.Count && !applied; slotIndex++)
-                    {
-                        Rect2D slot = availableSlots[slotIndex];
-                        applied = ApplyTagPlacement(doc, view, frame, item, slot, placementTolerance,
-                            out failureReason);
-                        if (applied) availableSlots.RemoveAt(slotIndex);
-                    }
-                    if (applied) moved++;
-                    else unmoved.Add(DescribeUnmoved(view, item.Tag,
-                        $"無法設定標籤位置或引線（{failureReason}）"));
+                    moved++;
+                    continue;
                 }
+                unmoved.Add(DescribeUnmoved(view, item.Tag,
+                    $"無法設定標籤位置或引線（{failureReason}）"));
             }
             return moved;
+        }
+
+        private static List<TagPlacementPlan> BuildPlacementPlans(List<PlacementGroup> groups,
+            bool useManualSlotOrder)
+        {
+            List<TagPlacementPlan> plans = new List<TagPlacementPlan>();
+            foreach (PlacementGroup group in groups)
+            {
+                List<Rect2D> orderedSlots = GetOrderedSlots(group, useManualSlotOrder);
+                List<TagPlacementData> orderedItems = GetOrderedTags(group);
+                int count = Math.Min(orderedSlots.Count, orderedItems.Count);
+                for (int index = 0; index < count; index++)
+                    plans.Add(new TagPlacementPlan(orderedItems[index], orderedSlots[index],
+                        GetPlacedTagBounds(orderedItems[index], orderedSlots[index])));
+            }
+            return plans;
+        }
+
+        private static void OptimizeOverlappedTags(List<PlacementGroup> groups,
+            bool useManualSlotOrder, IEnumerable<Rect2D> fixedTagBounds, ViewPlan view)
+        {
+            int iterationLimit = Math.Max(1, groups.Sum(group => group.AssignedTags.Count) * 2);
+            for (int iteration = 0; iteration < iterationLimit; iteration++)
+            {
+                List<TagPlacementPlan> currentPlans = BuildPlacementPlans(groups, useManualSlotOrder);
+                int currentScore = CountLeaderTagOverlaps(currentPlans, fixedTagBounds, view);
+                if (currentScore == 0) return;
+
+                HashSet<long> candidates = GetOverlapRelatedTagIds(currentPlans, fixedTagBounds, view);
+                TagPlacementData bestTag = null;
+                PlacementGroup bestSource = null;
+                PlacementGroup bestTarget = null;
+                int bestScore = currentScore;
+                double bestDistance = double.MaxValue;
+
+                foreach (TagPlacementData item in groups.SelectMany(group => group.AssignedTags)
+                    .Where(item => candidates.Contains(item.Tag.Id.Value)).ToList())
+                {
+                    PlacementGroup source = groups.First(group => group.AssignedTags.Contains(item));
+                    foreach (PlacementGroup target in groups.Where(group => group != source &&
+                        group.AssignedTags.Count < group.Slots.Count))
+                    {
+                        source.AssignedTags.Remove(item);
+                        target.AssignedTags.Add(item);
+                        int candidateScore = CountLeaderTagOverlaps(
+                            BuildPlacementPlans(groups, useManualSlotOrder), fixedTagBounds, view);
+                        target.AssignedTags.Remove(item);
+                        source.AssignedTags.Add(item);
+
+                        double distance = DistanceToRect(new UV2(item.AnchorU, item.AnchorV),
+                            target.DisplayBounds);
+                        if (candidateScore > bestScore ||
+                            (candidateScore == bestScore && candidateScore == currentScore) ||
+                            (candidateScore == bestScore && distance >= bestDistance)) continue;
+                        bestScore = candidateScore;
+                        bestDistance = distance;
+                        bestTag = item;
+                        bestSource = source;
+                        bestTarget = target;
+                    }
+                }
+
+                if (bestTag == null || bestScore >= currentScore) return;
+                bestSource.AssignedTags.Remove(bestTag);
+                bestTarget.AssignedTags.Add(bestTag);
+            }
+        }
+
+        private static int CountLeaderTagOverlaps(List<TagPlacementPlan> plans,
+            IEnumerable<Rect2D> fixedTagBounds, ViewPlan view)
+        {
+            int count = 0;
+            foreach (TagPlacementPlan leader in plans)
+            {
+                List<Segment2D> segments = GetPlannedLeaderSegments(leader, view);
+                count += plans.Where(body => body.Data.Tag.Id.Value != leader.Data.Tag.Id.Value)
+                    .Count(body => segments.Any(segment => segment.Intersects(body.Body)));
+                count += fixedTagBounds.Count(bounds =>
+                    segments.Any(segment => segment.Intersects(bounds)));
+            }
+            return count;
+        }
+
+        private static HashSet<long> GetOverlapRelatedTagIds(List<TagPlacementPlan> plans,
+            IEnumerable<Rect2D> fixedTagBounds, ViewPlan view)
+        {
+            HashSet<long> result = new HashSet<long>();
+            foreach (TagPlacementPlan leader in plans)
+            {
+                List<Segment2D> segments = GetPlannedLeaderSegments(leader, view);
+                foreach (TagPlacementPlan body in plans.Where(body =>
+                    body.Data.Tag.Id.Value != leader.Data.Tag.Id.Value &&
+                    segments.Any(segment => segment.Intersects(body.Body))))
+                    result.Add(body.Data.Tag.Id.Value);
+                if (fixedTagBounds.Any(bounds => segments.Any(segment => segment.Intersects(bounds))))
+                    result.Add(leader.Data.Tag.Id.Value);
+            }
+            return result;
+        }
+
+        private static List<Segment2D> GetPlannedLeaderSegments(TagPlacementPlan plan, ViewPlan view)
+        {
+            double centerV = (plan.Body.MinV + plan.Body.MaxV) / 2.0;
+            double centerU = (plan.Body.MinU + plan.Body.MaxU) / 2.0;
+            double sideU = plan.Data.AnchorU <= centerU ? plan.Body.MinU : plan.Body.MaxU;
+            UV2 tagSide = new UV2(sideU, centerV);
+            UV2 anchor = new UV2(plan.Data.AnchorU, plan.Data.AnchorV);
+            double tolerance = HorizontalLeaderTolerancePaperMm * view.Scale / 304.8;
+            if (Math.Abs(plan.Data.AnchorV - centerV) <= tolerance)
+                return new List<Segment2D> { new Segment2D(tagSide, anchor) };
+            UV2 elbow = new UV2(plan.Data.AnchorU, centerV);
+            return new List<Segment2D>
+            {
+                new Segment2D(tagSide, elbow),
+                new Segment2D(elbow, anchor)
+            };
+        }
+
+        private static List<Rect2D> GetOrderedSlots(PlacementGroup group, bool useManualSlotOrder)
+        {
+            return useManualSlotOrder
+                ? group.Slots.OrderBy(slot => slot.MinU)
+                    .ThenByDescending(slot => (slot.MinV + slot.MaxV) / 2.0).ToList()
+                : group.Slots.OrderByDescending(slot => (slot.MinV + slot.MaxV) / 2.0)
+                    .ThenBy(slot => slot.MinU).ToList();
+        }
+
+        private static List<TagPlacementData> GetOrderedTags(PlacementGroup group)
+        {
+            return group.AssignedTags.OrderByDescending(item => item.AnchorV)
+                .ThenBy(item => item.AnchorU).ToList();
+        }
+
+        private static Rect2D GetPlacedTagBounds(TagPlacementData data, Rect2D slot)
+        {
+            // 標籤文字框的左上角貼齊格位左上角；格位剩餘高度留作列間距。
+            double centerV = slot.MaxV - data.BodyHeight / 2.0;
+            return new Rect2D(slot.MinU, slot.MinU + data.BodyWidth,
+                centerV - data.BodyHeight / 2.0, centerV + data.BodyHeight / 2.0);
         }
 
         private static TagPlacementData CreateTagPlacementData(Document doc, ViewPlan view,
@@ -285,14 +448,12 @@ namespace Sinotech.CSD
             {
                 Reference targetReference = tag.GetTaggedReferences().FirstOrDefault();
                 if (targetReference == null) return null;
-                // CSD 管道／電纜架標籤建立時，無引線標籤的 Head 就位於目前視圖內
-                // 可見管段的長度中心；保留這個原始點作為最近區域與引線端點基準。
-                XYZ anchor = tag.TagHeadPosition;
-                BoundingBoxXYZ box = tag.get_BoundingBox(view);
-                if (anchor == null || box == null) return null;
+                XYZ originalHead = tag.TagHeadPosition;
+                XYZ anchor = GetTaggedAnchor(doc, targetReference, originalHead);
+                Rect2D body = GetTagBounds(doc, tag, view, frame);
+                if (anchor == null || originalHead == null || body == null) return null;
 
-                Rect2D body = frame.Project(box);
-                UV2 head = frame.Project(tag.TagHeadPosition);
+                UV2 head = frame.Project(originalHead);
                 UV2 anchorUv = frame.Project(anchor);
                 return new TagPlacementData
                 {
@@ -395,7 +556,7 @@ namespace Sinotech.CSD
                 try
                 {
                     double desiredLeft = slot.MinU;
-                    double desiredCenterV = (slot.MinV + slot.MaxV) / 2.0;
+                    double desiredCenterV = slot.MaxV - data.BodyHeight / 2.0;
                     double desiredHeadU = desiredLeft - data.LeftOffsetFromHead;
                     double desiredHeadV = desiredCenterV - data.CenterVOffsetFromHead;
 
@@ -413,6 +574,9 @@ namespace Sinotech.CSD
                     data.Tag.HasLeader = true;
                     double horizontalTolerance = HorizontalLeaderTolerancePaperMm * view.Scale / 304.8;
                     bool isHorizontal = Math.Abs(data.AnchorV - desiredCenterV) <= horizontalTolerance;
+
+                    // 只有水平直線使用貼附端點。標註點與標籤分處左右兩側，
+                    // Revit 會將引線接到水平文字框的左端或右端。
                     if (isHorizontal)
                     {
                         data.Tag.LeaderEndCondition = LeaderEndCondition.Attached;
@@ -426,8 +590,8 @@ namespace Sinotech.CSD
                             data.Tag.TagHeadPosition = finalHeadPosition;
                             data.Tag.SetLeaderEnd(data.TargetReference, data.AnchorPoint);
 
-                            // 標籤端至 Elbow 維持水平，Elbow 至被標註點維持垂直，
-                            // 因此只會在標籤左側或右側形成一個 90 度轉折。
+                            // 所有非水平引線使用自由端點。標籤端至 Elbow 維持水平，
+                            // Elbow 至被標註點維持垂直，形成 90 度 L 型並從左右側進入。
                             XYZ elbow = frame.PointAt(data.AnchorPoint, data.AnchorU, desiredCenterV);
                             data.Tag.SetLeaderElbow(data.TargetReference, elbow);
                             StabilizeTagHead(doc, data.Tag, finalHeadPosition);
@@ -435,12 +599,10 @@ namespace Sinotech.CSD
                             data.Tag.SetLeaderElbow(data.TargetReference, elbow);
                             doc.Regenerate();
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            // 個別標籤族若不支援自由端點，保留 R10 的貼附引線，
-                            // 不讓引線整形失敗連帶復原已正確完成的標籤位置。
-                            data.Tag.LeaderEndCondition = LeaderEndCondition.Attached;
-                            StabilizeTagHead(doc, data.Tag, finalHeadPosition);
+                            throw new InvalidOperationException(
+                                $"無法設定自由端點與 90 度轉折：{ex.Message}", ex);
                         }
                     }
 
@@ -641,7 +803,9 @@ namespace Sinotech.CSD
         private static bool IsRegionLine(Element element)
         {
             CurveElement curve = element as CurveElement;
-            return curve?.LineStyle != null && curve.LineStyle.Name == RegionLineStyleName;
+            if (curve?.LineStyle == null) return false;
+            string styleName = curve.LineStyle.Name;
+            return styleName == RegionLineStyleName || styleName == TagBoundsLineStyleName;
         }
 
         private static Rect2D InsetAnnotationBounds(Rect2D rect, double requestedInset)
@@ -997,33 +1161,103 @@ namespace Sinotech.CSD
             if (ids.Count > 0) doc.Delete(ids);
         }
 
-        private static GraphicsStyle GetOrCreateRegionLineStyle(Document doc)
+        private static Rect2D GetTagBounds(Document doc, IndependentTag tag, ViewPlan view, ViewFrame frame)
         {
-            Category lines = doc.Settings.Categories.get_Item(BuiltInCategory.OST_Lines);
-            Category style = lines.SubCategories.Cast<Category>()
-                .FirstOrDefault(category => category.Name == RegionLineStyleName);
-            if (style == null) style = doc.Settings.Categories.NewSubcategory(lines, RegionLineStyleName);
-            style.LineColor = new Autodesk.Revit.DB.Color(0, 255, 255);
-            try { style.SetLineWeight(3, GraphicsStyleType.Projection); } catch { }
-            return style.GetGraphicsStyle(GraphicsStyleType.Projection);
+            XYZ originalHead = null;
+            SubTransaction probe = null;
+            try
+            {
+                originalHead = tag.TagHeadPosition;
+                if (originalHead == null) return null;
+
+                Reference targetReference = tag.GetTaggedReferences().FirstOrDefault();
+                XYZ anchor = GetTaggedAnchor(doc, targetReference, originalHead);
+                if (anchor == null) return GetCurrentTagBounds(tag, view, frame);
+
+                // Revit 有些無引線標籤的 BoundingBox 仍包含標籤頭到被標註元件間的
+                // 隱形範圍。暫時把標籤頭移到被標註點使這段距離歸零，量測後回復。
+                probe = new SubTransaction(doc);
+                probe.Start();
+                UV2 anchorUv = frame.Project(anchor);
+                tag.HasLeader = false;
+                tag.TagHeadPosition = frame.PointAt(originalHead, anchorUv.U, anchorUv.V);
+                doc.Regenerate();
+
+                BoundingBoxXYZ bounds = tag.get_BoundingBox(view);
+                if (bounds == null) return null;
+                Rect2D projected = frame.Project(bounds);
+                UV2 probeHead = frame.Project(tag.TagHeadPosition);
+                UV2 originalHeadUv = frame.Project(originalHead);
+                double offsetU = originalHeadUv.U - probeHead.U;
+                double offsetV = originalHeadUv.V - probeHead.V;
+                Rect2D restoredPositionBounds = new Rect2D(
+                    projected.MinU + offsetU, projected.MaxU + offsetU,
+                    projected.MinV + offsetV, projected.MaxV + offsetV);
+                return restoredPositionBounds.Width > Epsilon && restoredPositionBounds.Height > Epsilon
+                    ? restoredPositionBounds : null;
+            }
+            catch
+            {
+                if (probe != null && probe.GetStatus() == TransactionStatus.Started)
+                {
+                    try { probe.RollBack(); } catch { }
+                    probe = null;
+                }
+                return GetCurrentTagBounds(tag, view, frame);
+            }
+            finally
+            {
+                if (probe != null && probe.GetStatus() == TransactionStatus.Started)
+                    try { probe.RollBack(); } catch { }
+            }
         }
 
-        private static void DrawRegions(Document doc, ViewPlan view, ViewFrame frame,
-            IEnumerable<Rect2D> regions, GraphicsStyle style)
+        private static Rect2D GetCurrentTagBounds(IndependentTag tag, ViewPlan view, ViewFrame frame)
         {
-            foreach (Rect2D box in regions)
+            try
             {
-                XYZ a = frame.PointAt(view.Origin, box.MinU, box.MinV);
-                XYZ b = frame.PointAt(view.Origin, box.MaxU, box.MinV);
-                XYZ c = frame.PointAt(view.Origin, box.MaxU, box.MaxV);
-                XYZ d = frame.PointAt(view.Origin, box.MinU, box.MaxV);
-                foreach (Line line in new[] { Line.CreateBound(a, b), Line.CreateBound(b, c),
-                    Line.CreateBound(c, d), Line.CreateBound(d, a) })
-                {
-                    DetailCurve curve = doc.Create.NewDetailCurve(view, line);
-                    curve.LineStyle = style;
-                }
+                BoundingBoxXYZ bounds = tag.get_BoundingBox(view);
+                if (bounds == null) return null;
+                Rect2D projected = frame.Project(bounds);
+                return projected.Width > Epsilon && projected.Height > Epsilon ? projected : null;
             }
+            catch { return null; }
+        }
+
+        private static XYZ GetTaggedAnchor(Document doc, Reference reference, XYZ nearPoint)
+        {
+            if (reference == null) return null;
+            try
+            {
+                Element hostElement = doc.GetElement(reference.ElementId);
+                Transform transform = Transform.Identity;
+                Element target = hostElement;
+                if (hostElement is RevitLinkInstance link &&
+                    reference.LinkedElementId != ElementId.InvalidElementId)
+                {
+                    Document linkDoc = link.GetLinkDocument();
+                    target = linkDoc?.GetElement(reference.LinkedElementId);
+                    transform = link.GetTotalTransform();
+                }
+                if (target == null) return null;
+
+                if (target.Location is LocationCurve locationCurve)
+                {
+                    XYZ localNearPoint = transform.IsIdentity
+                        ? nearPoint : transform.Inverse.OfPoint(nearPoint);
+                    IntersectionResult result = locationCurve.Curve.Project(localNearPoint);
+                    if (result != null)
+                        return transform.IsIdentity ? result.XYZPoint : transform.OfPoint(result.XYZPoint);
+                }
+                if (target.Location is LocationPoint locationPoint)
+                    return transform.IsIdentity ? locationPoint.Point : transform.OfPoint(locationPoint.Point);
+
+                BoundingBoxXYZ bounds = target.get_BoundingBox(null);
+                if (bounds == null) return null;
+                XYZ center = bounds.Transform.OfPoint((bounds.Min + bounds.Max) * 0.5);
+                return transform.IsIdentity ? center : transform.OfPoint(center);
+            }
+            catch { return null; }
         }
 
         private static double Distance(UV2 a, UV2 b)
@@ -1065,6 +1299,15 @@ namespace Sinotech.CSD
             public Rect2D DisplayBounds { get; }
             public List<Rect2D> Slots { get; } = new List<Rect2D>();
             public List<TagPlacementData> AssignedTags { get; } = new List<TagPlacementData>();
+        }
+
+        private class TagPlacementPlan
+        {
+            public TagPlacementPlan(TagPlacementData data, Rect2D slot, Rect2D body)
+            { Data = data; Slot = slot; Body = body; }
+            public TagPlacementData Data { get; }
+            public Rect2D Slot { get; }
+            public Rect2D Body { get; }
         }
 
         private class UV2
