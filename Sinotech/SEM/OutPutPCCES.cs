@@ -372,6 +372,20 @@ namespace Sinotech.SEM
                 (element is FamilyInstance instance && instance.Symbol.Family.Name.Contains("基座"));
         }
 
+        private static bool IsPullBox(Element element)
+        {
+            return element.Name.Contains("拉線盒") ||
+                (element is FamilyInstance instance && instance.Symbol.Family.Name.Contains("拉線盒"));
+        }
+
+        internal static string GetPullBoxSize(double depthMillimeters)
+        {
+            if ((double.IsNaN(depthMillimeters) || double.IsInfinity(depthMillimeters)) || depthMillimeters <= 0)
+                throw new InvalidOperationException("拉線盒深度必須為有效的正數。");
+            // 容許 Revit 單位轉換的浮點誤差，200 mm 本身歸入 100D。
+            return depthMillimeters > 200 + DiameterToleranceMillimeters ? "450Lx450Wx300D" : "450Lx450Wx100D";
+        }
+
         private static List<Element> CollectExportElements(Document doc)
         {
 
@@ -392,7 +406,9 @@ namespace Sinotech.SEM
                 .WherePasses(new ElementMulticategoryFilter(new[] { BuiltInCategory.OST_GenericModel, BuiltInCategory.OST_ElectricalEquipment }))
                 .WhereElementIsNotElementType().Where(IsPlatform).ToList();
             openings.AddRange(platforms);
-            return openings.Where(x => IsPlatform(x) || x.Category.Id.Value == (long)BuiltInCategory.OST_Conduit ||
+            openings.AddRange(new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_GenericModel)
+                .WhereElementIsNotElementType().Where(IsPullBox));
+            return openings.Where(x => IsPlatform(x) || IsPullBox(x) || x.Category.Id.Value == (long)BuiltInCategory.OST_Conduit ||
                 x.Name.Contains("圓形") || x.Name.Contains("風管") || x.Name.Contains("電纜架"))
                 .GroupBy(x => x.Id).Select(group => group.First()).ToList();
         }
@@ -444,7 +460,29 @@ namespace Sinotech.SEM
                     CommentsLinkPrj(opening, modelInfo);
                     modelInfo.familyName = opening.Name; // 開口名稱
                     // 套管or開口
-                    if (!IsPlatform(opening) && opening.Name.Contains("圓形"))
+                    if (IsPullBox(opening))
+                    {
+                        modelInfo.type = "電機接線盒";
+                        modelInfo.pipeOrDuct = "電機接線盒";
+                        modelInfo.pipeOrDuctInt = 7;
+                        modelInfo.unit = "個";
+                        Parameter depth = opening.LookupParameter("拉線盒深度");
+                        if (depth == null || !depth.HasValue)
+                            depth = doc.GetElement(opening.GetTypeId())?.LookupParameter("拉線盒深度");
+                        if (depth?.StorageType != StorageType.Double || !depth.HasValue)
+                            throw new InvalidOperationException("缺少可讀取的「拉線盒深度」長度參數。");
+                        double depthMillimeters = UnitUtils.ConvertFromInternalUnits(depth.AsDouble(), UnitTypeId.Millimeters);
+                        string size = GetPullBoxSize(depthMillimeters);
+                        var matches = openingContrastList.Where(x => x.type == "電機接線盒" &&
+                            x.name.Contains("金屬拉線箱") &&
+                            x.name.Replace(" ", "").IndexOf(size, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+                        if (matches.Count != 1 || string.IsNullOrWhiteSpace(matches[0].prjNumber))
+                            throw new InvalidOperationException("Excel「All」工作表需有唯一且含工程編號的「電機接線盒及配件，金屬拉線箱，" + size + "」項目。");
+                        modelInfo.description = matches[0].name;
+                        modelInfo.prjNumber = matches[0].prjNumber;
+                        modelInfo.count = 1;
+                    }
+                    else if (!IsPlatform(opening) && opening.Name.Contains("圓形"))
                     {
                         modelInfo.type = "管及管件";
                         modelInfo.pipeOrDuct = "套管";
@@ -614,7 +652,7 @@ namespace Sinotech.SEM
                     else
                     {
                         modelInfo.level = doc.GetElement(opening.LevelId) as Level;
-                        if (modelInfo.level == null && IsPlatform(opening))
+                        if (modelInfo.level == null && (IsPlatform(opening) || IsPullBox(opening)))
                         {
                             Parameter levelParameter = opening.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM)
                                 ?? opening.get_Parameter(BuiltInParameter.INSTANCE_REFERENCE_LEVEL_PARAM);
@@ -630,6 +668,8 @@ namespace Sinotech.SEM
                 }
                 catch (Exception ex)
                 {
+                    if (IsPullBox(opening))
+                        throw new InvalidOperationException("拉線盒 " + opening.Id.Value + " 的 PCCES 資料讀取失敗，已停止匯出。\n" + ex.Message, ex);
                     if (IsPlatform(opening))
                         throw new InvalidOperationException("基座 " + opening.Id.Value + " 的 PCCES 資料讀取失敗，已停止匯出。\n" + ex.Message, ex);
                 }

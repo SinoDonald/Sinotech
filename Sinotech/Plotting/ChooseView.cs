@@ -1,4 +1,4 @@
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
@@ -8,6 +8,8 @@ using System.Linq;
 using System.Windows.Forms;
 using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 using View = Autodesk.Revit.DB.View;
+using ComboBox = System.Windows.Forms.ComboBox;
+using TextBox = System.Windows.Forms.TextBox;
 
 namespace Sinotech.Plotting
 {
@@ -33,6 +35,136 @@ namespace Sinotech.Plotting
         List<ViewInfo> chooseViewSheets = new List<ViewInfo>(); // 選擇要匯出的圖紙
         List<FormatOption> formatOptionList = new List<FormatOption>(); // 格式類型與選項
         List<string> checkedNodesList = new List<string>(); // 儲存選取的視圖節點
+        private readonly ComboBox[] nameParameters = new ComboBox[3];
+        private readonly TextBox[] nameSeparators = new TextBox[2];
+        private Label namePreview;
+        private const string DefaultNameParameter = "圖框-電腦圖號";
+
+        private void InitializeFileNaming()
+        {
+            SuspendLayout();
+            ClientSize = new System.Drawing.Size(620, 650);
+            MinimumSize = Size;
+            label3.Text = "匯出檔名（最多三個圖紙參數）";
+            label3.Location = new System.Drawing.Point(139, 13);
+
+            var names = new SortedSet<string>(StringComparer.CurrentCulture);
+            names.Add(DefaultNameParameter);
+            foreach (var info in viewInfoList)
+                foreach (Parameter parameter in info.view.Parameters)
+                    if (parameter.StorageType != StorageType.None)
+                        names.Add(parameter.Definition.Name);
+            for (int i = 0; i < 3; i++)
+            {
+                var label = new Label { Text = "參數 " + (i + 1), AutoSize = true,
+                    Location = new System.Drawing.Point(13 + i * 200, 70) };
+                var combo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList,
+                    Location = new System.Drawing.Point(13 + i * 200, 92), Width = 190 };
+                if (i > 0) combo.Items.Add("（不使用）");
+                combo.Items.AddRange(names.Cast<object>().ToArray());
+                combo.SelectedItem = i == 0 ? DefaultNameParameter : "（不使用）";
+                nameParameters[i] = combo;
+                combo.SelectedIndexChanged += (sender, args) => UpdateNamePreview();
+                Controls.Add(label);
+                Controls.Add(combo);
+                if (i < 2)
+                {
+                    var separatorLabel = new Label { Text = "連接 " + (i + 1), AutoSize = true,
+                        Location = new System.Drawing.Point(13 + i * 200, 128) };
+                    var separator = new TextBox { Text = "_", Width = 130, MaxLength = 30,
+                        Location = new System.Drawing.Point(70 + i * 200, 124) };
+                    nameSeparators[i] = separator;
+                    separator.TextChanged += (sender, args) => UpdateNamePreview();
+                    Controls.Add(separatorLabel);
+                    Controls.Add(separator);
+                }
+            }
+            namePreview = new Label { AutoEllipsis = true, Width = 590, Height = 45,
+                Location = new System.Drawing.Point(13, 155) };
+            Controls.Add(namePreview);
+            treeView1.AfterSelect += (sender, args) => UpdateNamePreview();
+            UpdateNamePreview();
+            ResumeLayout(false);
+            LayoutExportControls();
+            ClientSizeChanged += (sender, args) => LayoutExportControls();
+        }
+
+        private void LayoutExportControls()
+        {
+            // 明確依 ClientSize 配置，避免 SuspendLayout 期間變更視窗尺寸
+            // 造成設計工具的 Anchor 基準仍停留在原始窄版視窗。
+            const int margin = 13;
+            const int listTop = 205;
+            int footerTop = ClientSize.Height - margin - 33;
+            treeView1.SetBounds(margin, listTop, ClientSize.Width - margin * 2,
+                Math.Max(100, footerTop - listTop - 12));
+            treeView1.BorderStyle = BorderStyle.FixedSingle;
+            treeView1.FullRowSelect = true;
+            treeView1.HideSelection = false;
+            optionCB.SetBounds(margin, footerTop + 4, 200, 25);
+            cancel.SetBounds(ClientSize.Width - margin - 72, footerTop, 72, 33);
+            sure.SetBounds(cancel.Left - 12 - 72, footerTop, 72, 33);
+            if (namePreview != null) namePreview.Width = ClientSize.Width - margin * 2;
+        }
+
+        private string BuildFileName(ViewInfo info)
+        {
+            string result = "";
+            for (int i = 0; i < nameParameters.Length; i++)
+            {
+                if (i > 0 && nameParameters[i].SelectedIndex == 0) continue;
+                string parameterName = nameParameters[i].Text;
+                Parameter parameter = info.view.LookupParameter(parameterName);
+                string value = parameter == null ? null : parameter.StorageType == StorageType.String
+                    ? parameter.AsString() : parameter.AsValueString();
+                if (string.IsNullOrWhiteSpace(value))
+                    value = (info.view as ViewSheet)?.SheetNumber ?? "Sheet_" + info.view.Id.Value;
+                if (result.Length > 0) result += nameSeparators[i - 1].Text;
+                result += value;
+            }
+            return SanitizeFileName(result, "Sheet_" + info.view.Id.Value);
+        }
+
+        private static string SanitizeFileName(string value, string fallback)
+        {
+            var invalid = Path.GetInvalidFileNameChars();
+            string name = new string(value.Select(c => invalid.Contains(c) || char.IsControl(c) ? '_' : c).ToArray());
+            name = name.Trim().TrimEnd('.', ' ');
+            if (name.Length == 0) name = fallback;
+            string stem = name.Split('.')[0].TrimEnd(' ');
+            string[] reserved = { "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$",
+                "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+                "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+                "COM¹", "COM²", "COM³", "LPT¹", "LPT²", "LPT³" };
+            if (reserved.Contains(stem, StringComparer.OrdinalIgnoreCase)) name = "_" + name;
+            return name;
+        }
+
+        private void UpdateNamePreview()
+        {
+            if (namePreview == null) return;
+            var info = viewInfoList.FirstOrDefault(x => x.name == treeView1.SelectedNode?.Text)
+                ?? viewInfoList.FirstOrDefault();
+            namePreview.Text = info == null ? "沒有可匯出的圖紙" : "檔名預覽：" + BuildFileName(info)
+                + "\n非法字元自動替換為 _；參數缺值使用圖紙號碼；重名自動加流水號。";
+        }
+
+        private static string ReserveFileName(string folder, string name, HashSet<string> usedNames)
+        {
+            // 保留副檔名、流水號及 Revit 附屬輸出檔名所需空間。
+            int limit = Math.Min(160, 240 - folder.Length - 1 - 16);
+            if (limit < 20) throw new IOException("匯出路徑太長，請選擇較短的資料夾路徑。");
+            if (name.Length > limit) name = name.Substring(0, limit).TrimEnd('.', ' ');
+            string candidate = name;
+            int index = 2;
+            while (usedNames.Contains(candidate) || Directory.EnumerateFileSystemEntries(folder)
+                .Any(file => string.Equals(Path.GetFileNameWithoutExtension(file), candidate, StringComparison.OrdinalIgnoreCase)
+                    || Path.GetFileName(file).StartsWith(candidate + "-", StringComparison.OrdinalIgnoreCase)))
+                candidate = name + "_" + index++;
+            usedNames.Add(candidate);
+            return candidate;
+        }
+
         bool trueOrFlase = false; // 有無選擇匯出路徑
         public ChooseView(UIApplication uiapp, Autodesk.Revit.ApplicationServices.Application app, Document doc)
         {
@@ -55,6 +187,7 @@ namespace Sinotech.Plotting
             CreateNodes(viewInfoList); // 新增節點
             treeView1.ExpandAll(); // 全部展開
 
+            InitializeFileNaming();
             CenterToScreen(); // 置中
         }
         // 查詢專案中DWG、DGN、PDF所擁有的選項
@@ -62,7 +195,7 @@ namespace Sinotech.Plotting
         {
             formatOptionList = new List<FormatOption>(); // 清空格式類型與選項
             string[] formats = new string[] { "DWG", "DGN", "PDF" };
-            foreach(string format in formats)
+            foreach (string format in formats)
             {
                 FormatOption formatOption = new FormatOption();
                 formatOption.format = format; // 格式類型
@@ -77,7 +210,7 @@ namespace Sinotech.Plotting
                 else if (format.Equals("PDF"))
                 {
                     ICollection<PrintSetting> printSettings = new FilteredElementCollector(doc).OfClass(typeof(PrintSetting)).Cast<PrintSetting>().ToList();
-                    foreach(PrintSetting printSetting in printSettings)
+                    foreach (PrintSetting printSetting in printSettings)
                     {
                         formatOption.options.Add(printSetting.Name);
                     }
@@ -104,13 +237,13 @@ namespace Sinotech.Plotting
                         viewInfo.view = view;
                         viewInfo.vftName = viewTitle[0].Trim();
                         viewInfo.name = viewTitle[1].Trim();
-                        if(view is ViewSheet)
+                        if (view is ViewSheet)
                         {
                             // 電腦圖號
                             try
                             {
                                 string picNumber = string.Empty;
-                                try { picNumber = view.LookupParameter("圖框-電腦圖號").AsString(); } catch(Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                                try { picNumber = view.LookupParameter("圖框-電腦圖號").AsString(); } catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
 
                                 if (!String.IsNullOrEmpty(picNumber))
                                 {
@@ -242,6 +375,12 @@ namespace Sinotech.Plotting
                                      select x).FirstOrDefault();
                 chooseViewSheets.Add(viewInfo);
             }
+            chooseViewSheets = chooseViewSheets.Where(x => x != null).Distinct().ToList();
+            if (chooseViewSheets.Count == 0)
+            {
+                TaskDialog.Show("匯出圖紙", "請至少勾選一張圖紙。");
+                return;
+            }
             // 匯出視圖成DWG檔
             ExportViewPlan(formDoc, chooseViewSheets);
         }
@@ -267,6 +406,7 @@ namespace Sinotech.Plotting
                         Directory.CreateDirectory(path); // 創建資料夾
                     }
 
+                    var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     // 將選擇要匯出的圖紙加入id中
                     foreach (ViewInfo viewInfo in chooseViewSheets)
                     {
@@ -275,6 +415,19 @@ namespace Sinotech.Plotting
                         {
                             try
                             {
+                                //// 開啟View
+                                //formUIApp.ActiveUIDocument.ActiveView = viewInfo.view;
+                                //// 關閉其他視圖
+                                //View currView = formDoc.ActiveView;
+                                //formUIApp.ActiveUIDocument.RequestViewChange(currView);
+                                //IList<UIView> openViews = formUIApp.ActiveUIDocument.GetOpenUIViews();
+                                //foreach (UIView openView in openViews)
+                                //{
+                                //    if (openView.ViewId != currView.Id)
+                                //    {
+                                //        openView.Close();
+                                //    }
+                                //}
                                 // 執行交易：先寫入視圖/圖框的時間戳記
                                 using (Transaction trans = new Transaction(doc, "更新時間戳記"))
                                 {
@@ -308,6 +461,7 @@ namespace Sinotech.Plotting
                                     trans.Commit();
                                 }
 
+                                string exportName = ReserveFileName(path, BuildFileName(viewInfo), usedNames);
                                 ICollection<ElementId> viewSheetElementIds = new List<ElementId>();
                                 viewSheetElementIds.Add(viewInfo.view.Id);
                                 // 確認要匯出的格式
@@ -326,7 +480,7 @@ namespace Sinotech.Plotting
                                     viewSheetElementIds = new List<ElementId>();
                                     viewSheetElementIds.Add(addView.Id);
                                     // 匯出, 檔名為電腦圖號
-                                    doc.Export(path, viewInfo.picNumber, viewSheetElementIds, dwgOptions);
+                                    doc.Export(path, exportName, viewSheetElementIds, dwgOptions);
                                     GC.Collect();
                                     GC.WaitForPendingFinalizers();
                                 }
@@ -346,7 +500,7 @@ namespace Sinotech.Plotting
                                         dgnOptions.LayerMapping = "AIA";
                                     }
                                     // 匯出, 檔名為電腦圖號
-                                    doc.Export(path, viewInfo.picNumber, viewSheetElementIds, dgnOptions);
+                                    doc.Export(path, exportName, viewSheetElementIds, dgnOptions);
                                     GC.Collect();
                                     GC.WaitForPendingFinalizers();
                                 }
@@ -356,18 +510,18 @@ namespace Sinotech.Plotting
                                     {
                                         // 建立PDF匯出選項
                                         PDFExportOptions options = new PDFExportOptions();
-                                        string fileName = viewInfo.picNumber; // 檔名為「圖框-電腦圖號」
+                                        string fileName = exportName; // 使用自訂參數組成的安全檔名
                                         options.FileName = fileName; // 直接指定檔名
                                         options.ColorDepth = ColorDepthType.BlackLine; // 色彩深度
                                         options.ExportQuality = PDFExportQualityType.DPI300; // 匯出品質
                                         options.Combine = true; // 合併檔案
-                                        options.HideCropBoundaries = false;                                            
+                                        options.HideCropBoundaries = false;
                                         ICollection<ElementId> views = new List<ElementId>() { viewInfo.view.Id }; // 準備要輸出的View
                                         bool result = doc.Export(path, views.ToList(), options); // 匯出 PDF
                                     }
                                     catch (Exception ex)
                                     {
-                                        string error = ex.Message + "\n" + ex.ToString();
+                                        TaskDialog.Show("PDF 匯出失敗", ex.Message);
                                     }
                                 }
                             }
@@ -415,10 +569,10 @@ namespace Sinotech.Plotting
         {
             List<string> options = (from x in formatOptionList
                                     where x.format.Equals(formatCB.Text)
-                                    select x.options).FirstOrDefault();            
+                                    select x.options).FirstOrDefault();
             optionCB.Items.Clear(); // 清除setupCB選項
             // 更新setupCB選項
-            foreach(string option in options)
+            foreach (string option in options)
             {
                 optionCB.Items.Add(option);
             }
