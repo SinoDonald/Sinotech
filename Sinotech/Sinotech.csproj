@@ -341,6 +341,10 @@
       <DependentUpon>MoveViewForm.cs</DependentUpon>
     </Compile>
     <Compile Include="SEM\OutPutPCCES.cs" />
+    <Compile Include="SEM\PccesProjectMappingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SEM\PccesProjectMappingStore.cs" />
     <Compile Include="SEM\CurbWallContactCalculator.cs" />
     <Compile Include="SpeedTool\ParkOrRoom.cs" />
     <Compile Include="SpeedTool\ParkOrRoomForm.cs">
@@ -393,6 +397,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="CSD\LinkSelectionForm.resx">
       <DependentUpon>LinkSelectionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SEM\PccesProjectMappingForm.resx">
+      <DependentUpon>PccesProjectMappingForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SEM\ViewSelectionForm.resx">
       <DependentUpon>ViewSelectionForm.cs</DependentUpon>

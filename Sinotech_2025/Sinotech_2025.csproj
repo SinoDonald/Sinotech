@@ -6,8 +6,8 @@
     <UseWPF>true</UseWPF>
     <PlatformTarget>x64</PlatformTarget>
 
-    <!-- 關鍵設定 1：禁止 NuGet 將系統內建的 .NET 8 核心 DLL 複製到輸出目錄，防止版本衝突 -->
-    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <!-- Revit 載入外掛時需要同目錄的第三方相依 DLL；系統套件另以 ExcludeAssets 排除。 -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 
     <!-- 抑制舊套件相容性警告 -->
     <NoWarn>$(NoWarn);NU1701;NETSDK1138</NoWarn>
@@ -23,6 +23,11 @@
     <PackageReference Include="EPPlus" Version="7.5.2" />
     <PackageReference Include="PdfPig" Version="0.1.15" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+
+    <!-- EPPlus 間接引用這兩個套件；WinForms 必須使用 Revit 的 WindowsDesktop
+         框架版本，避免 Add-in Manager 載入同名 DLL 後造成 Font 型別不一致。 -->
+    <PackageReference Include="System.Drawing.Common" Version="8.0.4" ExcludeAssets="all" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Win32.SystemEvents" Version="8.0.0" ExcludeAssets="all" PrivateAssets="all" />
 
     <!-- ── 系統套件：已內建於 .NET 8 runtime，強制 Exclude 避免將舊版 DLL 帶入輸出目錄 ── -->
     <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.10">
