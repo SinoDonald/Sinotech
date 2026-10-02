@@ -1,4 +1,4 @@
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +24,17 @@ namespace Sinotech.SEM
 
         public double CalculateMillimeters(Element element)
         {
-            var footprint = FindFootprint(element);
+            return CalculateMillimeters(element, "長度", "寬度", 100);
+        }
+
+        public double CalculateFloorOpeningMillimeters(Element element)
+        {
+            return CalculateMillimeters(element, "矩形開口高度", "矩形開口寬度", 0);
+        }
+
+        private double CalculateMillimeters(Element element, string lengthParameter, string widthParameter, double offsetMillimeters)
+        {
+            var footprint = FindFootprint(element, lengthParameter, widthParameter);
             var edges = footprint.Item1;
             double bottom = footprint.Item2;
             double top = edges[0].GetEndPoint(0).Z;
@@ -32,7 +42,7 @@ namespace Sinotech.SEM
             var walls = new List<WallFace>();
             CollectNearbyWalls(document, Transform.Identity, element.get_BoundingBox(null), walls, "host", new HashSet<Document>());
             var lengths = edges.Select(e => e.Length).ToArray();
-            var contacts = new double[4];
+            var contacts = new List<Tuple<double, double>>[4];
             for (int i = 0; i < 4; i++)
             {
                 XYZ start = edges[i].GetEndPoint(0);
@@ -57,27 +67,36 @@ namespace Sinotech.SEM
                         if (to - from > Epsilon) intervals.Add(Tuple.Create(from, to));
                     }
                 }
-                contacts[i] = UnionLength(intervals);
+                contacts[i] = intervals;
             }
-            // 完整貼牆僅容許數值誤差；1 mm 的面距容差不拿來吞掉未貼牆區段。
-            var full = lengths.Select((length, i) => length - contacts[i] <= Epsilon).ToArray();
-            double total = 0;
-            double allowance = UnitUtils.ConvertToInternalUnits(10, UnitTypeId.Millimeters);
-            for (int i = 0; i < 4; i++)
-            {
-                if (full[i]) continue;
-                total += Math.Max(0, lengths[i] - contacts[i]);
-                // 部分貼牆仍沿用原本該邊的端部加計；只有相鄰整邊貼牆才取消 10 mm。
-                if (!full[(i + 3) % 4]) total += allowance;
-                if (!full[(i + 1) % 4]) total += allowance;
-            }
-            return UnitUtils.ConvertFromInternalUnits(total * 2, UnitTypeId.Millimeters);
+            double offset = UnitUtils.ConvertToInternalUnits(offsetMillimeters, UnitTypeId.Millimeters);
+            return UnitUtils.ConvertFromInternalUnits(CalculateExposedPerimeter(lengths, contacts, offset), UnitTypeId.Millimeters);
         }
 
-        private static Tuple<List<Curve>, double> FindFootprint(Element element)
+        // 四邊依 CurveLoop 順序排列，所有數值使用相同單位；回傳已包含預算倍率 2。
+        // 只在兩側都未貼牆的原始轉角延伸相接，接觸區段的端點截止、不額外繞回基座。
+        internal static double CalculateExposedPerimeter(double[] lengths, List<Tuple<double, double>>[] contacts, double offset)
         {
-            double length = element.LookupParameter("長度").AsDouble();
-            double width = element.LookupParameter("寬度").AsDouble();
+            var ranges = contacts.Select((items, i) => items
+                .Select(r => Tuple.Create(Math.Max(0, r.Item1), Math.Min(lengths[i], r.Item2)))
+                .Where(r => r.Item2 - r.Item1 > Epsilon).ToList()).ToArray();
+            double total = lengths.Select((length, i) => Math.Max(0, length - UnionLength(ranges[i]))).Sum();
+            for (int i = 0; i < 4; i++)
+            {
+                int next = (i + 1) % 4;
+                bool endTouches = ranges[i].Any(r => r.Item2 >= lengths[i] - Epsilon);
+                bool nextStartTouches = ranges[next].Any(r => r.Item1 <= Epsilon);
+                if (!endTouches && !nextStartTouches) total += 2 * offset;
+            }
+            return total * 2;
+        }
+
+        private static Tuple<List<Curve>, double> FindFootprint(Element element, string lengthParameter, string widthParameter)
+        {
+            double length = element.LookupParameter(lengthParameter)?.AsDouble() ?? 0;
+            double width = element.LookupParameter(widthParameter)?.AsDouble() ?? 0;
+            if (length <= 0 || width <= 0)
+                throw new InvalidOperationException("缺少有效尺寸參數：" + lengthParameter + "／" + widthParameter);
             var candidates = new List<Tuple<List<Curve>, double>>();
             foreach (var solid in Solids(element.get_Geometry(new Options { DetailLevel = ViewDetailLevel.Fine })))
             {
@@ -104,7 +123,7 @@ namespace Sinotech.SEM
                 }
             }
             if (candidates.Count != 1)
-                throw new InvalidOperationException("無法唯一識別符合長度／寬度參數的矩形基座實體外框，請檢查族群幾何（不使用模型線或粉刷外框代替）。");
+                throw new InvalidOperationException("無法唯一識別符合「" + lengthParameter + "／" + widthParameter + "」的水平矩形實體外框，請檢查族群幾何（不使用模型線或粉刷外框代替）。");
             return candidates[0];
         }
 

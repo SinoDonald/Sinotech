@@ -48,12 +48,7 @@ namespace Sinotech_2025.Plotting
             label3.Text = "匯出檔名（最多三個圖紙參數）";
             label3.Location = new System.Drawing.Point(139, 13);
 
-            var names = new SortedSet<string>(StringComparer.CurrentCulture);
-            names.Add(DefaultNameParameter);
-            foreach (var info in viewInfoList)
-                foreach (Parameter parameter in info.view.Parameters)
-                    if (parameter.StorageType != StorageType.None)
-                        names.Add(parameter.Definition.Name);
+            string[] names = { DefaultNameParameter, "專案編號", "圖紙號碼", "圖框-版次" };
             for (int i = 0; i < 3; i++)
             {
                 var label = new Label { Text = "參數 " + (i + 1), AutoSize = true,
@@ -71,7 +66,7 @@ namespace Sinotech_2025.Plotting
                 {
                     var separatorLabel = new Label { Text = "連接 " + (i + 1), AutoSize = true,
                         Location = new System.Drawing.Point(13 + i * 200, 128) };
-                    var separator = new TextBox { Text = "_", Width = 130, MaxLength = 30,
+                    var separator = new TextBox { Text = "-", Width = 130, MaxLength = 30,
                         Location = new System.Drawing.Point(70 + i * 200, 124) };
                     nameSeparators[i] = separator;
                     separator.TextChanged += (sender, args) => UpdateNamePreview();
@@ -114,9 +109,7 @@ namespace Sinotech_2025.Plotting
             {
                 if (i > 0 && nameParameters[i].SelectedIndex == 0) continue;
                 string parameterName = nameParameters[i].Text;
-                Parameter parameter = info.view.LookupParameter(parameterName);
-                string value = parameter == null ? null : parameter.StorageType == StorageType.String
-                    ? parameter.AsString() : parameter.AsValueString();
+                string value = ReadNameParameter(info.view, parameterName);
                 if (string.IsNullOrWhiteSpace(value))
                     value = (info.view as ViewSheet)?.SheetNumber ?? "Sheet_" + info.view.Id.Value;
                 if (result.Length > 0) result += nameSeparators[i - 1].Text;
@@ -125,6 +118,41 @@ namespace Sinotech_2025.Plotting
             return SanitizeFileName(result, "Sheet_" + info.view.Id.Value);
         }
 
+        private static string ParameterText(Parameter parameter)
+        {
+            if (parameter == null) return null;
+            return parameter.StorageType == StorageType.String
+                ? parameter.AsString() : parameter.AsValueString();
+        }
+
+        private string ReadNameParameter(View sheet, string parameterName)
+        {
+            // 使用內建參數取得圖紙號碼，避免語系或同名參數影響結果。
+            if (parameterName == "圖紙號碼")
+                return (sheet as ViewSheet)?.SheetNumber;
+
+            string value = ParameterText(sheet.LookupParameter(parameterName));
+            if (!string.IsNullOrWhiteSpace(value)) return value;
+
+            if (parameterName == "專案編號")
+            {
+                value = ParameterText(formDoc.ProjectInformation.get_Parameter(BuiltInParameter.PROJECT_NUMBER));
+                if (!string.IsNullOrWhiteSpace(value)) return value;
+            }
+
+            // 圖框參數可能設在圖框實例或類型，而非圖紙本身。
+            foreach (Element titleBlock in new FilteredElementCollector(formDoc, sheet.Id)
+                .OfCategory(BuiltInCategory.OST_TitleBlocks).WhereElementIsNotElementType()
+                .OrderBy(element => element.Id.Value))
+            {
+                value = ParameterText(titleBlock.LookupParameter(parameterName));
+                if (!string.IsNullOrWhiteSpace(value)) return value;
+                Element type = formDoc.GetElement(titleBlock.GetTypeId());
+                value = ParameterText(type?.LookupParameter(parameterName));
+                if (!string.IsNullOrWhiteSpace(value)) return value;
+            }
+            return null;
+        }
         private static string SanitizeFileName(string value, string fallback)
         {
             var invalid = Path.GetInvalidFileNameChars();

@@ -1,4 +1,4 @@
-using Autodesk.Revit.Attributes;
+﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Sinotech.UpdateView;
@@ -451,6 +451,16 @@ namespace Sinotech.SEM
                 }
             }
 
+            // 樓板矩形開口也需預先完成貼牆計算，失敗時不可沿用面積級距或略過元件。
+            foreach (Element opening in openings.Where(IsFloorOpening))
+            {
+                try { curbLengths[opening.Id] = curbCalculator.CalculateFloorOpeningMillimeters(opening); }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException("樓板開口 " + opening.Id.Value + " 的貼牆計算失敗，已停止匯出。\n" + ex.Message, ex);
+                }
+            }
+
             int i = 1;
             foreach (Element opening in openings)
             {
@@ -536,6 +546,7 @@ namespace Sinotech.SEM
                             modelInfo.host = "樓板";
                             modelInfo.floorLength = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("矩形開口高度").AsDouble(), UnitTypeId.Millimeters);
                             modelInfo.floorWidth = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("矩形開口寬度").AsDouble(), UnitTypeId.Millimeters);
+                            modelInfo.interference = curbLengths[opening.Id]; // 未貼牆周長 × 2（mm），不外推
                         }
                         // 項目及說明
                         OpeningContrast item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host))
@@ -583,7 +594,7 @@ namespace Sinotech.SEM
                         modelInfo.isPillar = opening.LookupParameter("止水墩")?.AsInteger() ?? 0;
                         if (modelInfo.isPillar == 1)
                         {
-                            // 由實際貼牆區段計算，不讀取「周長(長)／周長(寬)」勾選值。
+                            // 外推 100 mm、扣除實際貼牆區段後乘以 2，不讀取人工周長勾選值。
                             modelInfo.interference = curbLengths[opening.Id];
                         }
                         modelInfo.volume = GetPlatformVolume(opening); // 體積（m³）
@@ -690,7 +701,14 @@ namespace Sinotech.SEM
             modelInfo.linkPrj = commentProjectMapping.TryGetValue(code, out string project) ? project : "A3";
             return modelInfo.linkPrj;
         }
-        // 如果條件為"開口"+"樓板", 則計算該條件下的止水墩周長, 並加入modelDB
+        private static bool IsFloorOpening(Element element)
+        {
+            return !IsPlatform(element) && !IsPullBox(element) && !element.Name.Contains("圓形") &&
+                !element.Name.Contains("牆") && (element.Name.Contains("風管") || element.Name.Contains("電纜架")) &&
+                (element.Name.Contains("樓板") || element.Name.Contains("樓版"));
+        }
+
+        // 彙總已扣除貼牆區段且已乘以 2 的止水墩計價長度（樓板開口與基座）。
         private void CurbStopCalcul(List<ModelInfo> modelDB, List<string> disLevelNames, List<string> disLinkPrjs)
         {
             foreach (string disLevelName in disLevelNames)
@@ -706,13 +724,7 @@ namespace Sinotech.SEM
                                                         x.pipeOrDuct.Equals("開口") && x.host.Equals("樓板") && x.description.Equals(description)).ToList();
                         foreach (ModelInfo curbStopCalcul in modelDBFilter)
                         {
-                            // 各面積級距的固定計價周長以 m 表示。
-                            if (description.Contains("面積≦0.1m2")) { perimeter += 2.56; }
-                            else if (description.Contains("0.1m2＜面積≦0.5m2")) { perimeter += 5.68; }
-                            else if (description.Contains("0.5m2＜面積≦1.0m2")) { perimeter += 8.0; }
-                            else if (description.Contains("1.0m2＜面積≦1.5m2")) { perimeter += 9.84; }
-                            else if (description.Contains("1.5m2＜面積≦2.0m2")) { perimeter += 11.36; }
-                            else { perimeter += UnitUtils.Convert((curbStopCalcul.floorLength + curbStopCalcul.floorWidth) * 2, UnitTypeId.Millimeters, UnitTypeId.Meters); }
+                            perimeter += UnitUtils.Convert(curbStopCalcul.interference, UnitTypeId.Millimeters, UnitTypeId.Meters);
                         }
                         ModelInfo modelInfo = new ModelInfo();
                         modelInfo.levelName = disLevelName;
