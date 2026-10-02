@@ -133,7 +133,7 @@ namespace Sinotech.SEM
                                     }
                                 }
                                 // 工程項目編號
-                                openingContrast.prjNumber = worksheet.Cells[i, 8].Value.ToString();
+                                openingContrast.prjNumber = worksheet.Cells[i, 8].Value?.ToString() ?? "";
                                 openingContrastList.Add(openingContrast);
                             }
                             catch (NullReferenceException)

@@ -10,6 +10,7 @@ namespace Sinotech_2025.SEM
     {
         private readonly Document document;
         private readonly Dictionary<string, List<WallFace>> wallCache = new Dictionary<string, List<WallFace>>();
+        private readonly Dictionary<string, List<WallVolume>> wallVolumeCache = new Dictionary<string, List<WallVolume>>();
         private static readonly double ContactTolerance = UnitUtils.ConvertToInternalUnits(1, UnitTypeId.Millimeters);
         private const double Epsilon = 1e-8;
 
@@ -18,6 +19,13 @@ namespace Sinotech_2025.SEM
             public XYZ Origin;
             public XYZ Normal;
             public List<XYZ[]> Triangles;
+        }
+
+        private sealed class WallVolume
+        {
+            public Solid Solid;
+            public Transform Transform;
+            public string Description;
         }
 
         public CurbWallContactCalculator(Document document) { this.document = document; }
@@ -29,7 +37,77 @@ namespace Sinotech_2025.SEM
 
         public double CalculateFloorOpeningMillimeters(Element element)
         {
-            return CalculateMillimeters(element, "矩形開口高度", "矩形開口寬度", 0);
+            // 此樓版開口族群的中心(左/右)、中心(前/後)均定義原點。
+            // 本地 X = 矩形開口寬度，Y = 矩形開口高度，Z = 0 為族群參考樓層。
+            // Transform 已包含放置標高及偏移，不再重複加 LocationPoint 或 Level.Elevation。
+            var instance = element as FamilyInstance;
+            if (instance == null || !(instance.Location is LocationPoint))
+                throw new InvalidOperationException("樓板開口必須是以點定位的矩形族群。");
+            Transform transform = instance.GetTransform();
+            if (Math.Abs(transform.BasisX.Z) > Epsilon || Math.Abs(transform.BasisY.Z) > Epsilon)
+                throw new InvalidOperationException("樓板開口參考平面並非水平，請確認族群方向，避免計算錯誤的投影周長。");
+            double width = ReadOpeningDimension(element, "矩形開口寬度");
+            double height = ReadOpeningDimension(element, "矩形開口高度");
+            var points = new[] { new XYZ(-width / 2, -height / 2, 0), new XYZ(width / 2, -height / 2, 0),
+                new XYZ(width / 2, height / 2, 0), new XYZ(-width / 2, height / 2, 0) }
+                .Select(transform.OfPoint).ToArray();
+            var bounds = new BoundingBoxXYZ
+            {
+                Min = new XYZ(points.Min(p => p.X), points.Min(p => p.Y), points.Min(p => p.Z)),
+                Max = new XYZ(points.Max(p => p.X), points.Max(p => p.Y), points.Max(p => p.Z))
+            };
+            var walls = new List<WallVolume>();
+            CollectNearbyWalls(document, Transform.Identity, bounds, null, "host", new HashSet<Document>(), walls);
+            var lengths = new double[4];
+            var contacts = new List<Tuple<double, double>>[4];
+            using (var options = new SolidCurveIntersectionOptions { ResultType = SolidCurveIntersectionMode.CurveSegmentsInside })
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    using (var edge = Line.CreateBound(points[i], points[(i + 1) % 4]))
+                    {
+                        lengths[i] = edge.Length;
+                        contacts[i] = new List<Tuple<double, double>>();
+                        foreach (var wall in walls)
+                        {
+                            try
+                            {
+                                // 在牆所在文件座標求交，避免鏡射連結的 Solid 轉換限制。
+                                using (var localEdge = edge.CreateTransformed(wall.Transform.Inverse))
+                                using (var intersection = wall.Solid.IntersectWithCurve(localEdge, options))
+                                {
+                                    for (int s = 0; s < intersection.SegmentCount; s++)
+                                    {
+                                        using (var segment = intersection.GetCurveSegment(s))
+                                        {
+                                            double a = (wall.Transform.OfPoint(segment.GetEndPoint(0)) - points[i]).DotProduct(edge.Direction);
+                                            double b = (wall.Transform.OfPoint(segment.GetEndPoint(1)) - points[i]).DotProduct(edge.Direction);
+                                            contacts[i].Add(Tuple.Create(Math.Min(a, b), Math.Max(a, b)));
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new InvalidOperationException("開口邊 " + (i + 1) + " 與 " + wall.Description + " 求交失敗。", ex);
+                            }
+                        }
+                    }
+                }
+            }
+            // 重疊牆的接觸區段合併，不外推，且僅在這裡套用一次預算倍率 2。
+            return UnitUtils.ConvertFromInternalUnits(CalculateExposedPerimeter(lengths, contacts, 0), UnitTypeId.Millimeters);
+        }
+
+        private static double ReadOpeningDimension(Element element, string name)
+        {
+            var parameter = element.LookupParameter(name);
+            if (parameter == null || parameter.StorageType != StorageType.Double || !parameter.HasValue)
+                throw new InvalidOperationException("缺少有效開口尺寸：" + name);
+            double value = parameter.AsDouble();
+            if (!double.IsFinite(value) || value <= element.Document.Application.ShortCurveTolerance)
+                throw new InvalidOperationException("開口尺寸必須大於 Revit 最短曲線長度：" + name);
+            return value;
         }
 
         private double CalculateMillimeters(Element element, string lengthParameter, string widthParameter, double offsetMillimeters)
@@ -130,7 +208,7 @@ namespace Sinotech_2025.SEM
         private static bool Matches(double a, double b) { return Math.Abs(a - b) <= ContactTolerance; }
 
         private void CollectNearbyWalls(Document source, Transform transform, BoundingBoxXYZ hostBox,
-            List<WallFace> result, string path, HashSet<Document> ancestors)
+            List<WallFace> result, string path, HashSet<Document> ancestors, List<WallVolume> volumes = null)
         {
             if (!ancestors.Add(source)) return;
             try
@@ -151,6 +229,20 @@ namespace Sinotech_2025.SEM
                     foreach (var wall in new FilteredElementCollector(source).OfClass(typeof(Wall)).WherePasses(filter))
                     {
                         string key = path + "/" + wall.Id.Value;
+                        if (volumes != null)
+                        {
+                            if (!wallVolumeCache.TryGetValue(key, out var cachedVolumes))
+                            {
+                                cachedVolumes = OpeningWallSolids(wall.get_Geometry(new Options { DetailLevel = ViewDetailLevel.Fine }))
+                                    .Select(s => new WallVolume { Solid = s, Transform = transform,
+                                        Description = source.Title + "／牆 ID " + wall.Id.Value + "／" + path }).ToList();
+                                if (cachedVolumes.Count == 0)
+                                    throw new InvalidOperationException(source.Title + "／牆 ID " + wall.Id.Value + " 找不到可求交的非空實體。");
+                                wallVolumeCache.Add(key, cachedVolumes);
+                            }
+                            volumes.AddRange(cachedVolumes);
+                            continue;
+                        }
                         List<WallFace> faces;
                         if (!wallCache.TryGetValue(key, out faces))
                         {
@@ -181,7 +273,7 @@ namespace Sinotech_2025.SEM
                     var linkedDocument = link.GetLinkDocument();
                     if (linkedDocument != null)
                         CollectNearbyWalls(linkedDocument, transform.Multiply(link.GetTotalTransform()), hostBox,
-                            result, path + "/link:" + link.Id.Value, ancestors);
+                            result, path + "/link:" + link.Id.Value, ancestors, volumes);
                 }
             }
             finally { ancestors.Remove(source); }
@@ -197,6 +289,22 @@ namespace Sinotech_2025.SEM
                 var instance = item as GeometryInstance;
                 if (instance != null)
                     foreach (var nested in Solids(instance.GetInstanceGeometry())) yield return nested;
+            }
+        }
+
+        // 僅供樓板開口的牆求交路徑使用；不更動基座已驗證的幾何取得方式。
+        private static IEnumerable<Solid> OpeningWallSolids(GeometryElement geometry)
+        {
+            if (geometry == null) yield break;
+            foreach (GeometryObject item in geometry)
+            {
+                if (item is Solid solid && solid.Faces.Size > 0 && solid.Edges.Size > 0)
+                {
+                    double volume = solid.Volume; // signed volume；負值本身不代表無效
+                    if (double.IsFinite(volume) && Math.Abs(volume) > Epsilon) yield return solid;
+                }
+                else if (item is GeometryInstance instance)
+                    foreach (var nested in OpeningWallSolids(instance.GetInstanceGeometry())) yield return nested;
             }
         }
 

@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.IO;
+using System.Text;
 using System.Windows.Forms;
 using TaskDialog = Autodesk.Revit.UI.TaskDialog;
 
@@ -53,6 +55,7 @@ namespace Sinotech_2025.SEM
             public double floorHeight = 0.0; // 基座止水墩高度（mm）
             public double perimeter = 0.0; // 周長
             public double interference = 0.0; // 干涉長度（mm）
+            public bool curbCalculationSucceeded = false; // 失敗不視為零長度，也不納入止水墩彙總
             public string description = string.Empty; // 項目及說明
             public string unit = string.Empty; // 單位
             public int count = 0; // 數量
@@ -73,8 +76,54 @@ namespace Sinotech_2025.SEM
         // 容許單位轉換造成的浮點誤差（mm），不使用顯示精度進行比對。
         private const double DiameterToleranceMillimeters = 1e-6;
         private Dictionary<string, string> commentProjectMapping = new Dictionary<string, string>(StringComparer.Ordinal);
+        private readonly List<string> exportErrors = new List<string>();
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+        {
+            exportErrors.Clear();
+            try { return ExecuteCore(commandData, ref message, elements); }
+            catch (Autodesk.Revit.Exceptions.OperationCanceledException) { return Result.Cancelled; }
+            catch (Exception ex)
+            {
+                RecordError(null, "匯出流程中止；已寫入的工作表可能不完整", ex);
+                return Result.Cancelled;
+            }
+            finally { SaveErrorReport(); }
+        }
+
+        private void RecordError(Element element, string stage, Exception exception)
+        {
+            string context = element == null ? "整體流程" :
+                "文件：" + element.Document.Title + "；元件 ID：" + element.Id.Value + "；名稱：" + element.Name;
+            exportErrors.Add(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " | " + stage + "\n" + context + "\n" + exception);
+        }
+
+        private void SaveErrorReport()
+        {
+            if (exportErrors.Count == 0) return;
+            string filename = "PCCES_錯誤紀錄_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff") + "_" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".txt";
+            string report = "PCCES 匯出錯誤紀錄\n失敗的止水墩計算未列入數量；其他成功資料繼續匯出。請核對下列元件後重新匯出。\n\n" +
+                string.Join("\n\n----------------------------------------\n\n", exportErrors);
+            string desktopError = null;
+            foreach (string folder in new[] { Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), Path.GetTempPath() })
+            {
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(folder)) throw new IOException("無法取得桌面路徑。");
+                    string path = Path.Combine(folder, filename);
+                    File.WriteAllText(path, report, new UTF8Encoding(true));
+                    TaskDialog.Show("PCCES 匯出紀錄", "本次有 " + exportErrors.Count + " 筆異常，數量可能不完整，請依紀錄核對。\n" +
+                        (desktopError == null ? "" : "桌面寫入失敗：" + desktopError + "\n已改存暫存資料夾。\n") + path);
+                    return;
+                }
+                catch (Exception ex) { desktopError = ex.Message; }
+            }
+            // 紀錄檔寫入失敗不可再拋出例外，仍提供可複製的錯誤內容。
+            try { TaskDialog.Show("PCCES 紀錄寫入失敗", desktopError + "\n" + report); }
+            catch (Exception) { }
+        }
+
+        private Result ExecuteCore(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             UIApplication uiapp = commandData.Application;
             UIDocument uidoc = uiapp.ActiveUIDocument;
@@ -123,7 +172,7 @@ namespace Sinotech_2025.SEM
                 try { modelDB = ModelDB(doc, exportElements); }
                 catch (InvalidOperationException ex)
                 {
-                    TaskDialog.Show("PCCES 止水墩計算", ex.Message);
+                    RecordError(null, "模型資料整理失敗", ex);
                     return Result.Cancelled;
                 }
                 // 篩選各樓層, 高程由上而下
@@ -185,21 +234,8 @@ namespace Sinotech_2025.SEM
                                 {
                                     double sum = (from x in filteredItems
                                                   select x.length).Sum();
-                                    if (description.Contains("止水墩"))
-                                    {
-                                        if (description.Contains("基座"))
-                                        {
-                                            length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
-                                        }
-                                        else
-                                        {
-                                            length = Math.Round(sum, 2, MidpointRounding.AwayFromZero); // 貴森兄
-                                        }
-                                    }
-                                    else
-                                    {
-                                        length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
-                                    }
+                                    // 公尺數量先彙總，再統一四捨五入至整數（0.5 進位）。
+                                    length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
                                 }
                                 // 工程項目編號
                                 string prjNumber = (from x in filteredItems
@@ -290,21 +326,8 @@ namespace Sinotech_2025.SEM
                             {
                                 double sum = (from x in filteredItems
                                               select x.length).Sum();
-                                if (description.Contains("止水墩"))
-                                {
-                                    if (description.Contains("基座"))
-                                    {
-                                        length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
-                                    }
-                                    else
-                                    {
-                                        length = Math.Round(sum, 2, MidpointRounding.AwayFromZero); // 貴森兄
-                                    }
-                                }
-                                else
-                                {
-                                    length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
-                                }
+                                // 公尺數量先彙總，再統一四捨五入至整數（0.5 進位）。
+                                length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
                             }
                             // 工程項目編號
                             string prjNumber = (from x in filteredItems
@@ -342,11 +365,13 @@ namespace Sinotech_2025.SEM
 
                     DateTime timeEnd = DateTime.Now; // 計時結束 取得目前時間
                     TimeSpan totalTime = timeEnd - timeStart;
-                    TaskDialog.Show("Revit", "耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒 " + "\n\n完成");
+                    TaskDialog.Show("Revit", "耗時：" + totalTime.Minutes + " 分 " + totalTime.Seconds + " 秒 " +
+                        (exportErrors.Count == 0 ? "\n\n完成" : "\n\n匯出完成，但有異常項目，請核對錯誤紀錄。"));
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-
+                    RecordError(null, "Excel 匯出失敗；已寫入的工作表可能不完整", ex);
+                    return Result.Cancelled;
                 }
             }
 
@@ -443,21 +468,21 @@ namespace Sinotech_2025.SEM
             var curbLengths = new Dictionary<ElementId, double>();
             foreach (Element platform in openings.Where(IsPlatform))
             {
-                if (platform.LookupParameter("止水墩")?.AsInteger() != 1) continue;
-                try { curbLengths[platform.Id] = curbCalculator.CalculateMillimeters(platform); }
+                try { if (platform.LookupParameter("止水墩")?.AsInteger() == 1) curbLengths[platform.Id] = curbCalculator.CalculateMillimeters(platform); }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException("基座 " + platform.Id.Value + " 的貼牆計算失敗，已停止匯出。\n" + ex.Message, ex);
+                    RecordError(platform, "基座貼牆計算失敗，略過此元件的止水墩計價長度", ex);
                 }
             }
 
-            // 樓板矩形開口也需預先完成貼牆計算，失敗時不可沿用面積級距或略過元件。
+            // 樓板矩形開口預先計算；失敗僅略過止水墩長度，保留開口本身並記錄。
             foreach (Element opening in openings.Where(IsFloorOpening))
             {
+                if (opening.Id.Value.Equals(2238675)) { }
                 try { curbLengths[opening.Id] = curbCalculator.CalculateFloorOpeningMillimeters(opening); }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException("樓板開口 " + opening.Id.Value + " 的貼牆計算失敗，已停止匯出。\n" + ex.Message, ex);
+                    RecordError(opening, "樓板開口貼牆計算失敗，略過此元件的止水墩計價長度", ex);
                 }
             }
 
@@ -508,8 +533,8 @@ namespace Sinotech_2025.SEM
                                 modelInfo.pCode = opening.LookupParameter("專業代碼").AsString(); // 專業代碼
                             }
                         }
-                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { RecordError(opening, "選用參數讀取失敗，繼續處理", ex); }
+                        catch (Exception ex) { RecordError(opening, "選用參數讀取失敗，繼續處理", ex); }
                         modelInfo.diameter = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("指定圓形套管直徑").AsDouble(), UnitTypeId.Millimeters);
                         if (modelInfo.diameter == 0) { modelInfo.diameter = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("預設圓形套管直徑").AsDouble(), UnitTypeId.Millimeters); }
                         // 開口對象(牆、樑、板)
@@ -536,8 +561,8 @@ namespace Sinotech_2025.SEM
                                 modelInfo.pCode = opening.LookupParameter("專業代碼").AsString(); // 專業代碼
                             }
                         }
-                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { RecordError(opening, "選用參數讀取失敗，繼續處理", ex); }
+                        catch (Exception ex) { RecordError(opening, "選用參數讀取失敗，繼續處理", ex); }
                         modelInfo.area = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("矩形開口面積").AsDouble(), UnitTypeId.SquareMeters);
                         // 開口對象(牆、樑、板)
                         if (opening.Name.Contains("牆")) { modelInfo.host = "牆"; }
@@ -546,7 +571,7 @@ namespace Sinotech_2025.SEM
                             modelInfo.host = "樓板";
                             modelInfo.floorLength = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("矩形開口高度").AsDouble(), UnitTypeId.Millimeters);
                             modelInfo.floorWidth = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("矩形開口寬度").AsDouble(), UnitTypeId.Millimeters);
-                            modelInfo.interference = curbLengths[opening.Id]; // 未貼牆周長 × 2（mm），不外推
+                            modelInfo.curbCalculationSucceeded = curbLengths.TryGetValue(opening.Id, out modelInfo.interference);
                         }
                         // 項目及說明
                         OpeningContrast item = openingContrastList.Where(x => x.type.Equals(modelInfo.pipeOrDuct) && x.host.Equals(modelInfo.host))
@@ -587,15 +612,15 @@ namespace Sinotech_2025.SEM
                                 //modelInfo.pCode = opening.LookupParameter("專業代碼").AsString(); // 專業代碼
                             }
                         }
-                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { RecordError(opening, "選用參數讀取失敗，繼續處理", ex); }
+                        catch (Exception ex) { RecordError(opening, "選用參數讀取失敗，繼續處理", ex); }
                         modelInfo.floorLength = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("長度")?.AsDouble() ?? 0, UnitTypeId.Millimeters);
                         modelInfo.floorWidth = UnitUtils.ConvertFromInternalUnits(opening.LookupParameter("寬度")?.AsDouble() ?? 0, UnitTypeId.Millimeters);
                         modelInfo.isPillar = opening.LookupParameter("止水墩")?.AsInteger() ?? 0;
                         if (modelInfo.isPillar == 1)
                         {
                             // 外推 100 mm、扣除實際貼牆區段後乘以 2，不讀取人工周長勾選值。
-                            modelInfo.interference = curbLengths[opening.Id];
+                            modelInfo.curbCalculationSucceeded = curbLengths.TryGetValue(opening.Id, out modelInfo.interference);
                         }
                         modelInfo.volume = GetPlatformVolume(opening); // 體積（m³）
                         // 項目及說明
@@ -633,8 +658,8 @@ namespace Sinotech_2025.SEM
                             Parameter para = opening.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
                             if (para != null) { CommentsLinkPrj(opening, modelInfo); } // 連結專案
                         }
-                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { string error = ex.Message + "\n" + ex.ToString(); }
-                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Autodesk.Revit.Exceptions.ArgumentNullException ex) { RecordError(opening, "選用參數讀取失敗，繼續處理", ex); }
+                        catch (Exception ex) { RecordError(opening, "選用參數讀取失敗，繼續處理", ex); }
 
                         modelInfo.length = UnitUtils.ConvertFromInternalUnits(opening.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH).AsDouble(), UnitTypeId.Meters); // 長度
                         // 取Excel資料庫中的最近數值
@@ -657,7 +682,7 @@ namespace Sinotech_2025.SEM
                             ElementId levelId = opening.get_Parameter(BuiltInParameter.RBS_START_LEVEL_PARAM).AsElementId(); // 參考樓層
                             level = doc.GetElement(levelId) as Level;
                         }
-                        catch (Exception ex) { string error = ex.Message + "\n" + ex.ToString(); }
+                        catch (Exception ex) { RecordError(opening, "選用參數讀取失敗，繼續處理", ex); }
                         modelInfo.level = level;
                     }
                     else
@@ -679,10 +704,7 @@ namespace Sinotech_2025.SEM
                 }
                 catch (Exception ex)
                 {
-                    if (IsPullBox(opening))
-                        throw new InvalidOperationException("拉線盒 " + opening.Id.Value + " 的 PCCES 資料讀取失敗，已停止匯出。\n" + ex.Message, ex);
-                    if (IsPlatform(opening))
-                        throw new InvalidOperationException("基座 " + opening.Id.Value + " 的 PCCES 資料讀取失敗，已停止匯出。\n" + ex.Message, ex);
+                    RecordError(opening, "PCCES 資料讀取失敗，略過此元件", ex);
                 }
             }
 
@@ -715,12 +737,12 @@ namespace Sinotech_2025.SEM
             {
                 foreach (string disLinkPrj in disLinkPrjs)
                 {
-                    List<string> descriptions = modelDB.Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
+                    List<string> descriptions = modelDB.Where(x => x.curbCalculationSucceeded).Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
                                                 x.pipeOrDuct.Equals("開口") && x.host.Equals("樓板")).Select(x => x.description).Distinct().ToList();
                     foreach (string description in descriptions)
                     {
                         double perimeter = 0.0;
-                        List<ModelInfo> modelDBFilter = modelDB.Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
+                        List<ModelInfo> modelDBFilter = modelDB.Where(x => x.curbCalculationSucceeded).Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
                                                         x.pipeOrDuct.Equals("開口") && x.host.Equals("樓板") && x.description.Equals(description)).ToList();
                         foreach (ModelInfo curbStopCalcul in modelDBFilter)
                         {
@@ -737,12 +759,12 @@ namespace Sinotech_2025.SEM
                         modelInfo.length = perimeter;
                         modelDB.Add(modelInfo);
                     }
-                    List<string> stopPillars = modelDB.Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
+                    List<string> stopPillars = modelDB.Where(x => x.curbCalculationSucceeded).Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
                                                x.pipeOrDuct.Equals("基座") && x.isPillar.Equals(1)).Select(x => x.description).Distinct().ToList();
                     foreach (string stopPillar in stopPillars)
                     {
                         double perimeter = 0.0;
-                        List<ModelInfo> modelDBFilter = modelDB.Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
+                        List<ModelInfo> modelDBFilter = modelDB.Where(x => x.curbCalculationSucceeded).Where(x => x.levelName.Equals(disLevelName) && x.linkPrj.Equals(disLinkPrj) &&
                                                         x.pipeOrDuct.Equals("基座") && x.isPillar.Equals(1) && x.description.Equals(stopPillar)).ToList();
                         foreach (ModelInfo curbStopCalcul in modelDBFilter)
                         {

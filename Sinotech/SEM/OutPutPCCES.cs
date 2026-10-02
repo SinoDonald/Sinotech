@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Sinotech.UpdateView;
@@ -185,21 +185,8 @@ namespace Sinotech.SEM
                                 {
                                     double sum = (from x in filteredItems
                                                   select x.length).Sum();
-                                    if (description.Contains("止水墩"))
-                                    {
-                                        if (description.Contains("基座"))
-                                        {
-                                            length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
-                                        }
-                                        else
-                                        {
-                                            length = Math.Round(sum, 2, MidpointRounding.AwayFromZero); // 貴森兄
-                                        }
-                                    }
-                                    else
-                                    {
-                                        length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
-                                    }
+                                    // 公尺數量先彙總，再統一四捨五入至整數（0.5 進位）。
+                                    length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
                                 }
                                 // 工程項目編號
                                 string prjNumber = (from x in filteredItems
@@ -290,21 +277,8 @@ namespace Sinotech.SEM
                             {
                                 double sum = (from x in filteredItems
                                               select x.length).Sum();
-                                if (description.Contains("止水墩"))
-                                {
-                                    if (description.Contains("基座"))
-                                    {
-                                        length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
-                                    }
-                                    else
-                                    {
-                                        length = Math.Round(sum, 2, MidpointRounding.AwayFromZero); // 貴森兄
-                                    }
-                                }
-                                else
-                                {
-                                    length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
-                                }
+                                // 公尺數量先彙總，再統一四捨五入至整數（0.5 進位）。
+                                length = Math.Round(sum, 0, MidpointRounding.AwayFromZero);
                             }
                             // 工程項目編號
                             string prjNumber = (from x in filteredItems
