@@ -47,6 +47,7 @@ namespace Sinotech.SEM
 
         private class OpeningInfo
         {
+            public Transform hostTransform = Transform.Identity;
             public string docName = string.Empty;
             public Element element { get; set; }
             public string type { get; set; }
@@ -87,6 +88,7 @@ namespace Sinotech.SEM
             /// <summary>搭配 tipAxis 使用的扶正角度(度)；水平貫穿時為 0，不套用。</summary>
             public double tipAngle { get; set; } = 0;
             public List<Element> pipeOpens = new List<Element>();
+            public Dictionary<ElementId, XYZ> placementPoints = new Dictionary<ElementId, XYZ>();
             public string useFS = string.Empty;
             public double deviation { get; set; }
             public double number { get; set; }
@@ -100,10 +102,6 @@ namespace Sinotech.SEM
         }
 
         private static List<Level> docLevels = new List<Level>();
-        List<LevelElevation> levelElevList = new List<LevelElevation>();
-        double prjNS = 0.0;
-        double prjWE = 0.0;
-        double prjElev = 0.0;
         double elevationOffset = 0.0;
         int prjCode = 0;
         public static double unit_conversion = 304.8;
@@ -123,23 +121,10 @@ namespace Sinotech.SEM
             {
                 try
                 {
-                    FindLevel findLevel = new FindLevel();
-                    Tuple<List<LevelElevation>, LevelElevation, double> multiValue = findLevel.FindDocViewLevel(doc);
-                    this.levelElevList = multiValue.Item1;
-
-                    List<BasePoint> allPrjLocations = new FilteredElementCollector(doc).OfClass(typeof(BasePoint)).WhereElementIsNotElementType().Cast<BasePoint>().ToList();
-                    List<BasePoint> prjLocations = allPrjLocations.Where(x => x.get_Parameter(BuiltInParameter.BASEPOINT_ANGLETON_PARAM) != null).ToList();
-                    BasePoint prjLocation = prjLocations.Where(x => x.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble() ==
-                                            prjLocations.Max(y => y.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble())).FirstOrDefault();
-                    prjNS = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_NORTHSOUTH_PARAM).AsDouble() * meter_conversion;
-                    prjWE = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_EASTWEST_PARAM).AsDouble() * meter_conversion;
-                    prjElev = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_ELEVATION_PARAM).AsDouble() * meter_conversion;
-                    try
-                    {
-                        string angleton = prjLocation.get_Parameter(BuiltInParameter.BASEPOINT_ANGLETON_PARAM).AsValueString();
-                        if (angleton != null) { double angle = -Convert.ToDouble(angleton.Remove(angleton.Length - 1)); }
-                    }
-                    catch (Exception) { }
+                    // 所有位置以主模型座標計算；不依賴視圖樓層或共用座標的顯示高程。
+                    startOpenings.Clear();
+                    openingXYZs.Clear();
+                    newOpeningIds.Clear();
 
                     IList<ElementFilter> startOpeningFilters = new List<ElementFilter>();
                     startOpeningFilters.Add(new ElementCategoryFilter(BuiltInCategory.OST_PipeAccessory));
@@ -151,8 +136,8 @@ namespace Sinotech.SEM
                     foreach (ElementId startOpening in startOpenings)
                     {
                         FamilyInstance opening = doc.GetElement(startOpening) as FamilyInstance;
-                        LocationPoint lp = opening.Location as LocationPoint;
-                        openingXYZs.Add(lp.Point);
+                        LocationPoint lp = opening?.Location as LocationPoint;
+                        if (lp != null) openingXYZs.Add(lp.Point);
                     }
 
                     docLevels = new FilteredElementCollector(doc).OfClass(typeof(Level)).WhereElementIsNotElementType().Cast<Level>().ToList();
@@ -219,15 +204,13 @@ namespace Sinotech.SEM
                                 {
                                     foreach (Element elem in wallOrBeamElems)
                                     {
-                                        string wallFamilyName = string.Empty;
                                         string wallTypeName = string.Empty;
                                         if (elem is Wall)
                                         {
                                             Wall wall = elem as Wall;
-                                            wallFamilyName = wall.WallType.FamilyName;
                                             wallTypeName = wall.WallType.Name;
                                         }
-                                        if (!wallFamilyName.Equals("帷幕牆") && !wallTypeName.Contains("輕隔間") && !wallTypeName.Contains("琺瑯") && !wallTypeName.Contains("廁所隔牆"))
+                                        if (!(elem is Wall curtainWall && curtainWall.WallType.Kind == WallKind.Curtain) && !wallTypeName.Contains("輕隔間") && !wallTypeName.Contains("琺瑯") && !wallTypeName.Contains("廁所隔牆"))
                                         {
                                             Options opt = new Options();
                                             opt.ComputeReferences = true;
@@ -242,7 +225,7 @@ namespace Sinotech.SEM
                                                 {
                                                     if (solid.SurfaceArea != 0)
                                                     {
-                                                        FindInputSolidBBElems(rvtLinkIns.GetLinkDocument(), elem, solid, pipeDuctLinkDocs, openingInfoList, professionalCodeForm.prjNameAndCodes);
+                                                        FindInputSolidBBElems(rvtLinkIns.GetLinkDocument(), elem, solid, rvtLinkIns.GetTotalTransform(), pipeDuctLinkDocs, openingInfoList, professionalCodeForm.prjNameAndCodes);
                                                     }
                                                 }
                                                 catch (NullReferenceException)
@@ -309,7 +292,8 @@ namespace Sinotech.SEM
                                         ductWight = merged.CableTrayWidthFeet,
                                         ductHeight = merged.FinalOpeningHeightFeet,
                                         thickness = merged.WallThickness,
-                                        xyzs = new List<XYZ> { merged.PlacementCenter },
+                                        // 保留電纜架上方 50 mm 餘量的中心上移 25 mm。
+                                        xyzs = new List<XYZ> { merged.PlacementCenter + new XYZ(0, 0, 25.0 / unit_conversion) },
                                         deviation = merged.DeviationFeet,
                                         axis = merged.Axis,
                                         pipeAngle = merged.PipeAngle,
@@ -355,17 +339,11 @@ namespace Sinotech.SEM
                                     }
                                     else
                                     {
-                                        double floorTopZ = 0.0;
-                                        if (openingInfo.level != null)
-                                        {
-                                            floorTopZ = openingInfo.level.ProjectElevation;
-                                        }
-
-                                        floorTopZ += floorOffsetFeet;
-                                        floorTopZ += elevationOffset;
-
-                                        entryZ = floorTopZ;
-                                        exitZ = floorTopZ - openingInfo.thickness;
+                                        // 族群管件沒有面交點時，仍從已轉到主模型的樓板實體取頂底高程。
+                                        BoundingBoxXYZ floorBounds = openingInfo.solid.GetBoundingBox();
+                                        Outline floorOutline = GetTransformedOutline(floorBounds, Transform.Identity);
+                                        entryZ = floorOutline.MaximumPoint.Z + elevationOffset;
+                                        exitZ = floorOutline.MinimumPoint.Z + elevationOffset;
                                     }
 
                                     double trueCenterZ = (entryZ + exitZ) / 2.0;
@@ -671,7 +649,7 @@ namespace Sinotech.SEM
             if (geomObj is Solid)
             {
                 solid = (Solid)geomObj;
-                Transform transform = revitLink.GetTotalTransform().Inverse;
+                Transform transform = revitLink.GetTotalTransform();
                 if (!transform.AlmostEqual(Transform.CreateTranslation(new XYZ(0, 0, 0))))
                 {
                     solid = SolidUtils.CreateTransformed(solid, transform);
@@ -679,7 +657,7 @@ namespace Sinotech.SEM
             }
             if (geomObj is GeometryInstance)
             {
-                GeometryElement geomElem = (geomObj as GeometryInstance).GetSymbolGeometry();
+                GeometryElement geomElem = (geomObj as GeometryInstance).GetInstanceGeometry();
                 foreach (GeometryObject o in geomElem)
                 {
                     solid = GetSymbolSolids(o, revitLink, solid);
@@ -698,16 +676,39 @@ namespace Sinotech.SEM
             return solid;
         }
 
-        private void FindInputSolidBBElems(Document revitLinkDoc, Element wallOrBeam, Solid solid, List<RevitLinkInstance> pipeDuctLinkDocs, List<OpeningInfo> openingInfoList, List<PrjNameAndCode> prjNameAndCodes)
+        private static bool IsCategory(Element element, BuiltInCategory category)
+        {
+            return element?.Category?.Id.Value == (long)category;
+        }
+
+        private static Outline GetTransformedOutline(BoundingBoxXYZ bounds, Transform transform)
+        {
+            // 旋轉後的最小/最大點未必仍是對角點，必須轉換八個角點後重算包圍盒。
+            List<XYZ> corners = new List<XYZ>();
+            for (int x = 0; x < 2; x++)
+                for (int y = 0; y < 2; y++)
+                    for (int z = 0; z < 2; z++)
+                        corners.Add(transform.OfPoint(bounds.Transform.OfPoint(new XYZ(
+                            x == 0 ? bounds.Min.X : bounds.Max.X,
+                            y == 0 ? bounds.Min.Y : bounds.Max.Y,
+                            z == 0 ? bounds.Min.Z : bounds.Max.Z))));
+            return new Outline(new XYZ(corners.Min(p => p.X), corners.Min(p => p.Y), corners.Min(p => p.Z)),
+                new XYZ(corners.Max(p => p.X), corners.Max(p => p.Y), corners.Max(p => p.Z)));
+        }
+
+        private static Level ResolvePlacementLevel(Level preferred, double modelZ)
+        {
+            if (preferred != null) return preferred;
+            return docLevels.Where(l => l.ProjectElevation <= modelZ + 1e-6)
+                .OrderByDescending(l => l.ProjectElevation).FirstOrDefault()
+                ?? docLevels.OrderBy(l => l.ProjectElevation).FirstOrDefault();
+        }
+
+        private void FindInputSolidBBElems(Document revitLinkDoc, Element wallOrBeam, Solid solid, Transform hostTransform, List<RevitLinkInstance> pipeDuctLinkDocs, List<OpeningInfo> openingInfoList, List<PrjNameAndCode> prjNameAndCodes)
         {
             try
             {
                 BoundingBoxXYZ bbox = solid.GetBoundingBox();
-                XYZ solidCentroid = solid.ComputeCentroid();
-                Transform transform = Transform.Identity;
-                transform.Origin = solidCentroid;
-                XYZ solidMin = transform.OfPoint(bbox.Min);
-                XYZ solidMax = transform.OfPoint(bbox.Max);
                 List<ElementTransform> elementTransformList = new List<ElementTransform>();
                 List<Element> interferenceElems = new List<Element>();
 
@@ -716,9 +717,7 @@ namespace Sinotech.SEM
                     ElementTransform elementTransform = new ElementTransform();
                     elementTransform.transform = pipeDuctLinkDoc.GetTotalTransform();
                     Transform linkTransform = pipeDuctLinkDoc.GetTotalTransform().Inverse;
-                    XYZ linkSolidMin = linkTransform.OfPoint(solidMin);
-                    XYZ linkSolidMax = linkTransform.OfPoint(solidMax);
-                    Outline linkOutline = new Outline(linkSolidMin, linkSolidMax);
+                    Outline linkOutline = GetTransformedOutline(bbox, linkTransform);
                     BoundingBoxIntersectsFilter linkBBFilter = new BoundingBoxIntersectsFilter(linkOutline);
                     IList<Element> bbElems = new FilteredElementCollector(pipeDuctLinkDoc.GetLinkDocument()).WherePasses(linkBBFilter).ToElements();
                     foreach (Element bbElem in bbElems)
@@ -727,12 +726,12 @@ namespace Sinotech.SEM
                         {
                             if (bbElem is FamilyInstance)
                             {
-                                if (bbElem.Category.Name.Equals("管配件") || bbElem.Category.Name.Equals("管附件"))
+                                if (IsCategory(bbElem, BuiltInCategory.OST_PipeFitting) || IsCategory(bbElem, BuiltInCategory.OST_PipeAccessory))
                                 {
                                     elementTransform.elements.Add(bbElem);
                                     interferenceElems.Add(bbElem);
                                 }
-                                else if (bbElem.Category.Name.Equals("風管附件"))
+                                else if (IsCategory(bbElem, BuiltInCategory.OST_DuctAccessory))
                                 {
                                     FamilyInstance familyInstance = bbElem as FamilyInstance;
                                     string fsName = familyInstance.Symbol.Family.Name;
@@ -742,7 +741,7 @@ namespace Sinotech.SEM
                                         interferenceElems.Add(bbElem);
                                     }
                                 }
-                                else if (bbElem.Category.Name.Equals("電纜架配件"))
+                                else if (IsCategory(bbElem, BuiltInCategory.OST_CableTrayFitting))
                                 {
                                     elementTransform.elements.Add(bbElem);
                                     interferenceElems.Add(bbElem);
@@ -764,16 +763,17 @@ namespace Sinotech.SEM
                 {
                     foreach (ElementTransform elemTransform in elementTransformList)
                     {
-                        SaveElemData(revitLinkDoc, wallOrBeam, solid, elemTransform.elements, elemTransform.transform, openingInfoList, prjNameAndCodes);
+                        SaveElemData(revitLinkDoc, wallOrBeam, solid, hostTransform, elemTransform.elements, elemTransform.transform, openingInfoList, prjNameAndCodes);
                     }
                 }
             }
             catch (Exception ex) { string error = wallOrBeam.Id + "\n" + ex.Message + "\n" + ex.ToString(); }
         }
 
-        private void SaveElemData(Document revitLinkDoc, Element wallOrBeam, Solid solid, List<Element> interferenceElems, Transform linkTransform, List<OpeningInfo> openingInfoList, List<PrjNameAndCode> prjNameAndCodes)
+        private void SaveElemData(Document revitLinkDoc, Element wallOrBeam, Solid solid, Transform hostTransform, List<Element> interferenceElems, Transform linkTransform, List<OpeningInfo> openingInfoList, List<PrjNameAndCode> prjNameAndCodes)
         {
             OpeningInfo openingInfo = new OpeningInfo();
+            openingInfo.hostTransform = hostTransform;
             ElementId levelElemId = null;
             Parameter thicknessPara = null;
             if (wallOrBeam is Wall)
@@ -784,13 +784,7 @@ namespace Sinotech.SEM
                     levelElemId = wallOrBeam.get_Parameter(BuiltInParameter.WALL_BASE_CONSTRAINT).AsElementId();
                     openingInfo.length = wallOrBeam.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH).AsDouble();
 
-                    List<WallType> wallTypelList = new FilteredElementCollector(revitLinkDoc).OfClass(typeof(WallType)).OfCategory(BuiltInCategory.OST_Walls).Cast<WallType>().ToList();
-                    string wallName = wallOrBeam.Name;
-                    Parameter wallTypePara = wallOrBeam.get_Parameter(BuiltInParameter.ELEM_FAMILY_PARAM);
-                    string wallTypeName = wallTypePara.AsValueString();
-                    WallType wallType = (from x in wallTypelList
-                                         where x.Name.Equals(wallName) && x.FamilyName.Equals(wallTypeName)
-                                         select x).FirstOrDefault();
+                    WallType wallType = ((Wall)wallOrBeam).WallType;
                     thicknessPara = wallType.get_Parameter(BuiltInParameter.WALL_ATTR_WIDTH_PARAM);
                 }
                 catch (Exception ex) { string error = wallOrBeam.Id + "\n" + levelElemId + "\n" + ex.Message; }
@@ -803,18 +797,7 @@ namespace Sinotech.SEM
                     levelElemId = wallOrBeam.get_Parameter(BuiltInParameter.INSTANCE_REFERENCE_LEVEL_PARAM).AsElementId();
                     openingInfo.length = wallOrBeam.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM).AsDouble();
 
-                    List<FamilySymbol> familySymbolList = new FilteredElementCollector(revitLinkDoc).OfClass(typeof(FamilySymbol)).OfCategory(BuiltInCategory.OST_StructuralFraming).Cast<FamilySymbol>().ToList();
-                    string beamName = wallOrBeam.Name;
-                    Parameter beamFamilyName = wallOrBeam.get_Parameter(BuiltInParameter.ELEM_FAMILY_PARAM);
-                    string beamFamily = beamFamilyName.AsValueString();
-                    FamilySymbol beamFS = (from x in familySymbolList
-                                           where x.Name.Equals(beamName) && x.FamilyName.Equals(beamFamily)
-                                           select x).FirstOrDefault();
-                    if (beamFS != null && !beamFS.IsActive)
-                    {
-                        beamFS.Activate();
-                        revitLinkDoc.Regenerate();
-                    }
+                    FamilySymbol beamFS = revitLinkDoc.GetElement(wallOrBeam.GetTypeId()) as FamilySymbol;
                     thicknessPara = beamFS.get_Parameter(BuiltInParameter.STRUCTURAL_SECTION_COMMON_WIDTH) ?? beamFS.LookupParameter("b") ?? beamFS.LookupParameter("樑寬度");
                 }
                 catch (Exception ex) { string error = wallOrBeam.Id + "\n" + levelElemId + "\n" + ex.Message; }
@@ -857,7 +840,7 @@ namespace Sinotech.SEM
                 try
                 {
                     LocationCurve lc = wallOrBeam.Location as LocationCurve;
-                    Line line = lc.Curve as Line;
+                    Line line = lc.Curve.CreateTransformed(hostTransform) as Line;
                     openingInfo.beamWallAngle = PointRotation(line.Tessellate()[0], line.Tessellate()[1]);
                 }
                 catch (Exception) { openingInfo.beamWallAngle = 0; }
@@ -867,7 +850,8 @@ namespace Sinotech.SEM
             try
             {
                 Level level = revitLinkDoc.GetElement(levelElemId) as Level;
-                docLevel = (from x in docLevels where x.Name.Contains(level.Name) select x).FirstOrDefault();
+                double levelZ = hostTransform.OfPoint(new XYZ(0, 0, level.ProjectElevation)).Z;
+                docLevel = docLevels.OrderBy(x => Math.Abs(x.ProjectElevation - levelZ)).FirstOrDefault();
                 openingInfo.level = docLevel;
             }
             catch (Exception) { }
@@ -901,13 +885,15 @@ namespace Sinotech.SEM
                     {
                         try
                         {
-                            string levelName = interferenceElem.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM).AsValueString();
-                            docLevel = (from x in docLevels where x.Name.Contains(levelName) select x).FirstOrDefault();
-                        }
-                        catch (NullReferenceException)
-                        {
-                            string levelName = interferenceElem.get_Parameter(BuiltInParameter.RBS_START_LEVEL_PARAM).AsValueString();
-                            docLevel = (from x in docLevels where x.Name.Contains(levelName) select x).FirstOrDefault();
+                            Parameter sourceLevelParam = interferenceElem.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM)
+                                ?? interferenceElem.get_Parameter(BuiltInParameter.RBS_START_LEVEL_PARAM);
+                            Level sourceLevel = sourceLevelParam != null
+                                ? interferenceElem.Document.GetElement(sourceLevelParam.AsElementId()) as Level : null;
+                            if (sourceLevel != null)
+                            {
+                                double levelZ = linkTransform.OfPoint(new XYZ(0, 0, sourceLevel.ProjectElevation)).Z;
+                                docLevel = docLevels.OrderBy(l => Math.Abs(l.ProjectElevation - levelZ)).FirstOrDefault();
+                            }
                         }
                         catch (Exception ex) { string error = ex.Message; }
                     }
@@ -916,14 +902,15 @@ namespace Sinotech.SEM
 
                     if (interferenceElem is FamilyInstance)
                     {
-                        if (interferenceElem.Category.Name.Equals("風管附件") || interferenceElem.Category.Name.Equals("電纜架配件"))
+                        if (IsCategory(interferenceElem, BuiltInCategory.OST_DuctAccessory) || IsCategory(interferenceElem, BuiltInCategory.OST_CableTrayFitting)
+                            || IsCategory(interferenceElem, BuiltInCategory.OST_PipeFitting) || IsCategory(interferenceElem, BuiltInCategory.OST_PipeAccessory))
                         {
                             LocationPoint lp = interferenceElem.Location as LocationPoint;
                             Parameter diameterPara = null;
                             FamilyInstance familyInstance = interferenceElem as FamilyInstance;
                             string fsName = familyInstance.Symbol.Family.Name;
 
-                            if (interferenceElem.Category.Name.Equals("管配件") || interferenceElem.Category.Name.Equals("管附件"))
+                            if (IsCategory(interferenceElem, BuiltInCategory.OST_PipeFitting) || IsCategory(interferenceElem, BuiltInCategory.OST_PipeAccessory))
                             {
                                 crushElemInfo.type = "PipeFitting";
                                 try
@@ -948,7 +935,7 @@ namespace Sinotech.SEM
                                     {
                                         diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
                                         crushElemInfo.size = diameterPara.AsDouble();
-                                        double diameterSize = diameterPara.AsDouble() / unit_conversion;
+                                        double diameterSize = diameterPara.AsDouble() * unit_conversion;
                                         size = diameterSize;
                                         diameterSize = SinoOpenSize(isInsulation, diameterSize);
                                         crushElemInfo.diameter = diameterSize / unit_conversion;
@@ -964,21 +951,16 @@ namespace Sinotech.SEM
                                     }
                                 }
                                 catch (Exception) { }
-
-                                if (crushElemInfo.ductHeight != 0 && crushElemInfo.ductWight != 0 && crushElemInfo.thickness != 0)
-                                {
-                                    FindSolidIntersection(interferenceElem, solid, openingInfo, crushElemInfo, linkTransform);
-                                }
                             }
-                            else if (interferenceElem.Category.Name.Equals("風管附件"))
+                            else if (IsCategory(interferenceElem, BuiltInCategory.OST_DuctAccessory))
                             {
                                 crushElemInfo.type = "DuctAccessory";
                                 if (fsName.Contains("防火風門") || fsName.Contains("防火風門 - 矩形") || fsName.Contains("電動風門 - 矩形"))
                                 {
                                     try
                                     {
-                                        crushElemInfo.ductHeight = GetFirstParameterValue(interferenceElem, "風管高度");
-                                        crushElemInfo.ductWight = GetFirstParameterValue(interferenceElem, "風管寬度");
+                                        crushElemInfo.ductHeight = GetFamilyDimension(familyInstance, BuiltInParameter.RBS_CURVE_HEIGHT_PARAM, "風管高度", false);
+                                        crushElemInfo.ductWight = GetFamilyDimension(familyInstance, BuiltInParameter.RBS_CURVE_WIDTH_PARAM, "風管寬度", true);
                                         crushElemInfo.thickness = thicknessPara != null ? thicknessPara.AsDouble() : GetFirstParameterValue(interferenceElem, "風門長度");
                                     }
                                     catch (Exception) { }
@@ -993,8 +975,7 @@ namespace Sinotech.SEM
                                     try
                                     {
                                         diameterPara = interferenceElem.LookupParameter("最大尺寸");
-                                        string diameter = diameterPara.AsValueString().Replace(" mm", "");
-                                        double diameterSize = Convert.ToDouble(diameter);
+                                        double diameterSize = diameterPara.AsDouble() * unit_conversion;
                                         crushElemInfo.thickness = diameterSize / unit_conversion;
                                         crushElemInfo.ductWight = diameterSize / unit_conversion;
                                         if (thicknessPara != null) crushElemInfo.thickness = thicknessPara.AsDouble();
@@ -1003,14 +984,14 @@ namespace Sinotech.SEM
                                     catch (Exception) { }
                                 }
                             }
-                            else if (interferenceElem.Category.Name.Equals("電纜架配件"))
+                            else if (IsCategory(interferenceElem, BuiltInCategory.OST_CableTrayFitting))
                             {
                                 crushElemInfo.type = "CableTrayFitting";
                                 try
                                 {
-                                    double heightValue = GetFirstParameterValue(interferenceElem, "托盤高度");
+                                    double heightValue = GetFamilyDimension(familyInstance, BuiltInParameter.RBS_CABLETRAY_HEIGHT_PARAM, "托盤高度", false);
                                     crushElemInfo.ductHeight = heightValue > 0 ? heightValue + (50.0 / unit_conversion) : 0.0;
-                                    crushElemInfo.ductWight = GetFirstParameterValue(interferenceElem, "托盤寬度");
+                                    crushElemInfo.ductWight = GetFamilyDimension(familyInstance, BuiltInParameter.RBS_CABLETRAY_WIDTH_PARAM, "托盤寬度", true);
                                     crushElemInfo.thickness = thicknessPara != null ? thicknessPara.AsDouble() : GetFirstParameterValue(interferenceElem, "長度");
                                 }
                                 catch (Exception) { }
@@ -1048,8 +1029,7 @@ namespace Sinotech.SEM
                             {
                                 diameterPara = interferenceElem.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
                                 crushElemInfo.size = diameterPara.AsDouble();
-                                string[] diameter = diameterPara.AsValueString().Split(new char[] { ' ' });
-                                double diameterSize = Convert.ToDouble(diameter[0]);
+                                double diameterSize = diameterPara.AsDouble() * unit_conversion;
                                 size = diameterSize;
                                 diameterSize = SinoOpenSize(isInsulation, diameterSize);
                                 crushElemInfo.diameter = diameterSize / unit_conversion;
@@ -1096,8 +1076,21 @@ namespace Sinotech.SEM
                 .Where(p => p.Definition != null && p.Definition.Name.Contains(keyword))
                 .ToList();
 
-            Parameter firstValidParam = matchingParams.FirstOrDefault(p => p.HasValue);
+            Parameter firstValidParam = matchingParams.FirstOrDefault(p => p.HasValue && p.StorageType == StorageType.Double);
             return firstValidParam != null ? firstValidParam.AsDouble() : 0.0;
+        }
+
+        private double GetFamilyDimension(FamilyInstance instance, BuiltInParameter builtIn, string customName, bool width)
+        {
+            Parameter parameter = instance.get_Parameter(builtIn);
+            if (parameter != null && parameter.HasValue && parameter.StorageType == StorageType.Double
+                && parameter.AsDouble() > 0) return parameter.AsDouble();
+            double customValue = GetFirstParameterValue(instance, customName);
+            if (customValue > 0) return customValue;
+            ConnectorManager manager = instance.MEPModel?.ConnectorManager;
+            if (manager == null) return 0;
+            return manager.Connectors.Cast<Connector>().Where(c => c.Shape == ConnectorProfileType.Rectangular)
+                .Select(c => width ? c.Width : c.Height).DefaultIfEmpty(0).Max();
         }
 
         /// <summary>
@@ -1182,18 +1175,21 @@ namespace Sinotech.SEM
 
             if (openingInfo.element is Floor)
             {
-                crushElemInfo.xyzs.Add(endPoint);
-                double z = endPoint.Z;
-                double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                XYZ topPoint = startPoint.Z >= endPoint.Z ? startPoint : endPoint;
+                crushElemInfo.level = ResolvePlacementLevel(crushElemInfo.level, topPoint.Z);
+                crushElemInfo.xyzs.Add(topPoint);
+                double z = topPoint.Z;
+                double elevation = crushElemInfo.level.ProjectElevation;
                 crushElemInfo.deviation = z - elevation;
             }
             else
             {
+                crushElemInfo.level = ResolvePlacementLevel(crushElemInfo.level, insXYZ.Z);
                 crushElemInfo.xyzs.Add(insXYZ);
                 double z = insXYZ.Z;
                 if (crushElemInfo.level != null)
                 {
-                    double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                    double elevation = crushElemInfo.level.ProjectElevation;
                     crushElemInfo.deviation = z - elevation;
                 }
             }
@@ -1258,21 +1254,22 @@ namespace Sinotech.SEM
                     XYZ insXYZ = new XYZ();
                     if (lp != null)
                     {
-                        insXYZ = new XYZ((lp.Point.X + transform.Origin.X), (lp.Point.Y + transform.Origin.Y), (lp.Point.Z + transform.Origin.Z) + elevationOffset);
+                        insXYZ = transform.OfPoint(lp.Point) + new XYZ(0, 0, elevationOffset);
                     }
                     else
                     {
                         LocationCurve lc = elem.Location as LocationCurve;
                         XYZ lp1 = lc.Curve.Tessellate()[0];
                         XYZ lp2 = lc.Curve.Tessellate()[1];
-                        insXYZ = new XYZ((lp1.X + lp2.X) / 2 + transform.Origin.X, (lp1.Y + lp2.Y) / 2 + transform.Origin.Y, (lp1.Z + lp2.Z) / 2 + transform.Origin.Z + elevationOffset);
+                        insXYZ = transform.OfPoint((lp1 + lp2) / 2) + new XYZ(0, 0, elevationOffset);
                     }
 
                     double z = insXYZ.Z;
+                    crushElemInfo.level = ResolvePlacementLevel(crushElemInfo.level, z);
                     if (openingInfo.element is Floor)
                     {
                         crushElemInfo.xyzs.Add(insXYZ);
-                        double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                        double elevation = crushElemInfo.level.ProjectElevation;
                         crushElemInfo.deviation = z - elevation;
                     }
                     else
@@ -1280,16 +1277,18 @@ namespace Sinotech.SEM
                         try
                         {
                             LocationCurve lc = openingInfo.element.Location as LocationCurve;
-                            Line line = lc.Curve as Line;
+                            Line line = lc.Curve.CreateTransformed(openingInfo.hostTransform) as Line;
                             line.MakeUnbound();
-                            insXYZ = line.Project(insXYZ).XYZPoint;
+                            XYZ projected = line.Project(insXYZ).XYZPoint;
+                            // 牆/樑定位線通常在樓層高度，只採用投影的 XY，保留管件真實 Z。
+                            insXYZ = new XYZ(projected.X, projected.Y, z);
                             crushElemInfo.xyzs.Add(insXYZ);
                         }
                         catch (Exception) { }
 
                         if (crushElemInfo.level != null)
                         {
-                            double elevation = crushElemInfo.level.get_Parameter(BuiltInParameter.LEVEL_ELEV).AsDouble();
+                            double elevation = crushElemInfo.level.ProjectElevation;
                             crushElemInfo.deviation = z - elevation;
                         }
                     }
@@ -1393,8 +1392,11 @@ namespace Sinotech.SEM
 
                     if (!isDuplicate)
                     {
+                        crushElemInfo.level = ResolvePlacementLevel(crushElemInfo.level, xyz.Z);
+                        crushElemInfo.deviation = xyz.Z - crushElemInfo.level.ProjectElevation;
                         FamilyInstance pipeOpen = doc.Create.NewFamilyInstance(xyz, openFS, crushElemInfo.level, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
                         crushElemInfo.pipeOpens.Add(pipeOpen);
+                        crushElemInfo.placementPoints[pipeOpen.Id] = xyz;
                         newOpeningIds.Add((int)pipeOpen.Id.Value);
                         amount++;
                     }
@@ -1479,10 +1481,22 @@ namespace Sinotech.SEM
                                 editPara = pipeOpen.LookupParameter("矩形牆開口流水號"); if (editPara != null && !editPara.IsReadOnly) editPara.Set(crushElemInfo.number);
                             }
 
-                            editPara = pipeOpen.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM);
+                            editPara = pipeOpen.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM)
+                                ?? pipeOpen.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM);
                             if (editPara != null && !editPara.IsReadOnly)
                             {
-                                editPara.Set(crushElemInfo.deviation);
+                                XYZ target = crushElemInfo.placementPoints[pipeOpen.Id];
+                                editPara.Set(target.Z - crushElemInfo.level.ProjectElevation);
+                            }
+
+                            // 重新生成後確認定位點，避免族群的樓層/偏移行為造成二次高程位移。
+                            doc.Regenerate();
+                            LocationPoint placedLocation = pipeOpen.Location as LocationPoint;
+                            if (placedLocation != null && crushElemInfo.placementPoints.TryGetValue(pipeOpen.Id, out XYZ targetPoint))
+                            {
+                                XYZ correction = targetPoint - placedLocation.Point;
+                                if (correction.GetLength() > 1e-6)
+                                    ElementTransformUtils.MoveElement(doc, pipeOpen.Id, correction);
                             }
 
                             editPara = pipeOpen.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
