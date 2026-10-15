@@ -33,7 +33,7 @@
     <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.10">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10">
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.13">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0">
@@ -45,9 +45,8 @@
     <PackageReference Include="System.Management" Version="10.0.10">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Text.Json" Version="10.0.10">
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </PackageReference>
+    <!-- Revit 2025 使用 .NET 8。連 compile 資產也必須排除，否則 DLL 仍會要求 Json 10。 -->
+    <PackageReference Include="System.Text.Json" Version="10.0.10" ExcludeAssets="all" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- ── Revit 2025 API 參考 ── -->
@@ -63,6 +62,9 @@
   </ItemGroup>
 
   <!-- ── WinForms 設計工具表單編譯聲明 ── -->
+  <ItemGroup>
+    <EmbeddedResource Include="Plotting\SheetPdfOcr.ps1" LogicalName="Sinotech_2025.Plotting.SheetPdfOcr.ps1" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Update="SEM\AutoNumberSettingForm.cs">
       <SubType>Form</SubType>

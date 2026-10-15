@@ -75,6 +75,11 @@ namespace Sinotech
             exportViewBtn.ToolTip = "使用者選擇要匯出的多張圖紙, 可一次輸出, 並且統一由圖紙中的參數設定為輸出檔名。";
             exportViewBtn.ToolTipImage = convertFromBitmap(Properties.Resources.圖紙匯出_原圖, 250);
 
+            PushButton sheetPdfCompareBtn = ribbonPanel.AddItem(new PushButtonData("SheetPdfCompare", "圖紙比對", addinAssmeblyPath, "Sinotech.Plotting.SheetPdfCompare")) as PushButton;
+            sheetPdfCompareBtn.LargeImage = convertFromBitmap(Properties.Resources.圖紙比對);
+            sheetPdfCompareBtn.ToolTip = "比對全部 Revit 圖紙的圖框圖名與圖號及選擇的 PDF 圖說，列出未匯出、圖名不一致與待確認項目。";
+            sheetPdfCompareBtn.ToolTipImage = convertFromBitmap(Properties.Resources.圖紙比對_原圖, 250);
+
             // 添加「快速工具」面板
             try { ribbonPanel = application.CreateRibbonPanel("中興自動化", "快速工具"); }
             catch

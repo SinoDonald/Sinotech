@@ -24,6 +24,18 @@ namespace Sinotech_2025.Properties {
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
         
+        /// <summary>圖紙比對按鈕圖片。</summary>
+        public static System.Drawing.Bitmap 圖紙比對 {
+            get {
+                return (System.Drawing.Bitmap)ResourceManager.GetObject("圖紙比對", resourceCulture);
+            }
+        }
+        /// <summary>圖紙比對工具提示原圖。</summary>
+        public static System.Drawing.Bitmap 圖紙比對_原圖 {
+            get {
+                return (System.Drawing.Bitmap)ResourceManager.GetObject("圖紙比對_原圖", resourceCulture);
+            }
+        }
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
