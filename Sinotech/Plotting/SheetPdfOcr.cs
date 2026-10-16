@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -41,23 +41,34 @@ namespace Sinotech.Plotting
                     Diagnostics += geometry;
                     if (!cells.HasValue) { Diagnostics += "找不到對應封閉欄格；"; continue; }
                     var title = cells.Value.Title; var number = cells.Value.Number;
-                    foreach (double scale in new[] { 6.0, 10.0, 16.0 })
+                    var samples = new List<FrameText>();
+                    string directTitle = SheetFrameReader.ReliableCellContent(page, title);
+                    string directNumber = SheetFrameReader.ReliableCellContent(page, number);
+                    foreach (double scale in new[] { 4.0, 6.0, 10.0 })
                     {
                         using var json = Recognize(file, page.Number, new[] { OcrRegion.From(title, page), OcrRegion.From(number, page) }, scale);
                         var extracted = json.RootElement.GetProperty("Cells");
                         if (extracted.GetArrayLength() != 2) continue;
-                        string t = CellText(extracted[0], true, out bool titleLabel);
+                        foreach (bool enhanced in new[] { false, true })
+                        {
+                        string t = CellText(extracted[0], true, out bool titleLabel, enhanced ? "EnhancedEnglishLines" : "EnglishLines");
                         string n = CellText(extracted[1], false, out bool numberLabel);
-                        var alternate = CellText(extracted[1], false, out _, "EnhancedEnglishLines");
-                        string improved = SheetOcrNumber.Repair(alternate, hints.Select(f => f.Number));
-                        if (improved != null) n = improved;
-                        else n = SheetOcrNumber.Repair(n, hints.Select(f => f.Number)) ?? n;
-                        Diagnostics += "OCR 原文圖號：" + CellText(extracted[1], false, out _) + "；候選圖號：" + n;
+                        var numbers = new[] { "EnglishLines", "EnhancedEnglishLines", "Lines", "EnhancedLines" }
+                            .Select(p => SheetOcrNumber.Repair(CellText(extracted[1], false, out _, p), hints.Select(f => f.Number)))
+                            .Where(v => v != null).GroupBy(v => v).OrderByDescending(g => g.Count()).ToList();
+                        if (numbers.Count > 0) n = numbers[0].Key;
+                        // 文字層可用的欄位保持原文，避免 OCR 把正確字元改壞。
+                        if (directTitle != null && SheetFrameReader.Normalize(directTitle) == SheetFrameReader.Normalize(t)) t = directTitle;
+                        if (directNumber != null && SheetFrameReader.Normalize(directNumber) == SheetFrameReader.Normalize(n)) n = directNumber;
+                        Diagnostics += $"OCR {scale:0}倍／{(enhanced ? "增強" : "原圖")}：{n}；{t}；";
                         // 需同時有欄格邊框、圖名標題與圖號標題，不能只讀到圖面索引號就當成圖框。
-                        if (!titleLabel || !numberLabel || string.IsNullOrWhiteSpace(t) || !Regex.IsMatch(n, @"\d") ||
+                        if (string.IsNullOrWhiteSpace(t) || !Regex.IsMatch(n, @"\d") ||
                             !Regex.IsMatch(n, @"[A-Za-z]")) continue;
                         var frame = new FrameText { Title = t, Number = n, TitleCell = title, NumberCell = number,
                             PageWidth = page.Width, PageHeight = page.Height, OcrCandidate = true, OcrScale = scale };
+                        samples.Add(frame);
+                        // 先收集同一封閉欄格的讀值；至少一個倍率確認兩個標題，才建立圖框結果。
+                        if (!titleLabel || !numberLabel) continue;
                         int Score(FrameText f)
                         {
                             int score = SheetOcrNumber.Repair(f.Number, hints.Select(h => h.Number)) != null ? 100 : 0;
@@ -69,11 +80,22 @@ namespace Sinotech.Plotting
                                 if (chinese > 0 && latin > chinese * 2) score -= 15;
                                 score += Regex.Matches(line, @"[A-Za-z]{3,}").Cast<Match>().Count(m => vocabulary.Contains(m.Value.ToUpperInvariant())) * 5;
                             }
-                            return score - Regex.Matches(f.Title, @"[\\<>]").Count * 10;
+                            // 不同倍率重複讀到相同完整內容，才增加可信度；不以模型圖名替換 OCR 原文。
+                            int agreement = samples.Select(s => s.OcrScale).Distinct().Count(s => samples.Any(c => c.OcrScale == s &&
+                                SheetFrameReader.Normalize(c.Title) == SheetFrameReader.Normalize(f.Title) &&
+                                SheetFrameReader.Normalize(c.Number) == SheetFrameReader.Normalize(f.Number)));
+                            return score + agreement * 30 - Regex.Matches(f.Title, @"[\\<>]").Count * 10;
                         }
                         var previous = results.FirstOrDefault(f => Math.Abs(f.TitleCell.Left - frame.TitleCell.Left) < 1);
                         if (previous == null || Score(frame) > Score(previous)) { if (previous != null) results.Remove(previous); results.Add(frame); }
-                        if (Score(frame) >= 100 && !Regex.IsMatch(t, @"[\\<>]")) break;
+                        }
+                    }
+                    var selected = results.FirstOrDefault(f => Math.Abs(f.TitleCell.Left - title.Left) < 1 &&
+                        Math.Abs(f.TitleCell.Bottom - title.Bottom) < 1);
+                    if (selected != null)
+                    {
+                        var compatible = samples.Where(s => SheetFrameReader.Normalize(s.Number) == SheetFrameReader.Normalize(selected.Number)).ToList();
+                        selected.Title = MergeTitleSamples(compatible.Select(s => s.Title), vocabulary);
                     }
                 }
                 if (results.Count == 0) reason = "局部 OCR 未能同時確認圖名／圖號標題及完整內容，請人工確認。";
@@ -89,6 +111,30 @@ namespace Sinotech.Plotting
                 }
             }
             return results;
+        }
+
+        // 只選 OCR 真正讀出的整行，不用模型圖名猜補；避免某倍率中文較佳、英文卻較差。
+        internal static string MergeTitleSamples(IEnumerable<string> titles, ISet<string> vocabulary)
+        {
+            var lines = titles.Select(t => t.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)).ToList();
+            if (lines.Count == 0) return "";
+            int count = lines.GroupBy(l => l.Length).OrderByDescending(g => g.Count()).ThenByDescending(g => g.Key).First().Key;
+            lines = lines.Where(l => l.Length == count).ToList();
+            var selected = new List<string>();
+            for (int i = 0; i < count; i++)
+            {
+                int Score(string text)
+                {
+                    int chinese = Regex.Matches(text, @"[\u4e00-\u9fff]").Count;
+                    int known = Regex.Matches(text, @"[A-Za-z]{3,}").Cast<Match>().Count(m => vocabulary.Contains(m.Value.ToUpperInvariant()));
+                    int noise = Regex.Matches(text, @"[\\<>$]").Count + text.Count(c => char.IsControl(c));
+                    int station = Regex.IsMatch(SheetFrameReader.Normalize(text), @"^[A-Z]{2}\d{2}") ? 30 : 0;
+                    return chinese * 8 + known * 12 + station - noise * 20;
+                }
+                selected.Add(lines.Select(l => l[i]).OrderByDescending(Score)
+                    .ThenByDescending(t => lines.Count(l => SheetFrameReader.Normalize(l[i]) == SheetFrameReader.Normalize(t))).First());
+            }
+            return string.Join(Environment.NewLine, selected);
         }
 
         internal JsonDocument Recognize(string file, int page, IEnumerable<OcrRegion> regions, double scale)
@@ -116,10 +162,11 @@ namespace Sinotech.Plotting
         {
             hasLabel = false;
             var lines = new List<string>();
-            var chosen = title ? cell.GetProperty("Lines").EnumerateArray().ToList() : cell.GetProperty(englishProperty).EnumerateArray().ToList();
+            bool enhanced = englishProperty == "EnhancedEnglishLines";
+            var chosen = title ? cell.GetProperty(enhanced ? "EnhancedLines" : "Lines").EnumerateArray().ToList() : cell.GetProperty(englishProperty).EnumerateArray().ToList();
             if (title)
             {
-                var english = cell.GetProperty("EnglishLines").EnumerateArray().ToList();
+                var english = cell.GetProperty(englishProperty).EnumerateArray().ToList();
                 for (int i = 0; i < chosen.Count; i++)
                 {
                     var words = chosen[i].GetProperty("Words").EnumerateArray().ToList();

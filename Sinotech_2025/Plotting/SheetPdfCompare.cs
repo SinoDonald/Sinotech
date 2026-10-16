@@ -115,7 +115,9 @@ namespace Sinotech_2025.Plotting
                         {
                             var page = pdf.GetPage(i);
                             var frames = SheetFrameReader.Read(page, out string reason);
-                            if (frames.Count == 0 && !string.IsNullOrEmpty(reason) && ocrHints.Count > 0)
+                            bool noFrame = frames.Count == 0 && SheetFrameReader.IsDefinitelyUnframed(page, ocrHints, reason);
+                            if (noFrame) continue;
+                            if (frames.Count == 0 && ocrHints.Count > 0)
                             {
                                 Update($"加強辨識 PDF 第 {i}/{pdf.NumberOfPages} 頁\n圖名／圖號欄格局部 OCR，擷取結果仍需人工確認。");
                                 frames = ocr.Read(picker.FileName, page, ocrHints, out string ocrReason);
@@ -132,7 +134,7 @@ namespace Sinotech_2025.Plotting
                             if (frames.Count == 0)
                             {
                                 if (!string.IsNullOrEmpty(reason)) notices.Add($"PDF 第 {i} 頁：{reason}");
-                                pdfRows.Rows.Add(i, "", "", string.IsNullOrEmpty(reason) ? "略過：沒有圖名／圖號圖框" : "待確認：" + reason);
+                                pdfRows.Rows.Add(i, "", "", "待確認：" + (string.IsNullOrEmpty(reason) ? "無法確認圖框內容。" : reason));
                                 continue;
                             }
                             foreach (FrameText frame in frames)
@@ -240,7 +242,8 @@ namespace Sinotech_2025.Plotting
                 "人工覆核：於 PDF 頁面明細填入圖框完整圖名／圖號並勾選人工確認，再按重新比對。" + Environment.NewLine +
                 "若為非相關頁面，清空圖名及圖號並勾選人工確認。每次開啟命令需重新覆核；CSV 保留覆核欄位。" + Environment.NewLine +
                 "圖目錄按圖號分類列出完整圖名；內容分類依圖名字詞推定。目錄中的圖號不當作實際圖紙存在的證據；OCR 目錄需覆核，PDF 有未確認頁面時不直接判定缺頁。" + Environment.NewLine +
-                "可在目錄分頁補入漏辨識的項目，再套用人工確認。OCR 以 6／10／16 倍重新渲染局部欄格，受 Windows 影像尺寸上限限制。" + Environment.NewLine +
+                "可在目錄分頁補入漏辨識的項目，再套用人工確認。OCR 比較 4／6／10 倍原圖及增強圖，逐行選取讀值，仍需人工覆核。" + Environment.NewLine +
+                "確認沒有圖框的頁面直接略過，不列於頁面明細；無法排除圖框的掃描頁或辨識失敗頁仍保留待確認。" + Environment.NewLine +
                 string.Join(Environment.NewLine, notices) });
             tabs.TabPages.Add(detailTab);
             var top = new Forms.FlowLayoutPanel { Dock = Forms.DockStyle.Top, Height = 70, Padding = new Forms.Padding(8) };
@@ -450,6 +453,28 @@ namespace Sinotech_2025.Plotting
             return (title.Value, candidates.OrderBy(c => Math.Abs(c.Width - expectedWidth)).ThenBy(c => c.Bottom).First());
         }
 
+        // 沒有文字不代表沒有圖框。影像頁與未知欄格仍保留待確認。
+        internal static bool IsDefinitelyUnframed(Page page, IEnumerable<FrameText> hints, string reason)
+        {
+            if (page.GetImages().Any()) return false;
+            if (!string.IsNullOrEmpty(reason) && page.Letters.Count > 0) return false;
+            var layouts = new List<FrameText>();
+            foreach (var hint in hints.Where(h => h.PageWidth > 0 && h.PageHeight > 0))
+            {
+                if (layouts.Any(h => h.SameLayout(hint))) continue;
+                layouts.Add(hint);
+                if (ProjectCells(page, hint, out _).HasValue) return false;
+            }
+            // 可讀文字卻沒有任何圖框標題，或確實空白的頁面，直接略過。
+            return page.Letters.Count > 0 || page.Paths.Count == 0;
+        }
+
+        internal static string ReliableCellContent(Page page, PdfRectangle cell)
+        {
+            string text = Content(page.Letters, cell);
+            return string.IsNullOrWhiteSpace(text) || BadText(text) ? null : text;
+        }
+
         private static (List<Edge> Horizontal, List<Edge> Vertical) Edges(Page page)
         {
             var horizontal = new List<Edge>(); var vertical = new List<Edge>();
@@ -478,7 +503,7 @@ namespace Sinotech_2025.Plotting
             return (horizontal, vertical);
         }
 
-        private static bool BadText(string text) => text.Contains('\uFFFD') || text.Contains('?') ||
+        private static bool BadText(string text) => text.Any(c => char.IsControl(c) && !char.IsWhiteSpace(c)) || text.Contains('\uFFFD') || text.Contains('?') ||
             text.Contains("(cid:") || text.Any(c => char.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.PrivateUse);
 
         internal sealed class Piece
