@@ -709,6 +709,8 @@ namespace Sinotech_2025.CSD
             {
                 // 容器的 BoundingBox 會包住所有成員，不能當成實心障礙物。
                 if (element is Group || element is AssemblyInstance) return;
+                // 剖面框是視圖控制範圍，並非填滿的圖面內容；其外框可能覆蓋整張裁切區。
+                if (element.Category?.BuiltInCategory == BuiltInCategory.OST_SectionBox) return;
                 if (element is CurveElement curveElement)
                 {
                     AddCurveObstacle(result, curveElement.GeometryCurve, frame, transform);
@@ -724,7 +726,9 @@ namespace Sinotech_2025.CSD
 
                 bool isAnnotation = element.Category != null &&
                     element.Category.CategoryType == CategoryType.Annotation;
-                if (isAnnotation || element is IndependentTag || element is TextNote ||
+                // 銜接線雖屬註解，只有線本身會遮擋文字，不能使用包住整條線的矩形。
+                bool isMatchline = element.Category?.BuiltInCategory == BuiltInCategory.OST_Matchline;
+                if ((isAnnotation && !isMatchline) || element is IndependentTag || element is TextNote ||
                     element is Dimension || element is FilledRegion || element is ImageInstance)
                 {
                     BoundingBoxXYZ box = element.get_BoundingBox(view);

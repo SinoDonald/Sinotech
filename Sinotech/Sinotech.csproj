@@ -616,4 +616,10 @@
     <None Include="pic\圖紙比對.png" />
     <None Include="pic\原圖\圖紙比對(原圖).png" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Sinotech_2025\Plotting\BatchNwcExport.cs"><Link>Plotting\BatchNwcExport.cs</Link></Compile>
+    <Compile Include="..\Sinotech_2025\Plotting\BatchNwcPolicy.cs"><Link>Plotting\BatchNwcPolicy.cs</Link></Compile>
+    <None Include="pic\批次匯出.png" />
+    <None Include="pic\原圖\批次匯出(原圖).png" />
+  </ItemGroup>
 </Project>

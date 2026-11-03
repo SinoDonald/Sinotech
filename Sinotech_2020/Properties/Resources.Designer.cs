@@ -24,6 +24,12 @@ namespace Sinotech_2020.Properties {
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
         
+        public static System.Drawing.Bitmap 批次匯出 {
+            get { return (System.Drawing.Bitmap)ResourceManager.GetObject("批次匯出", resourceCulture); }
+        }
+        public static System.Drawing.Bitmap 批次匯出_原圖 {
+            get { return (System.Drawing.Bitmap)ResourceManager.GetObject("批次匯出_原圖", resourceCulture); }
+        }
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;

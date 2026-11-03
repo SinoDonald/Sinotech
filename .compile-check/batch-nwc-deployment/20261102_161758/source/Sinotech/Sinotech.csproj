@@ -1,0 +1,619 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F11EF22E-0C35-4338-A413-7B7BBD44D1B3}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Sinotech</RootNamespace>
+    <AssemblyName>Sinotech</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <LangVersion>8.0</LangVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EPPlus, Version=7.5.2.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.7.5.2\lib\net462\EPPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus.Interfaces, Version=7.5.0.0, Culture=neutral, PublicKeyToken=a694d7f3b0907a61, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.Interfaces.7.5.0\lib\net462\EPPlus.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="EPPlus.System.Drawing, Version=7.5.0.0, Culture=neutral, PublicKeyToken=2308d35469c9bac0, processorArchitecture=MSIL">
+      <HintPath>..\packages\EPPlus.System.Drawing.7.5.0\lib\net462\EPPlus.System.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.10, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.10.0.10\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.Cryptography, Version=10.0.0.13, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.Cryptography.10.0.13\lib\net462\Microsoft.Bcl.Cryptography.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.HashCode.6.0.0\lib\net462\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IO.RecyclableMemoryStream.3.0.1\lib\netstandard2.0\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="RevitAPI">
+      <HintPath>..\..\..\..\Program Files\Autodesk\Revit 2024\RevitAPI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>..\..\..\..\Program Files\Autodesk\Revit 2024\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ComponentModel.Annotations.5.0.0\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Drawing.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Drawing.Common.10.0.10\lib\net462\System.Drawing.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Formats.Asn1, Version=10.0.0.13, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Formats.Asn1.10.0.13\lib\net462\System.Formats.Asn1.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.4.3.0\lib\net462\System.IO.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.IO.Pipelines, Version=10.0.0.10, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.Pipelines.10.0.10\lib\net462\System.IO.Pipelines.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Management" />
+    <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net" />
+    <Reference Include="System.Net.Http, Version=4.1.1.3, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Net.Http.4.3.4\lib\net46\System.Net.Http.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime, Version=4.1.1.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.4.3.1\lib\net462\System.Runtime.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Security.AccessControl, Version=6.0.0.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.AccessControl.6.0.1\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Algorithms, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Algorithms.4.3.1\lib\net463\System.Security.Cryptography.Algorithms.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Encoding, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Encoding.4.3.0\lib\net46\System.Security.Cryptography.Encoding.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Primitives, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Primitives.4.3.0\lib\net46\System.Security.Cryptography.Primitives.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.X509Certificates, Version=4.1.1.2, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.X509Certificates.4.3.2\lib\net461\System.Security.Cryptography.X509Certificates.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Xml, Version=10.0.0.13, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Cryptography.Xml.10.0.13\lib\net462\System.Security.Cryptography.Xml.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Security.Principal.Windows.5.0.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Text.Encoding.CodePages, Version=10.0.0.10, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encoding.CodePages.10.0.10\lib\net462\System.Text.Encoding.CodePages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web, Version=10.0.0.10, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encodings.Web.10.0.10\lib\net462\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json, Version=10.0.0.10, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Json.10.0.10\lib\net462\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.RegularExpressions, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.RegularExpressions.4.3.1\lib\net463\System.Text.RegularExpressions.dll</HintPath>
+      <Private>True</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Threading.Tasks" />
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.6.3\lib\net462\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.ValueTuple" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UglyToad.PdfPig, Version=0.1.15.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.15\lib\net471\UglyToad.PdfPig.dll</HintPath>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Core, Version=0.1.15.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.15\lib\net471\UglyToad.PdfPig.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.DocumentLayoutAnalysis, Version=0.1.15.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.15\lib\net471\UglyToad.PdfPig.DocumentLayoutAnalysis.dll</HintPath>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Fonts, Version=0.1.15.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.15\lib\net471\UglyToad.PdfPig.Fonts.dll</HintPath>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Package, Version=0.1.15.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.15\lib\net471\UglyToad.PdfPig.Package.dll</HintPath>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Tokenization, Version=0.1.15.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.15\lib\net471\UglyToad.PdfPig.Tokenization.dll</HintPath>
+    </Reference>
+    <Reference Include="UglyToad.PdfPig.Tokens, Version=0.1.15.0, Culture=neutral, PublicKeyToken=605d367334e74123, processorArchitecture=MSIL">
+      <HintPath>..\packages\PdfPig.0.1.15\lib\net471\UglyToad.PdfPig.Tokens.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="SEM\AutoNumber.cs" />
+    <Compile Include="Common\AutoNumberForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Common\AutoNumberForm.Designer.cs">
+      <DependentUpon>AutoNumberForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SEM\AutoNumberSettingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SEM\AutoNumberSettingForm.Designer.cs">
+      <DependentUpon>AutoNumberSettingForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SEM\AutoOpeningTag.cs" />
+    <Compile Include="Common\ChooseMultiViewPlansForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Common\ChooseMultiViewPlansForm.Designer.cs">
+      <DependentUpon>ChooseMultiViewPlansForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Common\ProgressForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CSD\LinkSelectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CSD\LinkSelectionForm.Designer.cs">
+      <DependentUpon>LinkSelectionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SEM\MegedOpening.cs" />
+    <Compile Include="SEM\NumberingConfig.cs" />
+    <Compile Include="SEM\OpeningTagArray.cs" />
+    <Compile Include="CSD\TagArray.cs" />
+    <Compile Include="SEM\ViewSelectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SEM\ViewSelectionForm.Designer.cs">
+      <DependentUpon>ViewSelectionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FamilyProtect\ProtectLoadedFamilyCommand.cs" />
+    <Compile Include="CreateModel\AutoColumn.cs" />
+    <Compile Include="SpeedTool\AutoJoin.cs" />
+    <Compile Include="SpeedTool\AutoJoinForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SpeedTool\AutoJoinForm.Designer.cs">
+      <DependentUpon>AutoJoinForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CreateModel\AutoPipe.cs" />
+    <Compile Include="CreateModel\AutoPipeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CreateModel\AutoPipeForm.Designer.cs">
+      <DependentUpon>AutoPipeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CSD\AutoPipeTag.cs" />
+    <Compile Include="SpeedTool\AutoUpdate.cs" />
+    <Compile Include="UpdateView\BatchSign.cs" />
+    <Compile Include="FamilyProtect\ChooseElems.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FamilyProtect\ChooseElems.Designer.cs">
+      <DependentUpon>ChooseElems.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Plotting\ChooseFSForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Plotting\ChooseFSForm.Designer.cs">
+      <DependentUpon>ChooseFSForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Plotting\ChooseView.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Plotting\ChooseView.Designer.cs">
+      <DependentUpon>ChooseView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CreateModel\ColNamesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CreateModel\colNamesForm.Designer.cs">
+      <DependentUpon>ColNamesForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Plotting\Command.cs" />
+    <Compile Include="Plotting\CopyDrawings.cs" />
+    <Compile Include="Verification\CopyFiles.cs" />
+    <Compile Include="Plotting\CopyViewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Plotting\CopyViewForm.Designer.cs">
+      <DependentUpon>CopyViewForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UpdateView\CreateDrawings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UpdateView\CreateDrawings.Designer.cs">
+      <DependentUpon>CreateDrawings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Verification\CrushReport.cs" />
+    <Compile Include="Verification\CrushReportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Verification\CrushReportForm.Designer.cs">
+      <DependentUpon>CrushReportForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Plotting\DefaultValues.cs" />
+    <Compile Include="UpdateView\DetectionScale.cs" />
+    <Compile Include="UpdateView\DrawingSign.cs" />
+    <Compile Include="UpdateView\EditViewSheetNumber.cs" />
+    <Compile Include="UpdateView\EditViewSheetNumberForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UpdateView\EditViewSheetNumberForm.Designer.cs">
+      <DependentUpon>EditViewSheetNumberForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UpdateView\EPPlus.cs" />
+    <Compile Include="UpdateView\ExcelReader.cs" />
+    <Compile Include="Plotting\ExportDWG.cs" />
+    <Compile Include="Plotting\ExportPDF.cs" />
+    <Compile Include="FamilyProtect\FamilyConversionToDirectShape.cs" />
+    <Compile Include="FamilyProtect\FamilyProtect.cs" />
+    <Compile Include="SEM\FindLevel.cs" />
+    <Compile Include="SEM\LinkOpening.cs" />
+    <Compile Include="FamilyProtect\LockOne.cs" />
+    <Compile Include="SEM\ManualPipeTag.cs" />
+    <Compile Include="SEM\ManualTagForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SEM\ManualTagForm.Designer.cs">
+      <DependentUpon>ManualTagForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Plotting\Methods.cs" />
+    <Compile Include="Plotting\MoveView.cs" />
+    <Compile Include="Plotting\MoveViewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Plotting\MoveViewForm.Designer.cs">
+      <DependentUpon>MoveViewForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SEM\OutPutPCCES.cs" />
+    <Compile Include="SEM\PccesProjectMappingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SEM\PccesProjectMappingStore.cs" />
+    <Compile Include="SEM\CurbWallContactCalculator.cs" />
+    <Compile Include="SpeedTool\ParkOrRoom.cs" />
+    <Compile Include="SpeedTool\ParkOrRoomForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SpeedTool\ParkOrRoomForm.Designer.cs">
+      <DependentUpon>ParkOrRoomForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UpdateView\PdfReader.cs" />
+    <Compile Include="SpeedTool\PipeCodeColor.cs" />
+    <Compile Include="SpeedTool\PipeEdit.cs" />
+    <Compile Include="SpeedTool\PipeEditForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SpeedTool\PipeEditForm.Designer.cs">
+      <DependentUpon>PipeEditForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SEM\ProfessionalCodeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SEM\ProfessionalCodeForm.Designer.cs">
+      <DependentUpon>ProfessionalCodeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RevitDocument.cs" />
+    <Compile Include="UpdateView\Sinotech_API.cs" />
+    <Compile Include="App.cs" />
+    <Compile Include="SEM\UpdateExcel.cs" />
+    <Compile Include="UpdateView\UpdateExcelCell.cs" />
+    <Compile Include="Verification\ExcelSPPath.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Common\AutoNumberForm.resx">
+      <DependentUpon>AutoNumberForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SEM\AutoNumberSettingForm.resx">
+      <DependentUpon>AutoNumberSettingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Common\ChooseMultiViewPlansForm.resx">
+      <DependentUpon>ChooseMultiViewPlansForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CSD\LinkSelectionForm.resx">
+      <DependentUpon>LinkSelectionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SEM\PccesProjectMappingForm.resx">
+      <DependentUpon>PccesProjectMappingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SEM\ViewSelectionForm.resx">
+      <DependentUpon>ViewSelectionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SpeedTool\AutoJoinForm.resx">
+      <DependentUpon>AutoJoinForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CreateModel\AutoPipeForm.resx">
+      <DependentUpon>AutoPipeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FamilyProtect\ChooseElems.resx">
+      <DependentUpon>ChooseElems.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Plotting\ChooseFSForm.resx">
+      <DependentUpon>ChooseFSForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Plotting\ChooseView.resx">
+      <DependentUpon>ChooseView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CreateModel\colNamesForm.resx">
+      <DependentUpon>ColNamesForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Plotting\CopyViewForm.resx">
+      <DependentUpon>CopyViewForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UpdateView\CreateDrawings.resx">
+      <DependentUpon>CreateDrawings.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Verification\CrushReportForm.resx">
+      <DependentUpon>CrushReportForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UpdateView\EditViewSheetNumberForm.resx">
+      <DependentUpon>EditViewSheetNumberForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SEM\ManualTagForm.resx">
+      <DependentUpon>ManualTagForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Plotting\MoveViewForm.resx">
+      <DependentUpon>MoveViewForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SpeedTool\ParkOrRoomForm.resx">
+      <DependentUpon>ParkOrRoomForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SpeedTool\PipeEditForm.resx">
+      <DependentUpon>PipeEditForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SEM\ProfessionalCodeForm.resx">
+      <DependentUpon>ProfessionalCodeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PCCES.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\手動標籤.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動升版.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動接合.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動開口.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動標籤.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\更新Excel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\更新比例尺.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\視圖搬移.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\視圖複製.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\雲形線編號.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\圖紙更新.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\圖紙匯出.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\更新圖號.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動簽圖.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\元件解鎖.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\元件鎖定.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\自動翻柱.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\干涉報告.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\規範詳圖.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\手動編號.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\自動編號.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\標籤排序.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\開口標籤.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\管道標籤.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\自動開口.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\PCCES.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\元件鎖定.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\自動升版.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\雲形線編號.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\自動接合.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\自動簽圖.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\更新Excel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\更新比例尺.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\更新圖號.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\視圖搬移.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\視圖複製.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\圖紙更新.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\原圖\PCCES(原圖).png" />
+    <None Include="pic\原圖\元件鎖定(原圖).png" />
+    <None Include="pic\原圖\圖紙匯出(原圖).png" />
+    <None Include="pic\原圖\圖紙更新(原圖).png" />
+    <None Include="pic\原圖\更新Excel(原圖).png" />
+    <None Include="pic\原圖\更新圖號(原圖).png" />
+    <None Include="pic\原圖\更新比例尺(原圖).png" />
+    <None Include="pic\原圖\標籤排序(原圖).png" />
+    <None Include="pic\原圖\管道標籤(原圖).png" />
+    <None Include="pic\原圖\自動升版(原圖).png" />
+    <None Include="pic\原圖\自動接合(原圖).png" />
+    <None Include="pic\原圖\自動簽圖(原圖).png" />
+    <None Include="pic\原圖\自動編號(原圖).png" />
+    <None Include="pic\原圖\自動開口(原圖).png" />
+    <None Include="pic\原圖\視圖搬移(原圖).png" />
+    <None Include="pic\原圖\視圖複製(原圖).png" />
+    <None Include="pic\原圖\開口標籤(原圖).png" />
+    <None Include="pic\原圖\雲形線編號(原圖).png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pic\圖紙匯出.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <Import Project="..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>此專案參考這部電腦上所缺少的 NuGet 套件。請啟用 NuGet 套件還原，以下載該套件。如需詳細資訊，請參閱 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的檔案是 {0}。</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets'))" />
+  </Target>
+  <ItemGroup>
+    <Compile Include="Plotting\SheetPdfCompare.cs" />
+    <Compile Include="Plotting\SheetTitleBlockParameters.cs" />
+    <Compile Include="Plotting\SheetPdfOcr.cs" />
+    <Compile Include="Plotting\SheetDrawingIndex.cs" />
+    <EmbeddedResource Include="Plotting\SheetPdfOcr.ps1">
+      <LogicalName>Sinotech.Plotting.SheetPdfOcr.ps1</LogicalName>
+    </EmbeddedResource>
+    <None Include="pic\圖紙比對.png" />
+    <None Include="pic\原圖\圖紙比對(原圖).png" />
+  </ItemGroup>
+</Project>
