@@ -622,4 +622,9 @@
     <None Include="pic\批次匯出.png" />
     <None Include="pic\原圖\批次匯出(原圖).png" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="pic\Sinotech.ico">
+      <LogicalName>Sinotech.BatchExport.Sinotech.ico</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

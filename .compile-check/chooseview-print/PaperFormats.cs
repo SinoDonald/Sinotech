@@ -1,0 +1,1 @@
+namespace Autodesk.Revit.DB { public enum ExportPaperFormat { ARCH_E3, ARCH_E2, ARCH_E1, ARCH_E, ARCH_D, ARCH_C, ARCH_B, ARCH_A, ISO_B1, ISO_B2, ISO_B3, ISO_B4, ISO_A0, ISO_A1, ISO_A2, ISO_A3, ISO_A4, ANSI_E, ANSI_D, ANSI_C, ANSI_B, ANSI_A, Default } }

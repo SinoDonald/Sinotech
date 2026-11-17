@@ -409,6 +409,16 @@ namespace Sinotech.Plotting
                 TaskDialog.Show("匯出圖紙", "請至少勾選一張圖紙。");
                 return;
             }
+            // 匯出前驗證一次；不支援的紙型/邊界保留視窗供使用者更換設定。
+            if (formatCB.Text == "PDF")
+            {
+                try { using (CreatePdfExportOptions(formDoc)) { } }
+                catch (Exception ex)
+                {
+                    TaskDialog.Show("PDF 列印設定", ex.Message);
+                    return;
+                }
+            }
             // 匯出視圖成DWG檔
             ExportViewPlan(formDoc, chooseViewSheets);
         }
@@ -536,16 +546,13 @@ namespace Sinotech.Plotting
                                 {
                                     try
                                     {
-                                        // 建立PDF匯出選項
-                                        PDFExportOptions options = new PDFExportOptions();
-                                        string fileName = exportName; // 使用自訂參數組成的安全檔名
-                                        options.FileName = fileName; // 直接指定檔名
-                                        options.ColorDepth = ColorDepthType.BlackLine; // 色彩深度
-                                        options.ExportQuality = PDFExportQualityType.DPI300; // 匯出品質
-                                        options.Combine = true; // 合併檔案
-                                        options.HideCropBoundaries = false;
-                                        ICollection<ElementId> views = new List<ElementId>() { viewInfo.view.Id }; // 準備要輸出的View
-                                        bool result = doc.Export(path, views.ToList(), options); // 匯出 PDF
+                                        using (PDFExportOptions options = CreatePdfExportOptions(doc))
+                                        {
+                                            options.FileName = exportName;
+                                            options.Combine = true;
+                                            if (!doc.Export(path, new List<ElementId> { viewInfo.view.Id }, options))
+                                                throw new IOException("Revit 未能完成 PDF 匯出：" + exportName);
+                                        }
                                     }
                                     catch (Exception ex)
                                     {
@@ -573,6 +580,77 @@ namespace Sinotech.Plotting
 
             Close(); // 關閉
         }
+        // PrintSetting 與原生 PDFExportOptions 是兩套設定，必須明確轉換。
+        private PDFExportOptions CreatePdfExportOptions(Document doc)
+        {
+            var options = new PDFExportOptions();
+            try
+            {
+                if (string.IsNullOrWhiteSpace(optionCB.Text)) return options;
+                PrintSetting setting = new FilteredElementCollector(doc).OfClass(typeof(PrintSetting))
+                    .Cast<PrintSetting>().FirstOrDefault(item => item.Name == optionCB.Text);
+                if (setting == null)
+                    throw new InvalidOperationException("找不到列印設定「" + optionCB.Text + "」，請重新開啟匯出視窗。");
+                PrintParameters print = setting.PrintParameters;
+                options.PaperFormat = ResolvePdfPaperFormat(print.PaperSize.Name);
+                options.PaperOrientation = print.PageOrientation;
+                options.ZoomType = print.ZoomType;
+                if (print.ZoomType == ZoomType.Zoom) options.ZoomPercentage = print.Zoom;
+                options.PaperPlacement = print.PaperPlacement == PaperPlacementType.Center
+                    ? PaperPlacementType.Center : PaperPlacementType.LowerLeft;
+                if (options.PaperPlacement == PaperPlacementType.LowerLeft)
+                {
+                    if (print.MarginType == MarginType.PrinterLimit)
+                        throw new NotSupportedException("列印設定「" + setting.Name
+                            + "」使用印表機可列印範圍，原生 PDF 無法取得該驅動程式的邊界。請將列印設定改為無邊界或自訂偏移。");
+                    // 兩個 API 的 OriginOffset 都使用英呎；無邊界不得讀取自訂偏移。
+                    options.OriginOffsetX = print.MarginType == MarginType.UserDefined ? print.OriginOffsetX : 0;
+                    options.OriginOffsetY = print.MarginType == MarginType.UserDefined ? print.OriginOffsetY : 0;
+                }
+                options.ColorDepth = print.ColorDepth;
+                options.RasterQuality = print.RasterQuality;
+                options.AlwaysUseRaster = print.HiddenLineViews == HiddenLineViewsType.RasterProcessing;
+                options.HideCropBoundaries = print.HideCropBoundaries;
+                options.HideReferencePlane = print.HideReforWorkPlanes;
+                options.HideScopeBoxes = print.HideScopeBoxes;
+                options.HideUnreferencedViewTags = print.HideUnreferencedViewTags;
+                options.ViewLinksInBlue = print.ViewLinksinBlue;
+                options.MaskCoincidentLines = print.MaskCoincidentLines;
+                options.ReplaceHalftoneWithThinLines = print.ReplaceHalftoneWithThinLines;
+                return options;
+            }
+            catch
+            {
+                options.Dispose();
+                throw;
+            }
+        }
+
+        internal static ExportPaperFormat ResolvePdfPaperFormat(string paperName)
+        {
+            // 僅辨識完整紙型名稱或驅動程式附加的尺寸說明，避免 A1 誤判成 A10/A1+。
+            string name = (paperName ?? "").Trim().ToUpperInvariant();
+            foreach (ExportPaperFormat format in Enum.GetValues(typeof(ExportPaperFormat)))
+            {
+                if (format == ExportPaperFormat.Default) continue;
+                string fullName = format.ToString().Replace('_', ' ').ToUpperInvariant();
+                string shortName = fullName.StartsWith("ISO ") ? fullName.Substring(4) : fullName;
+                foreach (string candidate in new[] { fullName, shortName })
+                {
+                    if (name == candidate || name.StartsWith(candidate + " (", StringComparison.Ordinal)
+                        || name.StartsWith(candidate + "(", StringComparison.Ordinal)) return format;
+                }
+            }
+            // 常見 Windows 印表機的北美紙型別名。
+            switch (name)
+            {
+                case "LETTER": return ExportPaperFormat.ANSI_A;
+                case "TABLOID": return ExportPaperFormat.ANSI_B;
+            }
+            throw new NotSupportedException("列印紙張「" + paperName
+                + "」無法對應至原生 PDF 紙張。請選用標準紙型（例如 A1），不會自動改用內容範圍匯出。");
+        }
+
         // 選擇Excel檔
         private string ChooseExportPath(string path)
         {

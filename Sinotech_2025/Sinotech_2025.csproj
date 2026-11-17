@@ -84,4 +84,9 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="pic\Sinotech.ico">
+      <LogicalName>Sinotech.BatchExport.Sinotech.ico</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>
