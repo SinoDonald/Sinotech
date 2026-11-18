@@ -592,7 +592,7 @@ namespace Sinotech_2025.Plotting
                 if (setting == null)
                     throw new InvalidOperationException("找不到列印設定「" + optionCB.Text + "」，請重新開啟匯出視窗。");
                 PrintParameters print = setting.PrintParameters;
-                options.PaperFormat = ResolvePdfPaperFormat(print.PaperSize.Name);
+                options.PaperFormat = ResolvePdfPaperFormat(GetPrintSettingPaperName(doc, setting, print));
                 options.PaperOrientation = print.PageOrientation;
                 options.ZoomType = print.ZoomType;
                 if (print.ZoomType == ZoomType.Zoom) options.ZoomPercentage = print.Zoom;
@@ -626,29 +626,63 @@ namespace Sinotech_2025.Plotting
             }
         }
 
+        // 列印設定的紙張必須存在於「目前印表機」的紙張清單，否則 Revit 讀取 PaperSize 會拋例外。
+        private static string GetPrintSettingPaperName(Document doc, PrintSetting setting, PrintParameters print)
+        {
+            try
+            {
+                return print.PaperSize.Name;
+            }
+            catch (Exception ex)
+            {
+                string printerName = "";
+                try { printerName = doc.PrintManager.PrinterName; } catch { }
+                throw new NotSupportedException("無法從目前印表機「" + printerName + "」讀取列印設定「" + setting.Name
+                    + "」的紙張，該印表機可能沒有此紙型。\n請先在 Revit「列印」對話框將印表機切換為建立此列印設定時使用的印表機"
+                    + "（例如 PDF 印表機），再重新匯出。\n\nRevit 訊息：" + ex.Message, ex);
+            }
+        }
+
+        // 北美紙型別名，對應至原生 PDF 紙張。
+        private static readonly KeyValuePair<string, ExportPaperFormat>[] PaperAliases =
+        {
+            new KeyValuePair<string, ExportPaperFormat>("LETTER", ExportPaperFormat.ANSI_A),
+            new KeyValuePair<string, ExportPaperFormat>("TABLOID", ExportPaperFormat.ANSI_B),
+            new KeyValuePair<string, ExportPaperFormat>("LEDGER", ExportPaperFormat.ANSI_B),
+            new KeyValuePair<string, ExportPaperFormat>("11X17", ExportPaperFormat.ANSI_B),
+        };
+
         internal static ExportPaperFormat ResolvePdfPaperFormat(string paperName)
         {
-            // 僅辨識完整紙型名稱或驅動程式附加的尺寸說明，避免 A1 誤判成 A10/A1+。
-            string name = (paperName ?? "").Trim().ToUpperInvariant();
+            // 驅動程式常在紙型後附加尺寸，例如「A3 297 x 420 mm」、「Letter 8.5 x 11 in (216 x 279 mm)」、
+            // AutoCAD pc3 的「ISO full bleed A1 (841.00 x 594.00 MM)」。
+            // 紙型後只接受結尾、「(」或數字開頭的尺寸，避免 A1 誤判成 A10/A1+/A1 oversized。
+            string name = (paperName ?? "").Trim().ToUpperInvariant().Replace('_', ' ');
+            name = System.Text.RegularExpressions.Regex.Replace(name, @"\b(FULL BLEED|EXPAND)\s+", "");
+            name = System.Text.RegularExpressions.Regex.Replace(name, @"\s+", " ");
             foreach (ExportPaperFormat format in Enum.GetValues(typeof(ExportPaperFormat)))
             {
                 if (format == ExportPaperFormat.Default) continue;
                 string fullName = format.ToString().Replace('_', ' ').ToUpperInvariant();
                 string shortName = fullName.StartsWith("ISO ") ? fullName.Substring(4) : fullName;
-                foreach (string candidate in new[] { fullName, shortName })
-                {
-                    if (name == candidate || name.StartsWith(candidate + " (", StringComparison.Ordinal)
-                        || name.StartsWith(candidate + "(", StringComparison.Ordinal)) return format;
-                }
+                if (MatchesPaperName(name, fullName) || MatchesPaperName(name, shortName)) return format;
             }
-            // 常見 Windows 印表機的北美紙型別名。
-            switch (name)
+            foreach (var alias in PaperAliases)
             {
-                case "LETTER": return ExportPaperFormat.ANSI_A;
-                case "TABLOID": return ExportPaperFormat.ANSI_B;
+                if (MatchesPaperName(name, alias.Key)) return alias.Value;
             }
             throw new NotSupportedException("列印紙張「" + paperName
                 + "」無法對應至原生 PDF 紙張。請選用標準紙型（例如 A1），不會自動改用內容範圍匯出。");
+        }
+
+        private static bool MatchesPaperName(string name, string candidate)
+        {
+            if (!name.StartsWith(candidate, StringComparison.Ordinal)) return false;
+            string rest = name.Substring(candidate.Length).TrimStart();
+            if (rest.Length == 0) return true;
+            // 紙型名稱後必須有分隔（空白或括號），再接尺寸說明。
+            if (rest.Length == name.Length - candidate.Length && rest[0] != '(') return false;
+            return rest[0] == '(' || char.IsDigit(rest[0]);
         }
 
         // 選擇Excel檔
