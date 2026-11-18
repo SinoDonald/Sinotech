@@ -134,7 +134,7 @@ namespace Sinotech.Plotting
                             if (frames.Count == 0)
                             {
                                 if (!string.IsNullOrEmpty(reason)) notices.Add($"PDF 第 {i} 頁：{reason}");
-                                pdfRows.Rows.Add(i, "", "", string.IsNullOrEmpty(reason) ? "略過：沒有圖名／圖號圖框" : "待確認：" + reason);
+                                pdfRows.Rows.Add(i, "", "", "待確認：" + (string.IsNullOrEmpty(reason) ? "無法確認圖框內容。" : reason));
                                 continue;
                             }
                             foreach (FrameText frame in frames)

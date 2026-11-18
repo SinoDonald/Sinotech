@@ -87,8 +87,8 @@ namespace Sinotech_2025
                 AvailabilityClassName = "Sinotech.BatchExport.BatchNwcExportAvailability"
             }) as PushButton;
             batchNwcExportBtn.LargeImage = convertFromBitmap(Properties.Resources.批次匯出);
-            batchNwcExportBtn.ToolTip = "【功能介紹】\n將資料夾內與目前 Revit 同年度的 RVT 批次匯出為 NWC；先集中確認主檔 3D 視圖，成果存於各 RVT 旁。";
-            batchNwcExportBtn.LongDescription = "【使用步驟】\n1. 先安裝並啟用相容的 Navisworks NWC Export Utility，已開啟的主檔會使用目前內容（含未儲存變更）。\n2. 點選「批次匯出」，貼上或選擇資料夾（會記住上次路徑）、優先視圖名稱（預設 {3D}），設定子資料夾、連結、座標及覆寫選項。\n3. 按「讀取視圖」，集中確認各主檔的 3D 視圖；無法唯一配對的項目需手動選擇或取消勾選。\n4. 按「開始匯出」，完成後核對 NWC 與 CSV 紀錄；主檔版本不符會略過；有問題的連結會列出提醒，原始 RVT 不儲存。";
+            batchNwcExportBtn.ToolTip = "【功能介紹】\n將資料夾內與目前 Revit 同年度的 RVT 批次匯出為 NWC 或 IFC（可同時勾選）；先集中確認主檔 3D 視圖，成果存於各 RVT 旁。";
+            batchNwcExportBtn.LongDescription = "【使用步驟】\n1. 匯出 NWC 需先安裝並啟用相容的 Navisworks NWC Export Utility（只匯出 IFC 則不需要），已開啟的主檔會使用目前內容（含未儲存變更）。\n2. 點選「批次匯出」，貼上或選擇資料夾（會記住上次路徑）、優先視圖名稱（預設 {3D}），勾選匯出格式 NWC / IFC 與 IFC 版本，設定子資料夾、連結、座標及覆寫選項。\n3. 按「讀取視圖」，集中確認各主檔的 3D 視圖；無法唯一配對的項目需手動選擇或取消勾選。\n4. 按「開始匯出」，完成後核對 NWC / IFC 與 CSV 紀錄；IFC 只含主檔、不含 Revit 連結；主檔版本不符會略過；有問題的連結會列出提醒，原始 RVT 不儲存。";
             batchNwcExportBtn.ToolTipImage = convertFromBitmap(Properties.Resources.批次匯出_原圖, 250);
             PushButton sheetPdfCompareBtn = ribbonPanel.AddItem(new PushButtonData("SheetPdfCompare", "圖紙比對", addinAssmeblyPath, "Sinotech_2025.Plotting.SheetPdfCompare")) as PushButton;
             sheetPdfCompareBtn.LargeImage = convertFromBitmap(Properties.Resources.圖紙比對);
