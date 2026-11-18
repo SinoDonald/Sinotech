@@ -412,16 +412,26 @@ namespace Sinotech_2025.Plotting
             // 匯出前驗證一次；不支援的紙型/邊界保留視窗供使用者更換設定。
             if (formatCB.Text == "PDF")
             {
-                try { using (CreatePdfExportOptions(formDoc)) { } }
+                // 整批匯出只轉換一次列印設定，避免每張圖紙都切換印表機。
+                try { pdfExportOptions = CreatePdfExportOptions(formDoc); }
                 catch (Exception ex)
                 {
                     TaskDialog.Show("PDF 列印設定", ex.Message);
                     return;
                 }
             }
-            // 匯出視圖成DWG檔
-            ExportViewPlan(formDoc, chooseViewSheets);
+            try
+            {
+                // 匯出視圖成DWG檔
+                ExportViewPlan(formDoc, chooseViewSheets);
+            }
+            finally
+            {
+                pdfExportOptions?.Dispose();
+                pdfExportOptions = null;
+            }
         }
+        private PDFExportOptions pdfExportOptions = null; // 本次匯出使用的 PDF 設定
         // 匯出視圖成DWG檔
         public void ExportViewPlan(Document doc, List<ViewInfo> chooseViewSheets)
         {
@@ -435,6 +445,8 @@ namespace Sinotech_2025.Plotting
                 // 選擇匯出路徑, 預設為桌面+匯出DWG+日期時間
                 string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                 path = ChooseExportPath(path) + "\\匯出_" + dt;
+                // 取消選擇資料夾時保留視窗，讓使用者回到圖紙清單重新選擇。
+                if (trueOrFlase == false) return;
 
                 // 有選擇路徑的情況下, 則進行檔案匯出
                 if (trueOrFlase == true)
@@ -546,13 +558,11 @@ namespace Sinotech_2025.Plotting
                                 {
                                     try
                                     {
-                                        using (PDFExportOptions options = CreatePdfExportOptions(doc))
-                                        {
-                                            options.FileName = exportName;
-                                            options.Combine = true;
-                                            if (!doc.Export(path, new List<ElementId> { viewInfo.view.Id }, options))
-                                                throw new IOException("Revit 未能完成 PDF 匯出：" + exportName);
-                                        }
+                                        if (pdfExportOptions == null) pdfExportOptions = CreatePdfExportOptions(doc);
+                                        pdfExportOptions.FileName = exportName;
+                                        pdfExportOptions.Combine = true;
+                                        if (!doc.Export(path, new List<ElementId> { viewInfo.view.Id }, pdfExportOptions))
+                                            throw new IOException("Revit 未能完成 PDF 匯出：" + exportName);
                                     }
                                     catch (Exception ex)
                                     {
@@ -583,16 +593,91 @@ namespace Sinotech_2025.Plotting
         // PrintSetting 與原生 PDFExportOptions 是兩套設定，必須明確轉換。
         private PDFExportOptions CreatePdfExportOptions(Document doc)
         {
+            if (string.IsNullOrWhiteSpace(optionCB.Text)) return new PDFExportOptions();
+            PrintSetting setting = new FilteredElementCollector(doc).OfClass(typeof(PrintSetting))
+                .Cast<PrintSetting>().FirstOrDefault(item => item.Name == optionCB.Text);
+            if (setting == null)
+                throw new InvalidOperationException("找不到列印設定「" + optionCB.Text + "」，請重新開啟匯出視窗。");
+            try
+            {
+                return ConvertPrintSetting(setting);
+            }
+            catch (Exception ex) when (IsPrinterIncompatible(ex))
+            {
+                // 列印設定的紙張必須存在於「目前印表機」，否則 Revit 讀取紙張會拋例外；
+                // 例如 A1-PDF 以 PDFCreator 建立，但目前印表機為 Epson（沒有 A1）。
+                return ConvertWithCompatiblePrinter(doc, setting, ex);
+            }
+        }
+
+        // 我們自己丟出的不支援訊息（紙型/邊界）不需要再換印表機重試。
+        private static bool IsPrinterIncompatible(Exception ex)
+        {
+            return !(ex is NotSupportedException);
+        }
+
+        // 暫時切換到可讀取此列印設定的印表機（PDF 印表機優先），讀完後切回原印表機。
+        private static PDFExportOptions ConvertWithCompatiblePrinter(Document doc, PrintSetting setting, Exception firstError)
+        {
+            PrintManager printManager = doc.PrintManager;
+            string originalPrinter = "";
+            try { originalPrinter = printManager.PrinterName; } catch { }
+            List<string> candidates = System.Drawing.Printing.PrinterSettings.InstalledPrinters.Cast<string>()
+                .Where(name => !string.Equals(name, originalPrinter, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(name => name.IndexOf("PDF", StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
+            bool switched = false;
+            try
+            {
+                foreach (string printerName in candidates)
+                {
+                    try
+                    {
+                        SelectPrinter(doc, printerName);
+                        switched = true;
+                        return ConvertPrintSetting(setting);
+                    }
+                    catch (NotSupportedException) { throw; }
+                    catch { } // 此印表機也不相容，換下一台
+                }
+            }
+            finally
+            {
+                if (switched && originalPrinter != "")
+                {
+                    try { SelectPrinter(doc, originalPrinter); } catch { }
+                }
+            }
+            throw new NotSupportedException("目前印表機「" + originalPrinter + "」與列印設定「" + setting.Name
+                + "」不相容（例如沒有該紙型），且找不到其他可用的印表機。\n請在 Revit「列印」對話框將印表機切換為建立此列印設定時使用的印表機"
+                + "（例如 PDFCreator），再重新匯出。\n\nRevit 訊息：" + firstError.Message, firstError);
+        }
+
+        private static void SelectPrinter(Document doc, string printerName)
+        {
+            try
+            {
+                doc.PrintManager.SelectNewPrintDriver(printerName);
+            }
+            catch (Autodesk.Revit.Exceptions.ModificationOutsideTransactionException)
+            {
+                using (Transaction trans = new Transaction(doc, "切換印表機"))
+                {
+                    trans.Start();
+                    doc.PrintManager.SelectNewPrintDriver(printerName);
+                    trans.Commit();
+                }
+            }
+        }
+
+        // PrintSetting 的各項設定轉成 PDFExportOptions；讀取時必須使用與設定相容的印表機。
+        private static PDFExportOptions ConvertPrintSetting(PrintSetting setting)
+        {
             var options = new PDFExportOptions();
             try
             {
-                if (string.IsNullOrWhiteSpace(optionCB.Text)) return options;
-                PrintSetting setting = new FilteredElementCollector(doc).OfClass(typeof(PrintSetting))
-                    .Cast<PrintSetting>().FirstOrDefault(item => item.Name == optionCB.Text);
-                if (setting == null)
-                    throw new InvalidOperationException("找不到列印設定「" + optionCB.Text + "」，請重新開啟匯出視窗。");
                 PrintParameters print = setting.PrintParameters;
-                options.PaperFormat = ResolvePdfPaperFormat(GetPrintSettingPaperName(doc, setting, print));
+                options.PaperFormat = ResolvePdfPaperFormat(print.PaperSize.Name);
                 options.PaperOrientation = print.PageOrientation;
                 options.ZoomType = print.ZoomType;
                 if (print.ZoomType == ZoomType.Zoom) options.ZoomPercentage = print.Zoom;
@@ -623,23 +708,6 @@ namespace Sinotech_2025.Plotting
             {
                 options.Dispose();
                 throw;
-            }
-        }
-
-        // 列印設定的紙張必須存在於「目前印表機」的紙張清單，否則 Revit 讀取 PaperSize 會拋例外。
-        private static string GetPrintSettingPaperName(Document doc, PrintSetting setting, PrintParameters print)
-        {
-            try
-            {
-                return print.PaperSize.Name;
-            }
-            catch (Exception ex)
-            {
-                string printerName = "";
-                try { printerName = doc.PrintManager.PrinterName; } catch { }
-                throw new NotSupportedException("無法從目前印表機「" + printerName + "」讀取列印設定「" + setting.Name
-                    + "」的紙張，該印表機可能沒有此紙型。\n請先在 Revit「列印」對話框將印表機切換為建立此列印設定時使用的印表機"
-                    + "（例如 PDF 印表機），再重新匯出。\n\nRevit 訊息：" + ex.Message, ex);
             }
         }
 
