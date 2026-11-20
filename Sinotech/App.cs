@@ -96,6 +96,9 @@ namespace Sinotech
             sheetPdfCompareBtn.ToolTip = "【功能介紹】\n比對 Revit 圖框圖名、圖號與 PDF 圖說，列出缺漏、不一致及待確認項目，並檢查圖目錄缺頁。";
             sheetPdfCompareBtn.LongDescription = "【使用步驟】\n1. 開啟含有圖紙的專案，點選「圖紙比對」，選擇要檢查的 PDF 圖說。\n2. 等待讀取 PDF 文字或辨識結果，查看比對結果與圖目錄檢查分頁。\n3. 核對未相符及待確認項目；需要時填入人工確認內容，再按「套用人工確認並重新比對」。\n4. 需要留存時按「匯出 CSV」；依結果修正模型或 PDF 後再檢查。";
             sheetPdfCompareBtn.ToolTipImage = convertFromBitmap(Properties.Resources.圖紙比對_原圖, 250);
+            // 暫時隱藏圖紙比對入口，保留指令與按鈕設定。
+            sheetPdfCompareBtn.Visible = false;
+            sheetPdfCompareBtn.Enabled = false;
 
             // 添加「快速工具」面板
             try { ribbonPanel = application.CreateRibbonPanel("中興自動化", "快速工具"); }
